@@ -72,12 +72,15 @@ npx vercel --prod
 │   ├── icon.svg                # Favicon
 │   ├── api/
 │   │   ├── intake/route.ts     # Intake API (POST → Supabase)
-│   │   └── admin/cases/
-│   │       ├── route.ts        # GET all cases
-│   │       └── [id]/route.ts   # GET/PATCH single case
+│   │   ├── admin/cases/
+│   │   │   ├── route.ts        # GET all cases
+│   │   │   └── [id]/route.ts   # GET/PATCH single case
+│   │   └── cases/[id]/
+│   │       ├── upload/route.ts  # POST file upload
+│   │       └── documents/route.ts # GET list / DELETE doc
 │   ├── admin/
 │   │   ├── page.tsx            # Admin console
-│   │   └── cases/[id]/page.tsx # Case detail page
+│   │   └── cases/[id]/page.tsx # Case detail + documents
 │   ├── services/page.tsx
 │   ├── formation-filings/page.tsx
 │   ├── credit-enablement/page.tsx
@@ -142,13 +145,29 @@ ADMIN_TOKEN=some-strong-random-secret
 | ---- | ----------- |
 | `lib/supabase/server.ts` | Server-side Supabase client helper |
 | `lib/supabase/client.ts` | Browser-side Supabase client helper |
-| `lib/db/schema.sql` | SQL schema for `intake_submissions` + `filing_cases` |
-| `lib/types.ts` | Added `FilingCase`, `CaseStatus`, `CASE_STATUSES` |
+| `lib/db/schema.sql` | SQL schema for `intake_submissions` + `filing_cases` + `case_documents` |
+| `lib/types.ts` | Added `FilingCase`, `CaseStatus`, `CaseDocument`, upload constants |
 | `app/api/intake/route.ts` | Now persists to DB + auto-creates a filing case |
 | `app/api/admin/cases/route.ts` | GET all cases (with status filter) |
 | `app/api/admin/cases/[id]/route.ts` | GET single case / PATCH to update |
 | `app/admin/page.tsx` | Admin console — case list with filters |
-| `app/admin/cases/[id]/page.tsx` | Case detail page — edit status, notes, etc. |
+| `app/admin/cases/[id]/page.tsx` | Case detail page — edit status, notes + document upload/listing |
+
+### Play 03B — Document Uploads
+
+| File | Description |
+| ---- | ----------- |
+| `app/api/cases/[id]/upload/route.ts` | POST multipart upload (PDF/JPG/PNG, 10 MB max) |
+| `app/api/cases/[id]/documents/route.ts` | GET documents with signed URLs / DELETE document |
+| `lib/db/schema.sql` | Added `case_documents` table |
+| `lib/types.ts` | Added `CaseDocument`, `ALLOWED_UPLOAD_TYPES`, `MAX_UPLOAD_SIZE` |
+| `app/admin/cases/[id]/page.tsx` | Added document upload UI + listing with download/delete |
+
+#### Supabase Storage Setup
+
+1. In the Supabase dashboard, go to **Storage**.
+2. Create a new bucket named `case-documents` (set to **private**).
+3. The API handles signed URLs for secure downloads.
 
 ### Routes Added
 
@@ -158,6 +177,8 @@ ADMIN_TOKEN=some-strong-random-secret
 | `/admin/cases/[id]?token=...` | Page | Case detail & editing |
 | `/api/admin/cases?token=...&status=...` | API GET | List cases |
 | `/api/admin/cases/[id]?token=...` | API GET/PATCH | Read/update a case |
+| `/api/cases/[id]/upload?token=...` | API POST | Upload document (multipart) |
+| `/api/cases/[id]/documents?token=...` | API GET/DELETE | List docs / delete doc |
 
 ### Data Flow
 

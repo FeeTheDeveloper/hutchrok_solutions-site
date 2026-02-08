@@ -21,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CASE_STATUSES, type FilingCase, type CaseStatus } from "@/lib/types";
-import { ArrowLeft, Save, ShieldAlert, Loader2 } from "lucide-react";
+import { CASE_STATUSES, type FilingCase, type CaseStatus, type CaseDocument, ALLOWED_UPLOAD_TYPES, MAX_UPLOAD_SIZE } from "@/lib/types";
+import { ArrowLeft, Save, ShieldAlert, Loader2, Upload, FileText, Image, Trash2, Download } from "lucide-react";
 import Link from "next/link";
 
 export default function CaseDetailPage() {
@@ -79,6 +79,11 @@ function CaseDetailContent() {
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Documents
+  const [documents, setDocuments] = useState<CaseDocument[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const fetchCase = useCallback(async () => {
     setLoading(true);
     try {
@@ -111,6 +116,77 @@ function CaseDetailContent() {
       setLoading(false);
     }
   }, [token, caseId, fetchCase]);
+
+  // Fetch documents
+  const fetchDocuments = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `/api/cases/${caseId}/documents?token=${encodeURIComponent(token)}`
+      );
+      if (res.ok) {
+        const json = await res.json();
+        setDocuments(json.documents ?? []);
+      }
+    } catch {
+      console.error("Failed to fetch documents");
+    }
+  }, [caseId, token]);
+
+  useEffect(() => {
+    if (token && caseId && authorized) fetchDocuments();
+  }, [token, caseId, authorized, fetchDocuments]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ""; // reset input
+
+    if (!ALLOWED_UPLOAD_TYPES.includes(file.type as (typeof ALLOWED_UPLOAD_TYPES)[number])) {
+      setUploadMsg({ type: "error", text: `Invalid file type. Allowed: PDF, JPG, PNG.` });
+      return;
+    }
+    if (file.size > MAX_UPLOAD_SIZE) {
+      setUploadMsg({ type: "error", text: `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 10 MB.` });
+      return;
+    }
+
+    setUploading(true);
+    setUploadMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(
+        `/api/cases/${caseId}/upload?token=${encodeURIComponent(token)}`,
+        { method: "POST", body: fd }
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        setUploadMsg({ type: "error", text: json.error || "Upload failed." });
+        return;
+      }
+      setUploadMsg({ type: "success", text: `"${file.name}" uploaded.` });
+      fetchDocuments();
+    } catch {
+      setUploadMsg({ type: "error", text: "Network error during upload." });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteDoc = async (docId: string, filename: string) => {
+    if (!confirm(`Delete "${filename}"?`)) return;
+    try {
+      const res = await fetch(
+        `/api/cases/${caseId}/documents?token=${encodeURIComponent(token)}&docId=${docId}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        setDocuments((prev) => prev.filter((d) => d.id !== docId));
+      }
+    } catch {
+      console.error("Failed to delete document");
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -337,6 +413,105 @@ function CaseDetailContent() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Documents section */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Documents</CardTitle>
+            <CardDescription>
+              Upload PDFs, JPGs, or PNGs (max 10 MB each)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Upload */}
+            <div className="flex items-center gap-3">
+              <Label
+                htmlFor="file-upload"
+                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-dashed border-border rounded-md text-sm hover:bg-muted/50 transition-colors"
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {uploading ? "Uploading…" : "Choose file"}
+              </Label>
+              <input
+                id="file-upload"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="hidden"
+                onChange={handleUpload}
+                disabled={uploading}
+              />
+              <span className="text-xs text-muted-foreground">
+                PDF, JPG, PNG · 10 MB max
+              </span>
+            </div>
+            {uploadMsg && (
+              <p
+                className={`text-sm font-medium ${
+                  uploadMsg.type === "success" ? "text-green-700" : "text-destructive"
+                }`}
+              >
+                {uploadMsg.text}
+              </p>
+            )}
+
+            {/* Document list */}
+            {documents.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No documents uploaded yet.
+              </p>
+            ) : (
+              <div className="divide-y">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center justify-between py-3 gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {doc.mime === "application/pdf" ? (
+                        <FileText className="h-5 w-5 text-red-500 shrink-0" />
+                      ) : (
+                        <Image className="h-5 w-5 text-blue-500 shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {doc.filename}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {(doc.size / 1024).toFixed(0)} KB ·{" "}
+                          {new Date(doc.uploaded_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {doc.download_url && (
+                        <a
+                          href={doc.download_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors"
+                          title="Download"
+                        >
+                          <Download className="h-4 w-4" />
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleDeleteDoc(doc.id, doc.filename)}
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-destructive/10 text-destructive transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

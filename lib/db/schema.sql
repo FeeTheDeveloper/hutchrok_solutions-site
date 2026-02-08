@@ -1,5 +1,5 @@
 -- =============================================================
--- Hutchrok Solutions Group — Play 03A Schema
+-- Hutchrok Solutions Group — Play 03 Schema
 -- Run this in the Supabase SQL Editor to create the tables.
 -- =============================================================
 
@@ -58,3 +58,26 @@ create policy "Allow all for anon" on intake_submissions
 
 create policy "Allow all for anon" on filing_cases
   for all using (true) with check (true);
+
+-- 3) case_documents (Play 03B)
+create table if not exists case_documents (
+  id            uuid primary key default gen_random_uuid(),
+  case_id       uuid not null references filing_cases(id) on delete cascade,
+  filename      text not null,
+  mime          text not null,
+  size          int not null,
+  storage_path  text not null,
+  uploaded_at   timestamptz not null default now()
+);
+
+create index if not exists idx_case_documents_case on case_documents(case_id);
+
+alter table case_documents enable row level security;
+
+create policy "Allow all for anon" on case_documents
+  for all using (true) with check (true);
+
+-- Storage bucket (run via Supabase Dashboard or SQL):
+-- insert into storage.buckets (id, name, public)
+--   values ('case-documents', 'case-documents', false)
+--   on conflict do nothing;

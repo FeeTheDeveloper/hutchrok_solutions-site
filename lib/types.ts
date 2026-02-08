@@ -49,6 +49,28 @@ export interface FilingCase {
   };
 }
 
+// ── Case document types ──
+
+export interface CaseDocument {
+  id: string;
+  case_id: string;
+  filename: string;
+  mime: string;
+  size: number;
+  storage_path: string;
+  uploaded_at: string;
+  /** Populated client-side from signed URL */
+  download_url?: string;
+}
+
+export const ALLOWED_UPLOAD_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+] as const;
+
+export const MAX_UPLOAD_SIZE = 10 * 1024 * 1024; // 10 MB
+
 export type BusinessStage =
   | "idea"
   | "pre-launch"
