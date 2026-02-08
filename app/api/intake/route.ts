@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import type { IntakeFormData } from "@/lib/types";
+import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { validateIntake } from "@/lib/validation";
+import { rateLimit } from "@/lib/rate-limit";
+import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
+
+const isProd = process.env.NODE_ENV === "production";
 
 /**
  * Generate a unique case number: HSG-YYYY-XXXX
@@ -30,28 +34,50 @@ async function generateCaseNumber(
   return `HSG-${year}-${ts}`;
 }
 
+/**
+ * Extract client IP for rate limiting.
+ */
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body: IntakeFormData = await request.json();
+    // ── Rate limit (5 requests / 60s per IP) ──
+    const ip = getClientIp(request);
+    const rl = rateLimit(ip, { limit: 5, windowMs: 60_000 });
 
-    // ── Validate required fields ──
-    const errors: Record<string, string> = {};
-
-    if (!body.name?.trim()) errors.name = "Name is required.";
-    if (!body.email?.trim()) {
-      errors.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
-      errors.email = "Please enter a valid email address.";
+    if (!rl.allowed) {
+      return apiError(
+        ErrorCode.RATE_LIMITED,
+        "Too many requests. Please wait a moment and try again.",
+        429
+      );
     }
-    if (!body.phone?.trim()) errors.phone = "Phone number is required.";
-    if (!body.businessStage)
-      errors.businessStage = "Business stage is required.";
-    if (!body.serviceNeeded)
-      errors.serviceNeeded = "Service selection is required.";
 
-    if (Object.keys(errors).length > 0) {
-      return NextResponse.json({ ok: false, errors }, { status: 400 });
+    // ── Parse + validate with Zod ──
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return apiError(ErrorCode.BAD_REQUEST, "Invalid JSON body.", 400);
     }
+
+    const validation = validateIntake(body);
+    if (!validation.success) {
+      return apiError(
+        ErrorCode.VALIDATION_ERROR,
+        "Please fix the highlighted fields.",
+        400,
+        validation.fieldErrors
+      );
+    }
+
+    const data = validation.data!;
 
     // ── Persist to Supabase ──
     const supabase = getSupabaseServer();
@@ -60,21 +86,23 @@ export async function POST(request: NextRequest) {
     const { data: intake, error: intakeError } = await supabase
       .from("intake_submissions")
       .insert({
-        name: body.name.trim(),
-        email: body.email.trim(),
-        phone: body.phone.trim(),
-        business_stage: body.businessStage,
-        service_needed: body.serviceNeeded,
-        message: body.message?.trim() || null,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        business_stage: data.businessStage,
+        service_needed: data.serviceNeeded,
+        message: data.message || null,
       })
       .select("id")
       .single();
 
     if (intakeError || !intake) {
-      console.error("[api/intake] Supabase insert error:", intakeError);
-      return NextResponse.json(
-        { ok: false, errors: { form: "Failed to save submission." } },
-        { status: 500 }
+      // Log DB error details but never PII
+      console.error("[api/intake] Supabase insert error:", intakeError?.code, intakeError?.message);
+      return apiError(
+        ErrorCode.INTERNAL_ERROR,
+        "Failed to save submission. Please try again.",
+        500
       );
     }
 
@@ -92,29 +120,32 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (caseError || !filingCase) {
-      console.error("[api/intake] Case creation error:", caseError);
+      console.error("[api/intake] Case creation error:", caseError?.code, caseError?.message);
       // Intake was saved; return partial success
-      return NextResponse.json(
-        { ok: true, intakeId: intake.id, caseNumber: null, caseId: null },
-        { status: 201 }
+      return apiSuccess(
+        { intakeId: intake.id, caseNumber: null, caseId: null },
+        201
       );
     }
 
-    console.log("[api/intake] Created case:", filingCase.case_number);
+    if (!isProd) {
+      console.log("[api/intake] Created case:", filingCase.case_number);
+    }
 
-    return NextResponse.json(
+    return apiSuccess(
       {
-        ok: true,
         caseNumber: filingCase.case_number,
         caseId: filingCase.id,
       },
-      { status: 201 }
+      201
     );
   } catch (error) {
-    console.error("[api/intake] Error:", error);
-    return NextResponse.json(
-      { ok: false, errors: { form: "Invalid request." } },
-      { status: 400 }
-    );
+    // Never log the raw error object in prod (may contain PII from body)
+    if (isProd) {
+      console.error("[api/intake] Unhandled error");
+    } else {
+      console.error("[api/intake] Error:", error);
+    }
+    return apiError(ErrorCode.BAD_REQUEST, "Invalid request.", 400);
   }
 }

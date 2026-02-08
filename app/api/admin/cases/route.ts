@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 
 /**
  * Validate the admin token from query params or Authorization header.
@@ -17,7 +18,7 @@ function isAuthorized(request: NextRequest): boolean {
  */
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
   }
 
   const supabase = getSupabaseServer();
@@ -37,12 +38,9 @@ export async function GET(request: NextRequest) {
   const { data, error } = await query;
 
   if (error) {
-    console.error("[api/admin/cases] Fetch error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch cases." },
-      { status: 500 }
-    );
+    console.error("[api/admin/cases] Fetch error:", error.code, error.message);
+    return apiError(ErrorCode.INTERNAL_ERROR, "Failed to fetch cases.", 500);
   }
 
-  return NextResponse.json({ cases: data ?? [] });
+  return apiSuccess({ cases: data ?? [] });
 }

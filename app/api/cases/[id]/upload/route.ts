@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { ALLOWED_UPLOAD_TYPES, MAX_UPLOAD_SIZE } from "@/lib/types";
+import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 
 function isAuthorized(request: NextRequest): boolean {
   const token =
@@ -21,7 +22,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
   }
 
   const { id: caseId } = await params;
@@ -35,7 +36,7 @@ export async function POST(
     .single();
 
   if (caseErr || !filing) {
-    return NextResponse.json({ error: "Case not found." }, { status: 404 });
+    return apiError(ErrorCode.NOT_FOUND, "Case not found.", 404);
   }
 
   // 2. Parse multipart form
@@ -43,18 +44,12 @@ export async function POST(
   try {
     formData = await request.formData();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid form data." },
-      { status: 400 }
-    );
+    return apiError(ErrorCode.BAD_REQUEST, "Invalid form data.", 400);
   }
 
   const file = formData.get("file") as File | null;
   if (!file) {
-    return NextResponse.json(
-      { error: "No file provided. Use field name 'file'." },
-      { status: 400 }
-    );
+    return apiError(ErrorCode.BAD_REQUEST, "No file provided. Use field name 'file'.", 400);
   }
 
   // 3. Validate MIME type
@@ -63,21 +58,19 @@ export async function POST(
       file.type as (typeof ALLOWED_UPLOAD_TYPES)[number]
     )
   ) {
-    return NextResponse.json(
-      {
-        error: `Invalid file type "${file.type}". Allowed: PDF, JPG, PNG.`,
-      },
-      { status: 400 }
+    return apiError(
+      ErrorCode.VALIDATION_ERROR,
+      `Invalid file type "${file.type}". Allowed: PDF, JPG, PNG.`,
+      400
     );
   }
 
   // 4. Validate size
   if (file.size > MAX_UPLOAD_SIZE) {
-    return NextResponse.json(
-      {
-        error: `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 10 MB.`,
-      },
-      { status: 400 }
+    return apiError(
+      ErrorCode.VALIDATION_ERROR,
+      `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 10 MB.`,
+      400
     );
   }
 
@@ -98,11 +91,8 @@ export async function POST(
     });
 
   if (uploadErr) {
-    console.error("[api/cases/upload] Storage error:", uploadErr);
-    return NextResponse.json(
-      { error: "Failed to upload file to storage." },
-      { status: 500 }
-    );
+    console.error("[api/cases/upload] Storage error:", uploadErr.message);
+    return apiError(ErrorCode.INTERNAL_ERROR, "Failed to upload file to storage.", 500);
   }
 
   // 8. Insert metadata row
@@ -119,12 +109,9 @@ export async function POST(
     .single();
 
   if (docErr) {
-    console.error("[api/cases/upload] DB insert error:", docErr);
-    return NextResponse.json(
-      { error: "File uploaded but failed to save metadata." },
-      { status: 500 }
-    );
+    console.error("[api/cases/upload] DB insert error:", docErr.message);
+    return apiError(ErrorCode.INTERNAL_ERROR, "File uploaded but failed to save metadata.", 500);
   }
 
-  return NextResponse.json({ ok: true, document: doc }, { status: 201 });
+  return apiSuccess({ document: doc }, 201);
 }

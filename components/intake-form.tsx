@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { BUSINESS_STAGES, SERVICE_TYPES } from "@/lib/types";
 import type { IntakeFormData } from "@/lib/types";
+import { validateIntake } from "@/lib/validation";
 import { CheckCircle, Loader2 } from "lucide-react";
 
 export default function IntakeForm() {
@@ -30,19 +31,8 @@ export default function IntakeForm() {
   const [submitted, setSubmitted] = useState(false);
 
   function validate(): Record<string, string> {
-    const errs: Record<string, string> = {};
-    if (!formData.name.trim()) errs.name = "Name is required.";
-    if (!formData.email.trim()) {
-      errs.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errs.email = "Please enter a valid email address.";
-    }
-    if (!formData.phone.trim()) errs.phone = "Phone number is required.";
-    if (!formData.businessStage)
-      errs.businessStage = "Please select a business stage.";
-    if (!formData.serviceNeeded)
-      errs.serviceNeeded = "Please select a service.";
-    return errs;
+    const result = validateIntake(formData);
+    return result.success ? {} : (result.fieldErrors ?? {});
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -58,11 +48,16 @@ export default function IntakeForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (data.ok) {
         setSubmitted(true);
       } else {
-        const data = await res.json();
-        if (data.errors) setErrors(data.errors);
+        const errPayload = data.error ?? {};
+        if (errPayload.fields) {
+          setErrors(errPayload.fields);
+        } else {
+          setErrors({ form: errPayload.message ?? "Submission failed." });
+        }
       }
     } catch {
       setErrors({ form: "Something went wrong. Please try again." });

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { CASE_STATUSES } from "@/lib/types";
+import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 
 function isAuthorized(request: NextRequest): boolean {
   const token =
@@ -18,7 +19,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
   }
 
   const { id } = await params;
@@ -33,10 +34,10 @@ export async function GET(
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: "Case not found." }, { status: 404 });
+    return apiError(ErrorCode.NOT_FOUND, "Case not found.", 404);
   }
 
-  return NextResponse.json({ case: data });
+  return apiSuccess({ case: data });
 }
 
 /**
@@ -48,15 +49,20 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
   }
 
   const { id } = await params;
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return apiError(ErrorCode.BAD_REQUEST, "Invalid JSON body.", 400);
+  }
 
   // Whitelist updatable fields
   const updates: Record<string, unknown> = {};
-  if (body.status && CASE_STATUSES.includes(body.status)) {
+  if (body.status && CASE_STATUSES.includes(body.status as typeof CASE_STATUSES[number])) {
     updates.status = body.status;
   }
   if (body.assigned_to !== undefined) {
@@ -70,10 +76,7 @@ export async function PATCH(
   }
 
   if (Object.keys(updates).length === 0) {
-    return NextResponse.json(
-      { error: "No valid fields to update." },
-      { status: 400 }
-    );
+    return apiError(ErrorCode.BAD_REQUEST, "No valid fields to update.", 400);
   }
 
   const supabase = getSupabaseServer();
@@ -88,12 +91,9 @@ export async function PATCH(
     .single();
 
   if (error) {
-    console.error("[api/admin/cases] Update error:", error);
-    return NextResponse.json(
-      { error: "Failed to update case." },
-      { status: 500 }
-    );
+    console.error("[api/admin/cases] Update error:", error.code, error.message);
+    return apiError(ErrorCode.INTERNAL_ERROR, "Failed to update case.", 500);
   }
 
-  return NextResponse.json({ case: data });
+  return apiSuccess({ case: data });
 }

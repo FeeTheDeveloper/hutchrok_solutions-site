@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 
 function isAuthorized(request: NextRequest): boolean {
   const token =
@@ -17,7 +18,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
   }
 
   const { id: caseId } = await params;
@@ -31,11 +32,8 @@ export async function GET(
     .order("uploaded_at", { ascending: false });
 
   if (error) {
-    console.error("[api/cases/documents] Fetch error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch documents." },
-      { status: 500 }
-    );
+    console.error("[api/cases/documents] Fetch error:", error.code, error.message);
+    return apiError(ErrorCode.INTERNAL_ERROR, "Failed to fetch documents.", 500);
   }
 
   // Generate signed download URLs (valid for 1 hour)
@@ -52,7 +50,7 @@ export async function GET(
     })
   );
 
-  return NextResponse.json({ documents });
+  return apiSuccess({ documents });
 }
 
 /**
@@ -64,17 +62,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
   }
 
   const { id: caseId } = await params;
   const docId = request.nextUrl.searchParams.get("docId");
 
   if (!docId) {
-    return NextResponse.json(
-      { error: "Missing docId query parameter." },
-      { status: 400 }
-    );
+    return apiError(ErrorCode.BAD_REQUEST, "Missing docId query parameter.", 400);
   }
 
   const supabase = getSupabaseServer();
@@ -88,10 +83,7 @@ export async function DELETE(
     .single();
 
   if (fetchErr || !doc) {
-    return NextResponse.json(
-      { error: "Document not found." },
-      { status: 404 }
-    );
+    return apiError(ErrorCode.NOT_FOUND, "Document not found.", 404);
   }
 
   // Remove from storage
@@ -100,7 +92,7 @@ export async function DELETE(
     .remove([doc.storage_path]);
 
   if (storageErr) {
-    console.error("[api/cases/documents] Storage delete error:", storageErr);
+    console.error("[api/cases/documents] Storage delete error:", storageErr.message);
   }
 
   // Remove DB record
@@ -110,12 +102,9 @@ export async function DELETE(
     .eq("id", docId);
 
   if (dbErr) {
-    console.error("[api/cases/documents] DB delete error:", dbErr);
-    return NextResponse.json(
-      { error: "Failed to delete document record." },
-      { status: 500 }
-    );
+    console.error("[api/cases/documents] DB delete error:", dbErr.message);
+    return apiError(ErrorCode.INTERNAL_ERROR, "Failed to delete document record.", 500);
   }
 
-  return NextResponse.json({ ok: true });
+  return apiSuccess({});
 }
