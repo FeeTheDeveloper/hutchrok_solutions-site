@@ -11,6 +11,42 @@ export interface IntakeResponse {
   ok: boolean;
   message?: string;
   errors?: Record<string, string>;
+  caseNumber?: string | null;
+  caseId?: string | null;
+}
+
+// ── Filing case types ──
+
+export const CASE_STATUSES = [
+  "NEW",
+  "IN_REVIEW",
+  "NEEDS_INFO",
+  "IN_PROGRESS",
+  "FILED",
+  "COMPLETED",
+] as const;
+
+export type CaseStatus = (typeof CASE_STATUSES)[number];
+
+export interface FilingCase {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  intake_id: string;
+  case_number: string;
+  status: CaseStatus;
+  assigned_to: string | null;
+  due_date: string | null;
+  notes: string | null;
+  // Joined from intake_submissions
+  intake_submissions?: {
+    name: string;
+    email: string;
+    phone: string;
+    business_stage: string;
+    service_needed: string;
+    message: string | null;
+  };
 }
 
 export type BusinessStage =
