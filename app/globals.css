@@ -106,6 +106,19 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ── Reusable section rhythm ── */
+.section-padding {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+@media (min-width: 640px) {
+  .section-padding { padding-top: 5rem; padding-bottom: 5rem; }
+}
+@media (min-width: 1024px) {
+  .section-padding { padding-top: 6rem; padding-bottom: 6rem; }
+}
+
+/* ── Gold gradient text ── */
 .text-gradient-gold {
   background: linear-gradient(135deg, #C8A951 0%, #E5D08F 50%, #C8A951 100%);
   -webkit-background-clip: text;
@@ -113,13 +126,36 @@ html {
   background-clip: text;
 }
 
+/* ── Navy gradient (deep, multi-stop for richness) ── */
 .bg-gradient-navy {
-  background: linear-gradient(135deg, #0A1628 0%, #1E3A5F 100%);
+  background: linear-gradient(160deg, #070F1C 0%, #0A1628 30%, #142240 65%, #1E3A5F 100%);
 }
 
+/* ── Hero-specific premium gradient with radial glow ── */
+.bg-hero-premium {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 40%, rgba(200, 169, 81, 0.06) 0%, transparent 70%),
+    linear-gradient(160deg, #070F1C 0%, #0A1628 30%, #142240 65%, #1E3A5F 100%);
+}
+
+/* ── Subtle grid overlay ── */
 .bg-grid-pattern {
   background-image:
     linear-gradient(rgba(200, 169, 81, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(200, 169, 81, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-size: 48px 48px;
+}
+
+/* ── Focus ring for accessibility on all interactive elements ── */
+:focus-visible {
+  outline: 2px solid #C8A951;
+  outline-offset: 2px;
+}
+
+/* ── Consistent button polish ── */
+button, [role="button"] {
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+button:active, [role="button"]:active {
+  transform: scale(0.98);
 }
