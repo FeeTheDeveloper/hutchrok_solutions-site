@@ -1,0 +1,1 @@
+export { submitIntake } from "./intake";
