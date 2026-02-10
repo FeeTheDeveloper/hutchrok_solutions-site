@@ -74,9 +74,9 @@ export async function POST(
     );
   }
 
-  // 5. Read file buffer
+  // 5. Read file bytes (Web API — no Node Buffer needed)
   const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const bytes = new Uint8Array(arrayBuffer);
 
   // 6. Build storage path: {case_number}/{timestamp}-{filename}
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -85,7 +85,7 @@ export async function POST(
   // 7. Upload to Supabase Storage
   const { error: uploadErr } = await supabase.storage
     .from("case-documents")
-    .upload(storagePath, buffer, {
+    .upload(storagePath, bytes, {
       contentType: file.type,
       upsert: false,
     });

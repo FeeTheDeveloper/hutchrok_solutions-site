@@ -24,7 +24,7 @@ Compliance-first intake system for business formation and filings workflow. Capt
 | Database | Supabase Postgres |
 | File Storage | Supabase Storage (private bucket + signed URLs) |
 | Validation | Zod (shared client/server schema) |
-| Deployment | Vercel-optimized (no server dependencies) |
+| Deployment | Cloudflare Pages (Next.js Functions) |
 
 ---
 
@@ -44,7 +44,7 @@ npm run dev
 
 ## Environment Variables
 
-Create a `.env.local` file in the project root (and set these in the Vercel dashboard for production):
+Create a `.env.local` file in the project root (and set these in the Cloudflare Pages project settings for production):
 
 ```env
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
@@ -261,20 +261,25 @@ Integration approach: Power Automate webhook triggered by Supabase database webh
 
 ---
 
-## Build & Deploy
+## Build & Deploy (Cloudflare Pages)
+
+Cloudflare Pages supports Next.js via the `@cloudflare/next-on-pages` adapter.
 
 ```bash
 # Production build
 npm run build
 
-# Start production server
-npm start
-
-# Deploy to Vercel
-npx vercel --prod
+# Generate Cloudflare Pages output
+npx @cloudflare/next-on-pages
 ```
 
-Vercel auto-detects Next.js — set the three environment variables in the Vercel dashboard and deploy.
+**Cloudflare Pages settings**
+
+- **Build command:** `npm run build && npx @cloudflare/next-on-pages`
+- **Build output directory:** `.vercel/output/static`
+- **Environment variables:** set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `ADMIN_TOKEN` in the project settings
+
+Cloudflare Pages will run the generated Functions for the API routes.
 
 ---
 
