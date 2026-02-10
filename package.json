@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "pages:build": "npx @cloudflare/next-on-pages",
-    "pages:preview": "npx wrangler pages dev .vercel/output/static --compatibility-flag=nodejs_compat"
+    "pages:build": "npx @opennextjs/cloudflare build",
+    "pages:dev": "npx @opennextjs/cloudflare dev",
+    "pages:preview": "npx wrangler dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
