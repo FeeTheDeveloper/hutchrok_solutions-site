@@ -56,7 +56,7 @@ export default function ContactPage() {
                     <div>
                       <p className="font-medium text-navy">Email</p>
                       <p className="text-muted-foreground">
-                        info@hutchroksolutions.com
+                        contact@hutchrok.com
                       </p>
                     </div>
                   </li>
