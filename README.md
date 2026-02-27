@@ -57,6 +57,8 @@ ADMIN_TOKEN=some-strong-random-secret
 | `SUPABASE_URL` | Your Supabase project URL (Settings → API) |
 | `SUPABASE_ANON_KEY` | Supabase anon/public key (Settings → API) |
 | `ADMIN_TOKEN` | Shared secret used to protect the admin console via `?token=...` query param. Replace with real auth (NextAuth, Clerk, etc.) in a future iteration. |
+| `OPS_TOKEN` | Shared secret that Power Automate (or any external caller) sends in the `X-Ops-Token` header to authenticate ops integration endpoints. |
+| `OPS_WEBHOOK_URL` | *(Optional)* Power Automate HTTP-trigger URL. When set, the app emits outbound webhook events on status changes and document inserts. |
 
 > **Never commit `.env.local` to the repository.** The `.gitignore` already excludes it.
 
@@ -123,6 +125,9 @@ A step-by-step walkthrough to demonstrate the full intake-to-filing workflow. Fo
 | `/api/admin/cases/[id]?token=...` | GET/PATCH | Read or update a single case |
 | `/api/cases/[id]/upload?token=...` | POST | Upload a document (multipart, 10 MB max) |
 | `/api/cases/[id]/documents?token=...` | GET/DELETE | List documents / delete a document |
+| `/api/ops/case-linked` | POST | Power Automate → link SharePoint folder to a case |
+| `/api/ops/status-sync` | POST | Power Automate → sync case status from M365 |
+| `/api/ops/doc-published` | POST | Power Automate → mark a document as published to SharePoint |
 
 ---
 
@@ -154,6 +159,9 @@ Three tables in Supabase Postgres (see [`lib/db/schema.sql`](lib/db/schema.sql) 
 | `assigned_to` | text | Team member name |
 | `due_date` | date | Target completion date |
 | `notes` | text | Admin notes |
+| `sharepoint_folder_url` | text | URL of the SharePoint case folder (set by ops integration) |
+| `ms_list_item_id` | text | Microsoft Lists item ID (set by ops integration) |
+| `ops_synced_at` | timestamptz | Timestamp of last ops sync event |
 | `created_at` | timestamptz | Case creation time |
 | `updated_at` | timestamptz | Auto-updated on change |
 
@@ -167,6 +175,7 @@ Three tables in Supabase Postgres (see [`lib/db/schema.sql`](lib/db/schema.sql) 
 | `mime` | text | MIME type |
 | `size` | int | Bytes |
 | `storage_path` | text | Path in Supabase Storage bucket |
+| `sharepoint_item_id` | text | SharePoint item ID (set by ops integration) |
 | `uploaded_at` | timestamptz | Upload timestamp |
 
 ---
@@ -258,6 +267,143 @@ The current system handles intake, case management, and document storage. The ne
 | Team assignment | **Teams** | Post to a channel when a case is assigned or escalated |
 
 Integration approach: Power Automate webhook triggered by Supabase database webhooks or a Next.js API route that calls the Microsoft Graph API on case status changes.
+
+---
+
+## Microsoft 365 Ops Wiring
+
+Three inbound API routes allow Power Automate (or any webhook caller) to push M365 state back into the app. An outbound webhook emitter notifies Power Automate when events happen inside the app.
+
+### 1. Environment Variables
+
+Add these to `.env.local` (and to your Cloudflare Pages project settings):
+
+```env
+# Shared secret – Power Automate sends this in the X-Ops-Token header
+OPS_TOKEN=generate-a-strong-random-secret
+
+# (Optional) Power Automate HTTP-trigger URL for outbound events
+OPS_WEBHOOK_URL=https://prod-xx.westus.logic.azure.com:443/workflows/...
+```
+
+### 2. Database Migration
+
+Run [`lib/db/schema-ops.sql`](lib/db/schema-ops.sql) in the Supabase SQL Editor to add the new columns:
+
+```sql
+alter table filing_cases
+  add column if not exists sharepoint_folder_url text,
+  add column if not exists ms_list_item_id       text,
+  add column if not exists ops_synced_at          timestamptz;
+
+alter table case_documents
+  add column if not exists sharepoint_item_id text;
+```
+
+### 3. Inbound API Routes (Power Automate → App)
+
+All three routes require the `X-Ops-Token` header.
+
+#### POST `/api/ops/case-linked`
+
+Called after Power Automate creates a SharePoint folder for a case.
+
+```json
+{
+  "case_id": "b1c2d3e4-...",
+  "sharepoint_folder_url": "https://yourtenant.sharepoint.com/sites/Cases/Shared%20Documents/HSG-2026-0001",
+  "ms_list_item_id": "42"
+}
+```
+
+Response:
+
+```json
+{ "ok": true, "case": { "id": "...", "case_number": "HSG-2026-0001", "sharepoint_folder_url": "...", "ms_list_item_id": "42", "ops_synced_at": "..." } }
+```
+
+#### POST `/api/ops/status-sync`
+
+Called when a case status changes in Microsoft Lists / Planner.
+
+```json
+{
+  "case_id": "b1c2d3e4-...",
+  "status": "IN_PROGRESS",
+  "ms_list_item_id": "42"
+}
+```
+
+Response:
+
+```json
+{ "ok": true, "case": { "id": "...", "case_number": "HSG-2026-0001", "status": "IN_PROGRESS", "ops_synced_at": "..." } }
+```
+
+#### POST `/api/ops/doc-published`
+
+Called after a document is copied to SharePoint.
+
+```json
+{
+  "case_id": "b1c2d3e4-...",
+  "document_id": "a1b2c3d4-...",
+  "sharepoint_item_id": "item-id-from-graph"
+}
+```
+
+Response:
+
+```json
+{ "ok": true, "document": { "id": "...", "filename": "articles.pdf", "sharepoint_item_id": "item-id-from-graph" } }
+```
+
+### 4. Outbound Webhook (App → Power Automate)
+
+When `OPS_WEBHOOK_URL` is configured, the app fires HTTP POSTs on:
+
+| Event | Trigger |
+| --- | --- |
+| `case.status_changed` | Admin updates case status via PATCH |
+| `case.document_inserted` | (Wire via Supabase Database Webhook on `case_documents` INSERT) |
+| `case.created` | (Wire via Supabase Database Webhook on `filing_cases` INSERT) |
+
+Sample outbound payload:
+
+```json
+{
+  "event": "case.status_changed",
+  "timestamp": "2026-02-27T15:30:00.000Z",
+  "payload": {
+    "case_id": "b1c2d3e4-...",
+    "case_number": "HSG-2026-0001",
+    "old_status": "NEW",
+    "new_status": "IN_REVIEW"
+  }
+}
+```
+
+### 5. Power Automate Setup (Quick Start)
+
+1. **Create an Instant Cloud Flow** with the trigger **"When an HTTP request is received"**.
+2. Copy the generated URL → set it as `OPS_WEBHOOK_URL` in your environment.
+3. Add a **Parse JSON** step with the schema above.
+4. Branch on `event` to route to different actions:
+   - `case.status_changed` → update a Microsoft List item, send a Teams notification
+   - `case.created` → create a SharePoint folder, call `/api/ops/case-linked` to store the URL
+5. For the return call, add an **HTTP** action:
+   - Method: `POST`
+   - URL: `https://yoursite.com/api/ops/case-linked`
+   - Headers: `X-Ops-Token: <your OPS_TOKEN value>`
+   - Body: the JSON shown above
+
+### 6. Admin UI
+
+The case detail page (`/admin/cases/[id]`) now displays:
+
+- **SharePoint Folder** link (opens in new tab) when `sharepoint_folder_url` is set
+- **Last ops sync** timestamp when `ops_synced_at` is set
+- **MS List ID** badge when `ms_list_item_id` is set
 
 ---
 

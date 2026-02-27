@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CASE_STATUSES, type FilingCase, type CaseStatus, type CaseDocument, ALLOWED_UPLOAD_TYPES, MAX_UPLOAD_SIZE } from "@/lib/types";
-import { ArrowLeft, Save, ShieldAlert, Loader2, Upload, FileText, Image, Trash2, Download } from "lucide-react";
+import { ArrowLeft, Save, ShieldAlert, Loader2, Upload, FileText, Image, Trash2, Download, ExternalLink, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
 export default function CaseDetailPage() {
@@ -300,6 +300,38 @@ function CaseDetailContent() {
             </p>
           </div>
         </div>
+
+        {/* Microsoft 365 Ops info */}
+        {(filing.sharepoint_folder_url || filing.ops_synced_at) && (
+          <Card className="mb-6">
+            <CardContent className="py-4">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                {filing.sharepoint_folder_url && (
+                  <a
+                    href={filing.sharepoint_folder_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-blue-700 hover:underline font-medium"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    SharePoint Folder
+                  </a>
+                )}
+                {filing.ops_synced_at && (
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Last ops sync: {new Date(filing.ops_synced_at).toLocaleString()}
+                  </span>
+                )}
+                {filing.ms_list_item_id && (
+                  <span className="text-xs text-muted-foreground">
+                    MS List ID: <code className="bg-muted px-1 py-0.5 rounded">{filing.ms_list_item_id}</code>
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Intake info */}

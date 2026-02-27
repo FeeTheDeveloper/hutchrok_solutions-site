@@ -38,6 +38,10 @@ export interface FilingCase {
   assigned_to: string | null;
   due_date: string | null;
   notes: string | null;
+  // Microsoft 365 Ops integration
+  sharepoint_folder_url: string | null;
+  ms_list_item_id: string | null;
+  ops_synced_at: string | null;
   // Joined from intake_submissions
   intake_submissions?: {
     name: string;
@@ -59,6 +63,8 @@ export interface CaseDocument {
   size: number;
   storage_path: string;
   uploaded_at: string;
+  /** SharePoint item ID set by ops integration */
+  sharepoint_item_id: string | null;
   /** Populated client-side from signed URL */
   download_url?: string;
 }

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { CASE_STATUSES } from "@/lib/types";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
+import { emitOpsEvent } from "@/lib/services/ops-webhook";
 
 function isAuthorized(request: NextRequest): boolean {
   const token =
@@ -93,6 +94,16 @@ export async function PATCH(
   if (error) {
     console.error("[api/admin/cases] Update error:", error.code, error.message);
     return apiError(ErrorCode.INTERNAL_ERROR, "Failed to update case.", 500);
+  }
+
+  // Emit ops webhook when status changes
+  if (updates.status) {
+    emitOpsEvent("case.status_changed", {
+      case_id: id,
+      case_number: data.case_number,
+      old_status: body._old_status ?? null,
+      new_status: updates.status,
+    });
   }
 
   return apiSuccess({ case: data });
