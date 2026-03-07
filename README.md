@@ -24,7 +24,7 @@ Compliance-first intake system for business formation and filings workflow. Capt
 | Database | Supabase Postgres |
 | File Storage | Supabase Storage (private bucket + signed URLs) |
 | Validation | Zod (shared client/server schema) |
-| Deployment | Cloudflare Pages (Next.js Functions) |
+| Deployment | Vercel |
 
 ---
 
@@ -44,7 +44,7 @@ npm run dev
 
 ## Environment Variables
 
-Create a `.env.local` file in the project root (and set these in the Cloudflare Pages project settings for production):
+Create a `.env.local` file in the project root (and set these in your Vercel project settings for production):
 
 ```env
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
@@ -89,21 +89,21 @@ A step-by-step walkthrough to demonstrate the full intake-to-filing workflow. Fo
 
 ### 2. Open the Admin Console
 
-4. Visit **`/admin?token=YOUR_ADMIN_TOKEN`**
-5. The case list shows the new submission with status `NEW`
+1. Visit **`/admin?token=YOUR_ADMIN_TOKEN`**
+2. The case list shows the new submission with status `NEW`
 
 ### 3. Manage the Case
 
-6. Click the case row → opens **`/admin/cases/[id]?token=...`**
-7. Update status to `IN_REVIEW`, add notes, set a due date
-8. Save changes — verify they persist on reload
+1. Click the case row → opens **`/admin/cases/[id]?token=...`**
+2. Update status to `IN_REVIEW`, add notes, set a due date
+3. Save changes — verify they persist on reload
 
 ### 4. Upload a Document
 
-9. On the case detail page, scroll to **Documents**
-10. Upload a PDF or image (max 10 MB)
-11. Verify it appears in the list with a download link (signed URL)
-12. Optionally delete the document to verify removal
+1. On the case detail page, scroll to **Documents**
+2. Upload a PDF or image (max 10 MB)
+3. Verify it appears in the list with a download link (signed URL)
+4. Optionally delete the document to verify removal
 
 ---
 
@@ -205,7 +205,7 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 
 ## Project Structure
 
-```
+```text
 ├── app/
 │   ├── layout.tsx                  # Root layout (nav + footer)
 │   ├── page.tsx                    # Home page
@@ -310,7 +310,7 @@ Three inbound API routes allow Power Automate (or any webhook caller) to push M3
 
 ### 1. Environment Variables
 
-Add these to `.env.local` (and to your Cloudflare Pages project settings):
+Add these to `.env.local` (and to your Vercel project settings):
 
 ```env
 # Shared secret – Power Automate sends this in the X-Ops-Token header
@@ -441,25 +441,23 @@ The case detail page (`/admin/cases/[id]`) now displays:
 
 ---
 
-## Build & Deploy (Cloudflare Pages)
+## Build & Deploy (Vercel)
 
-Cloudflare Pages supports Next.js via the `@cloudflare/next-on-pages` adapter.
+Vercel has first-class support for Next.js — no adapter needed. Push to `main` and Vercel builds + deploys automatically.
 
 ```bash
-# Production build
+# Production build (local verification)
 npm run build
-
-# Generate Cloudflare Pages output
-npx @cloudflare/next-on-pages
 ```
 
-**Cloudflare Pages settings**
+### Vercel Project Settings
 
-- **Build command:** `npm run build && npx @cloudflare/next-on-pages`
-- **Build output directory:** `.vercel/output/static`
-- **Environment variables:** set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `ADMIN_TOKEN` in the project settings
+- **Framework Preset:** Next.js (auto-detected)
+- **Build command:** `npm run build` (default)
+- **Output directory:** `.next` (default)
+- **Environment variables:** set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `ADMIN_TOKEN`, and `OPS_TOKEN` in Settings → Environment Variables
 
-Cloudflare Pages will run the generated Functions for the API routes.
+Vercel automatically handles serverless functions for API routes and edge middleware.
 
 ---
 
