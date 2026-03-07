@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
+import { ConciergeFloating } from "@/components/concierge/hutchrok-concierge";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,25 +17,26 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Hutchrok Solutions Group | Veteran-Owned Business Enablement",
+    default: "Hutchrok Solutions Group | Free Texas LLC Filing for Veterans",
     template: "%s | Hutchrok Solutions Group",
   },
   description:
-    "Hutchrok Solutions Group is a veteran-owned solutions firm delivering compliant business formation, operational structuring, and execution support for entrepreneurs, startups, and mission-driven organizations.",
+    "Free Texas LLC formation for qualified U.S. military veterans. Veteran-owned, veteran-operated. We handle your Certificate of Formation with the Texas Secretary of State at no cost.",
   keywords: [
-    "business formation",
-    "LLC formation",
+    "free LLC filing",
+    "veteran LLC",
+    "Texas LLC formation",
     "veteran-owned",
-    "compliance",
-    "operational structuring",
+    "TVC verification",
+    "free business formation",
     "Dallas TX",
-    "business services",
+    "Texas veterans",
   ],
   authors: [{ name: "Hutchrok Solutions Group LLC" }],
   openGraph: {
-    title: "Hutchrok Solutions Group | Veteran-Owned Business Enablement",
+    title: "Hutchrok Solutions Group | Free Texas LLC Filing for Veterans",
     description:
-      "Compliant business formation, operational structuring, and execution support.",
+      "Free Texas LLC formation for qualified veterans. No filing fees, no service fees.",
     type: "website",
     locale: "en_US",
   },
@@ -53,6 +55,7 @@ export default function RootLayout({
         <Navbar />
         <main className="min-h-screen">{children}</main>
         <Footer />
+        <ConciergeFloating />
       </body>
     </html>
   );

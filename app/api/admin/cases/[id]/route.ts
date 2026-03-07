@@ -2,14 +2,12 @@ import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { CASE_STATUSES } from "@/lib/types";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
-import { emitOpsEvent } from "@/lib/services/ops-webhook";
+import { requireAdmin, isValidUUID } from "@/lib/auth";
+import { emitStatusChangeEvents } from "@/lib/notifications";
+import { recordCaseUpdate, AUDIT_ACTIONS } from "@/lib/audit";
+import { recordAudit } from "@/lib/audit/logger";
 
-function isAuthorized(request: NextRequest): boolean {
-  const token =
-    request.nextUrl.searchParams.get("token") ||
-    request.headers.get("authorization")?.replace("Bearer ", "");
-  return !!token && token === process.env.ADMIN_TOKEN;
-}
+const INTAKE_JOIN = `*, intake_submissions ( name, email, phone, business_stage, service_needed, message, veteran_status, vvl_status, business_name, entity_type, business_purpose, principal_address, mailing_address, texas_confirmed, launch_timeline, all_owners_veterans, fully_veteran_owned, owner_details, organizer_name, organizer_title, registered_agent_preference, operator_review_confirmed, eligibility_answers )`;
 
 /**
  * GET /api/admin/cases/[id]?token=...
@@ -19,18 +17,18 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorized(request)) {
-    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
-  }
+  const denied = requireAdmin(request);
+  if (denied) return denied;
 
   const { id } = await params;
+  if (!isValidUUID(id)) {
+    return apiError(ErrorCode.BAD_REQUEST, "Invalid case ID format.", 400);
+  }
   const supabase = getSupabaseServer();
 
   const { data, error } = await supabase
     .from("filing_cases")
-    .select(
-      `*, intake_submissions ( name, email, phone, business_stage, service_needed, message )`
-    )
+    .select(INTAKE_JOIN)
     .eq("id", id)
     .single();
 
@@ -49,11 +47,13 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorized(request)) {
-    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
-  }
+  const denied = requireAdmin(request);
+  if (denied) return denied;
 
   const { id } = await params;
+  if (!isValidUUID(id)) {
+    return apiError(ErrorCode.BAD_REQUEST, "Invalid case ID format.", 400);
+  }
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -75,6 +75,9 @@ export async function PATCH(
   if (body.notes !== undefined) {
     updates.notes = body.notes || null;
   }
+  if (body.handoff_data !== undefined) {
+    updates.handoff_data = body.handoff_data || null;
+  }
 
   if (Object.keys(updates).length === 0) {
     return apiError(ErrorCode.BAD_REQUEST, "No valid fields to update.", 400);
@@ -86,9 +89,7 @@ export async function PATCH(
     .from("filing_cases")
     .update(updates)
     .eq("id", id)
-    .select(
-      `*, intake_submissions ( name, email, phone, business_stage, service_needed, message )`
-    )
+    .select(INTAKE_JOIN)
     .single();
 
   if (error) {
@@ -96,15 +97,23 @@ export async function PATCH(
     return apiError(ErrorCode.INTERNAL_ERROR, "Failed to update case.", 500);
   }
 
-  // Emit ops webhook when status changes
+  // Emit lifecycle events when status changes
   if (updates.status) {
-    emitOpsEvent("case.status_changed", {
-      case_id: id,
-      case_number: data.case_number,
-      old_status: body._old_status ?? null,
-      new_status: updates.status,
-    });
+    emitStatusChangeEvents(
+      id,
+      data.case_number,
+      (body._old_status as string) ?? "",
+      updates.status as string,
+    );
   }
+
+  // Record audit trail (fire-and-forget)
+  recordCaseUpdate(id, "operator", {
+    status: body._old_status ?? data.status,
+    assigned_to: body._old_assigned_to ?? null,
+    due_date: body._old_due_date ?? null,
+    notes: body._old_notes ?? null,
+  }, updates);
 
   return apiSuccess({ case: data });
 }

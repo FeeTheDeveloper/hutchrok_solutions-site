@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { validateIntake } from "@/lib/validation";
+import { validateIntake, validateVeteranIntake } from "@/lib/validation";
 import { rateLimit } from "@/lib/rate-limit";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Parse + validate with Zod ──
+    // ── Parse body ──
     let body: unknown;
     try {
       body = await request.json();
@@ -67,80 +67,19 @@ export async function POST(request: NextRequest) {
       return apiError(ErrorCode.BAD_REQUEST, "Invalid JSON body.", 400);
     }
 
-    const validation = validateIntake(body);
-    if (!validation.success) {
-      return apiError(
-        ErrorCode.VALIDATION_ERROR,
-        "Please fix the highlighted fields.",
-        400,
-        validation.fieldErrors
-      );
-    }
+    // ── Detect intake type and validate ──
+    const isVeteranIntake =
+      body !== null &&
+      typeof body === "object" &&
+      "veteranStatus" in (body as Record<string, unknown>);
 
-    const data = validation.data!;
-
-    // ── Persist to Supabase ──
     const supabase = getSupabaseServer();
 
-    // 1. Insert intake submission
-    const { data: intake, error: intakeError } = await supabase
-      .from("intake_submissions")
-      .insert({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        business_stage: data.businessStage,
-        service_needed: data.serviceNeeded,
-        message: data.message || null,
-      })
-      .select("id")
-      .single();
-
-    if (intakeError || !intake) {
-      // Log DB error details but never PII
-      console.error("[api/intake] Supabase insert error:", intakeError?.code, intakeError?.message);
-      return apiError(
-        ErrorCode.INTERNAL_ERROR,
-        "Failed to save submission. Please try again.",
-        500
-      );
+    if (isVeteranIntake) {
+      return handleVeteranIntake(body, supabase);
     }
-
-    // 2. Create filing case linked to the intake
-    const caseNumber = await generateCaseNumber(supabase);
-
-    const { data: filingCase, error: caseError } = await supabase
-      .from("filing_cases")
-      .insert({
-        intake_id: intake.id,
-        case_number: caseNumber,
-        status: "NEW",
-      })
-      .select("id, case_number")
-      .single();
-
-    if (caseError || !filingCase) {
-      console.error("[api/intake] Case creation error:", caseError?.code, caseError?.message);
-      // Intake was saved; return partial success
-      return apiSuccess(
-        { intakeId: intake.id, caseNumber: null, caseId: null },
-        201
-      );
-    }
-
-    if (!isProd) {
-      console.log("[api/intake] Created case:", filingCase.case_number);
-    }
-
-    return apiSuccess(
-      {
-        caseNumber: filingCase.case_number,
-        caseId: filingCase.id,
-      },
-      201
-    );
+    return handleLegacyIntake(body, supabase);
   } catch (error) {
-    // Never log the raw error object in prod (may contain PII from body)
     if (isProd) {
       console.error("[api/intake] Unhandled error");
     } else {
@@ -148,4 +87,187 @@ export async function POST(request: NextRequest) {
     }
     return apiError(ErrorCode.BAD_REQUEST, "Invalid request.", 400);
   }
+}
+
+// ── Veteran filing intake path ──
+
+async function handleVeteranIntake(
+  body: unknown,
+  supabase: ReturnType<typeof getSupabaseServer>
+) {
+  const validation = validateVeteranIntake(body);
+  if (!validation.success) {
+    return apiError(
+      ErrorCode.VALIDATION_ERROR,
+      "Please fix the highlighted fields.",
+      400,
+      validation.fieldErrors
+    );
+  }
+
+  const data = validation.data!;
+
+  // 1. Insert intake submission with veteran-specific fields
+  const { data: intake, error: intakeError } = await supabase
+    .from("intake_submissions")
+    .insert({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      message: data.notes || null,
+      // Legacy fields populated for backward compatibility
+      business_stage: "veteran-filing",
+      service_needed: "formation",
+      // Veteran fields
+      veteran_status: data.veteranStatus,
+      vvl_status: data.vvlStatus,
+      business_name: data.businessName,
+      entity_type: data.entityType,
+      business_purpose: data.businessPurpose,
+      principal_address: data.principalAddress,
+      mailing_address: data.mailingAddress || null,
+      texas_confirmed: data.texasConfirmed,
+      launch_timeline: data.launchTimeline,
+      all_owners_veterans: data.allOwnersVeterans,
+      fully_veteran_owned: data.fullyVeteranOwned,
+      owner_details: data.ownerDetails,
+      organizer_name: data.organizerName,
+      organizer_title: data.organizerTitle || null,
+      registered_agent_preference: data.registeredAgentPreference,
+      operator_review_confirmed: data.operatorReviewConfirmed,
+      eligibility_answers: data.eligibilityAnswers || null,
+    })
+    .select("id")
+    .single();
+
+  if (intakeError || !intake) {
+    console.error(
+      "[api/intake] Veteran intake insert error:",
+      intakeError?.code,
+      intakeError?.message
+    );
+    return apiError(
+      ErrorCode.INTERNAL_ERROR,
+      "Failed to save submission. Please try again.",
+      500
+    );
+  }
+
+  // 2. Create filing case linked to the intake
+  const caseNumber = await generateCaseNumber(supabase);
+
+  const { data: filingCase, error: caseError } = await supabase
+    .from("filing_cases")
+    .insert({
+      intake_id: intake.id,
+      case_number: caseNumber,
+      status: "LEAD",
+    })
+    .select("id, case_number")
+    .single();
+
+  if (caseError || !filingCase) {
+    console.error(
+      "[api/intake] Case creation error:",
+      caseError?.code,
+      caseError?.message
+    );
+    return apiSuccess(
+      { intakeId: intake.id, caseNumber: null, caseId: null },
+      201
+    );
+  }
+
+  if (!isProd) {
+    console.log("[api/intake] Created veteran case:", filingCase.case_number);
+  }
+
+  return apiSuccess(
+    {
+      caseNumber: filingCase.case_number,
+      caseId: filingCase.id,
+    },
+    201
+  );
+}
+
+// ── Legacy intake path (preserved for backward compatibility) ──
+
+async function handleLegacyIntake(
+  body: unknown,
+  supabase: ReturnType<typeof getSupabaseServer>
+) {
+  const validation = validateIntake(body);
+  if (!validation.success) {
+    return apiError(
+      ErrorCode.VALIDATION_ERROR,
+      "Please fix the highlighted fields.",
+      400,
+      validation.fieldErrors
+    );
+  }
+
+  const data = validation.data!;
+
+  const { data: intake, error: intakeError } = await supabase
+    .from("intake_submissions")
+    .insert({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      business_stage: data.businessStage,
+      service_needed: data.serviceNeeded,
+      message: data.message || null,
+    })
+    .select("id")
+    .single();
+
+  if (intakeError || !intake) {
+    console.error(
+      "[api/intake] Supabase insert error:",
+      intakeError?.code,
+      intakeError?.message
+    );
+    return apiError(
+      ErrorCode.INTERNAL_ERROR,
+      "Failed to save submission. Please try again.",
+      500
+    );
+  }
+
+  const caseNumber = await generateCaseNumber(supabase);
+
+  const { data: filingCase, error: caseError } = await supabase
+    .from("filing_cases")
+    .insert({
+      intake_id: intake.id,
+      case_number: caseNumber,
+      status: "LEAD",
+    })
+    .select("id, case_number")
+    .single();
+
+  if (caseError || !filingCase) {
+    console.error(
+      "[api/intake] Case creation error:",
+      caseError?.code,
+      caseError?.message
+    );
+    return apiSuccess(
+      { intakeId: intake.id, caseNumber: null, caseId: null },
+      201
+    );
+  }
+
+  if (!isProd) {
+    console.log("[api/intake] Created case:", filingCase.case_number);
+  }
+
+  return apiSuccess(
+    {
+      caseNumber: filingCase.case_number,
+      caseId: filingCase.id,
+    },
+    201
+  );
 }

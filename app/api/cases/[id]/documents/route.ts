@@ -1,13 +1,8 @@
 import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
-
-function isAuthorized(request: NextRequest): boolean {
-  const token =
-    request.nextUrl.searchParams.get("token") ||
-    request.headers.get("authorization")?.replace("Bearer ", "");
-  return !!token && token === process.env.ADMIN_TOKEN;
-}
+import { requireAdmin, isValidUUID } from "@/lib/auth";
+import { recordAudit, AUDIT_ACTIONS } from "@/lib/audit";
 
 /**
  * GET /api/cases/[id]/documents?token=...
@@ -17,11 +12,13 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorized(request)) {
-    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
-  }
+  const denied = requireAdmin(request);
+  if (denied) return denied;
 
   const { id: caseId } = await params;
+  if (!isValidUUID(caseId)) {
+    return apiError(ErrorCode.BAD_REQUEST, "Invalid case ID format.", 400);
+  }
   const supabase = getSupabaseServer();
 
   // Fetch document records
@@ -61,15 +58,17 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorized(request)) {
-    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
-  }
+  const denied = requireAdmin(request);
+  if (denied) return denied;
 
   const { id: caseId } = await params;
-  const docId = request.nextUrl.searchParams.get("docId");
+  if (!isValidUUID(caseId)) {
+    return apiError(ErrorCode.BAD_REQUEST, "Invalid case ID format.", 400);
+  }
 
-  if (!docId) {
-    return apiError(ErrorCode.BAD_REQUEST, "Missing docId query parameter.", 400);
+  const docId = request.nextUrl.searchParams.get("docId");
+  if (!docId || !isValidUUID(docId)) {
+    return apiError(ErrorCode.BAD_REQUEST, "Missing or invalid docId.", 400);
   }
 
   const supabase = getSupabaseServer();
@@ -105,6 +104,15 @@ export async function DELETE(
     console.error("[api/cases/documents] DB delete error:", dbErr.message);
     return apiError(ErrorCode.INTERNAL_ERROR, "Failed to delete document record.", 500);
   }
+
+  // Audit trail (fire-and-forget)
+  recordAudit({
+    case_id: caseId,
+    action: AUDIT_ACTIONS.DOCUMENT_DELETED,
+    actor: "operator",
+    old_value: doc.storage_path,
+    new_value: null,
+  });
 
   return apiSuccess({});
 }

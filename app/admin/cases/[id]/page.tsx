@@ -21,8 +21,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CASE_STATUSES, type FilingCase, type CaseStatus, type CaseDocument, ALLOWED_UPLOAD_TYPES, MAX_UPLOAD_SIZE } from "@/lib/types";
-import { ArrowLeft, Save, ShieldAlert, Loader2, Upload, FileText, Image, Trash2, Download, ExternalLink, RefreshCw } from "lucide-react";
+import {
+  CASE_STATUSES,
+  QUICK_ACTIONS,
+  LAUNCH_SERVICE_OPTIONS,
+  LAUNCH_SERVICE_LABELS,
+  type FilingCase,
+  type CaseStatus,
+  type CaseDocument,
+  type OwnerDetail,
+  type HandoffData,
+  ALLOWED_UPLOAD_TYPES,
+  MAX_UPLOAD_SIZE,
+} from "@/lib/types";
+import {
+  ArrowLeft,
+  Save,
+  ShieldAlert,
+  Loader2,
+  Upload,
+  FileText,
+  Image,
+  Trash2,
+  Download,
+  ExternalLink,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  User,
+  Building2,
+  Users,
+  FileCheck,
+  MessageSquare,
+  Clock,
+  CalendarDays,
+  Zap,
+  Rocket,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function CaseDetailPage() {
@@ -40,21 +75,47 @@ export default function CaseDetailPage() {
 }
 
 const STATUS_COLORS: Record<CaseStatus, string> = {
-  NEW: "bg-blue-100 text-blue-800 border-blue-200",
+  LEAD: "bg-slate-100 text-slate-800 border-slate-200",
+  ELIGIBILITY_PENDING: "bg-amber-100 text-amber-800 border-amber-200",
+  VVL_PENDING: "bg-orange-100 text-orange-800 border-orange-200",
+  READY_FOR_INTAKE: "bg-blue-100 text-blue-800 border-blue-200",
   IN_REVIEW: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  NEEDS_INFO: "bg-orange-100 text-orange-800 border-orange-200",
-  IN_PROGRESS: "bg-purple-100 text-purple-800 border-purple-200",
-  FILED: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  READY_FOR_FILING: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  SUBMITTED: "bg-purple-100 text-purple-800 border-purple-200",
+  ACCEPTED: "bg-emerald-100 text-emerald-800 border-emerald-200",
   COMPLETED: "bg-green-100 text-green-800 border-green-200",
 };
 
 const STATUS_LABELS: Record<CaseStatus, string> = {
-  NEW: "New",
+  LEAD: "Lead",
+  ELIGIBILITY_PENDING: "Eligibility Pending",
+  VVL_PENDING: "VVL Pending",
+  READY_FOR_INTAKE: "Ready for Intake",
   IN_REVIEW: "In Review",
-  NEEDS_INFO: "Needs Info",
-  IN_PROGRESS: "In Progress",
-  FILED: "Filed",
+  READY_FOR_FILING: "Ready for Filing",
+  SUBMITTED: "Submitted",
+  ACCEPTED: "Accepted",
   COMPLETED: "Completed",
+};
+
+const VVL_LABELS: Record<string, string> = {
+  have_vvl: "Has VVL",
+  applied: "Applied — Waiting on TVC",
+  not_started: "Not Started",
+};
+
+const TIMELINE_LABELS: Record<string, string> = {
+  asap: "ASAP",
+  "1_3_months": "1–3 months",
+  "3_6_months": "3–6 months",
+  "6_plus_months": "6+ months",
+  not_sure: "Not sure",
+};
+
+const RA_LABELS: Record<string, string> = {
+  self: "Self",
+  hutchrok: "Hutchrok recommended",
+  other: "Already has one",
 };
 
 function CaseDetailContent() {
@@ -74,15 +135,24 @@ function CaseDetailContent() {
   } | null>(null);
 
   // Editable fields
-  const [status, setStatus] = useState<CaseStatus>("NEW");
+  const [status, setStatus] = useState<CaseStatus>("LEAD");
   const [assignedTo, setAssignedTo] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [handoffData, setHandoffData] = useState<HandoffData>({
+    servicesInterested: [],
+    recommendedService: null,
+    launchReady: false,
+    handoffNotes: null,
+  });
 
   // Documents
   const [documents, setDocuments] = useState<CaseDocument[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [uploadMsg, setUploadMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [uploadMsg, setUploadMsg] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const fetchCase = useCallback(async () => {
     setLoading(true);
@@ -102,6 +172,12 @@ function CaseDetailContent() {
       setAssignedTo(c.assigned_to ?? "");
       setDueDate(c.due_date ?? "");
       setNotes(c.notes ?? "");
+      setHandoffData(c.handoff_data ?? {
+        servicesInterested: [],
+        recommendedService: null,
+        launchReady: false,
+        handoffNotes: null,
+      });
     } catch {
       console.error("Failed to fetch case");
     } finally {
@@ -139,14 +215,24 @@ function CaseDetailContent() {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    e.target.value = ""; // reset input
+    e.target.value = "";
 
-    if (!ALLOWED_UPLOAD_TYPES.includes(file.type as (typeof ALLOWED_UPLOAD_TYPES)[number])) {
-      setUploadMsg({ type: "error", text: `Invalid file type. Allowed: PDF, JPG, PNG.` });
+    if (
+      !ALLOWED_UPLOAD_TYPES.includes(
+        file.type as (typeof ALLOWED_UPLOAD_TYPES)[number]
+      )
+    ) {
+      setUploadMsg({
+        type: "error",
+        text: `Invalid file type. Allowed: PDF, JPG, PNG.`,
+      });
       return;
     }
     if (file.size > MAX_UPLOAD_SIZE) {
-      setUploadMsg({ type: "error", text: `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 10 MB.` });
+      setUploadMsg({
+        type: "error",
+        text: `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 10 MB.`,
+      });
       return;
     }
 
@@ -202,6 +288,8 @@ function CaseDetailContent() {
             assigned_to: assignedTo,
             due_date: dueDate,
             notes,
+            handoff_data: handoffData,
+            _old_status: filing?.status,
           }),
         }
       );
@@ -212,6 +300,37 @@ function CaseDetailContent() {
       const json = await res.json();
       setFiling(json.case);
       setMessage({ type: "success", text: "Case updated successfully." });
+    } catch {
+      setMessage({ type: "error", text: "Network error." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleQuickAction = async (targetStatus: CaseStatus) => {
+    const oldStatus = filing?.status;
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch(
+        `/api/admin/cases/${caseId}?token=${encodeURIComponent(token)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: targetStatus,
+            _old_status: oldStatus,
+          }),
+        }
+      );
+      if (!res.ok) {
+        setMessage({ type: "error", text: "Quick action failed." });
+        return;
+      }
+      const json = await res.json();
+      setFiling(json.case);
+      setStatus(json.case.status);
+      setMessage({ type: "success", text: `Moved to ${targetStatus.replace(/_/g, " ").toLowerCase()}.` });
     } catch {
       setMessage({ type: "error", text: "Network error." });
     } finally {
@@ -268,23 +387,35 @@ function CaseDetailContent() {
   }
 
   const intake = filing.intake_submissions;
+  const isVeteran = intake?.veteran_status === true;
+  const hasVvl = intake?.vvl_status === "have_vvl";
+  const intakeComplete =
+    isVeteran && !!intake?.business_name && !!intake?.organizer_name;
+  const owners = (intake?.owner_details ?? []) as OwnerDetail[];
+  const eligibility = intake?.eligibility_answers as Record<
+    string,
+    boolean | null
+  > | null;
+
+  // Pipeline position
+  const pipelineIdx = CASE_STATUSES.indexOf(filing.status);
 
   return (
     <div className="min-h-screen bg-cream">
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <div className="container mx-auto px-4 py-12 max-w-5xl">
         {/* Back link */}
         <Link
           href={`/admin?token=${encodeURIComponent(token)}`}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-navy mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to console
+          Back to dashboard
         </Link>
 
         {/* Case header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold font-mono text-navy">
                 {filing.case_number}
               </h1>
@@ -293,6 +424,14 @@ function CaseDetailContent() {
               >
                 {STATUS_LABELS[filing.status]}
               </Badge>
+              {isVeteran && (
+                <Badge
+                  variant="outline"
+                  className="text-xs px-2.5 py-0.5 border-amber-400 text-amber-700"
+                >
+                  Veteran Filing
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               Created {new Date(filing.created_at).toLocaleString()} · Updated{" "}
@@ -300,6 +439,66 @@ function CaseDetailContent() {
             </p>
           </div>
         </div>
+
+        {/* Pipeline progress */}
+        <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-2">
+          {CASE_STATUSES.map((s, i) => {
+            const isCurrent = s === filing.status;
+            const isPast = i < pipelineIdx;
+            return (
+              <div key={s} className="flex items-center gap-1 shrink-0">
+                <div
+                  className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
+                    isCurrent
+                      ? STATUS_COLORS[s]
+                      : isPast
+                        ? "bg-green-50 text-green-700 border-green-200"
+                        : "bg-muted text-muted-foreground border-border"
+                  }`}
+                >
+                  {STATUS_LABELS[s]}
+                </div>
+                {i < CASE_STATUSES.length - 1 && (
+                  <span
+                    className={`text-xs ${isPast ? "text-green-400" : "text-muted-foreground/40"}`}
+                  >
+                    →
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Blocking alerts */}
+        {isVeteran && (!hasVvl || !intakeComplete) && (
+          <Card className="mb-6 border-orange-200 bg-orange-50">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-orange-800">
+                    Blocking Issues
+                  </p>
+                  {!hasVvl && (
+                    <p className="text-sm text-orange-700">
+                      VVL not uploaded — applicant status:{" "}
+                      <span className="font-medium">
+                        {VVL_LABELS[intake?.vvl_status ?? ""] ?? "Unknown"}
+                      </span>
+                    </p>
+                  )}
+                  {!intakeComplete && (
+                    <p className="text-sm text-orange-700">
+                      Intake form incomplete — missing business or ownership
+                      details
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Microsoft 365 Ops info */}
         {(filing.sharepoint_folder_url || filing.ops_synced_at) && (
@@ -320,12 +519,16 @@ function CaseDetailContent() {
                 {filing.ops_synced_at && (
                   <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                     <RefreshCw className="h-3.5 w-3.5" />
-                    Last ops sync: {new Date(filing.ops_synced_at).toLocaleString()}
+                    Last ops sync:{" "}
+                    {new Date(filing.ops_synced_at).toLocaleString()}
                   </span>
                 )}
                 {filing.ms_list_item_id && (
                   <span className="text-xs text-muted-foreground">
-                    MS List ID: <code className="bg-muted px-1 py-0.5 rounded">{filing.ms_list_item_id}</code>
+                    MS List ID:{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">
+                      {filing.ms_list_item_id}
+                    </code>
                   </span>
                 )}
               </div>
@@ -333,25 +536,78 @@ function CaseDetailContent() {
           </Card>
         )}
 
+        {/* ── Quick Actions ── */}
+        {(() => {
+          const available = QUICK_ACTIONS.filter((qa) =>
+            qa.fromStatuses.includes(filing.status)
+          );
+          if (available.length === 0) return null;
+          return (
+            <Card className="mb-6 border-blue-200 bg-blue-50/50">
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <Zap className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-800 mb-3">
+                      Quick Actions
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {available.map((qa) => (
+                        <Button
+                          key={qa.targetStatus}
+                          size="sm"
+                          variant="outline"
+                          disabled={saving}
+                          onClick={() => handleQuickAction(qa.targetStatus)}
+                          className="border-blue-300 text-blue-800 hover:bg-blue-100 hover:border-blue-400"
+                          title={qa.description}
+                        >
+                          {saving ? (
+                            <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                          ) : (
+                            <Zap className="h-3 w-3 mr-1.5" />
+                          )}
+                          {qa.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+        {/* ── MAIN CONTENT GRID ── */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Intake info */}
+          {/* ── 1. Applicant Summary ── */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Intake Submission</CardTitle>
-              <CardDescription>
-                Original form data from the client
-              </CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Applicant
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Field label="Name" value={intake?.name} />
               <Field label="Email" value={intake?.email} />
               <Field label="Phone" value={intake?.phone} />
-              <Field label="Business Stage" value={intake?.business_stage} />
-              <Field label="Service Needed" value={intake?.service_needed} />
+              {!isVeteran && (
+                <>
+                  <Field
+                    label="Business Stage"
+                    value={intake?.business_stage}
+                  />
+                  <Field
+                    label="Service Needed"
+                    value={intake?.service_needed}
+                  />
+                </>
+              )}
               {intake?.message && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">
-                    Message
+                    Notes / Message
                   </p>
                   <p className="text-sm bg-muted/50 p-3 rounded">
                     {intake.message}
@@ -361,15 +617,344 @@ function CaseDetailContent() {
             </CardContent>
           </Card>
 
-          {/* Case management */}
+          {/* ── 2. Eligibility Summary ── */}
+          {isVeteran && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Eligibility
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Field
+                  label="Veteran Status"
+                  value={intake?.veteran_status ? "Yes" : "No"}
+                />
+                <Field
+                  label="Texas Confirmed"
+                  value={
+                    intake?.texas_confirmed === true
+                      ? "Yes"
+                      : intake?.texas_confirmed === false
+                        ? "No"
+                        : "—"
+                  }
+                />
+                <Field
+                  label="All Owners Veterans"
+                  value={
+                    intake?.all_owners_veterans === true
+                      ? "Yes"
+                      : intake?.all_owners_veterans === false
+                        ? "No"
+                        : "—"
+                  }
+                />
+                <Field
+                  label="Fully Veteran-Owned"
+                  value={
+                    intake?.fully_veteran_owned === true
+                      ? "Yes"
+                      : intake?.fully_veteran_owned === false
+                        ? "No"
+                        : "—"
+                  }
+                />
+                {eligibility && Object.keys(eligibility).length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      Quiz Answers
+                    </p>
+                    <div className="space-y-1">
+                      {Object.entries(eligibility).map(([key, val]) => (
+                        <div
+                          key={key}
+                          className="flex items-center justify-between text-xs"
+                        >
+                          <span className="text-muted-foreground capitalize">
+                            {key.replace(/_/g, " ")}
+                          </span>
+                          <span
+                            className={
+                              val === true
+                                ? "text-green-700 font-medium"
+                                : val === false
+                                  ? "text-red-600 font-medium"
+                                  : "text-muted-foreground"
+                            }
+                          >
+                            {val === true
+                              ? "Yes"
+                              : val === false
+                                ? "No"
+                                : "—"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ── 3. Verification (VVL) ── */}
+          {isVeteran && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileCheck className="h-4 w-4" />
+                  Verification (VVL)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  {hasVvl ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 text-orange-500" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {VVL_LABELS[intake?.vvl_status ?? ""] ?? "Unknown"}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {hasVvl
+                    ? "VVL has been provided. Verification criteria met."
+                    : "VVL not yet received. Free filing cannot proceed until the Veteran Verification Letter is uploaded."}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ── 4. Business Formation ── */}
+          {isVeteran && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Business Formation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Field label="Business Name" value={intake?.business_name} />
+                <Field
+                  label="Entity Type"
+                  value={intake?.entity_type?.toUpperCase()}
+                />
+                <Field
+                  label="Business Purpose"
+                  value={intake?.business_purpose}
+                />
+                <Field
+                  label="Principal Address"
+                  value={intake?.principal_address}
+                />
+                {intake?.mailing_address && (
+                  <Field
+                    label="Mailing Address"
+                    value={intake.mailing_address}
+                  />
+                )}
+                <Field
+                  label="Launch Timeline"
+                  value={
+                    TIMELINE_LABELS[intake?.launch_timeline ?? ""] ??
+                    intake?.launch_timeline
+                  }
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ── 5. Ownership & Structure ── */}
+          {isVeteran && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Ownership &amp; Structure
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Field label="Organizer" value={intake?.organizer_name} />
+                {intake?.organizer_title && (
+                  <Field
+                    label="Organizer Title"
+                    value={intake.organizer_title}
+                  />
+                )}
+                <Field
+                  label="Registered Agent"
+                  value={
+                    RA_LABELS[intake?.registered_agent_preference ?? ""] ??
+                    intake?.registered_agent_preference
+                  }
+                />
+                <Field
+                  label="Operator Review Confirmed"
+                  value={intake?.operator_review_confirmed ? "Yes" : "No"}
+                />
+                {owners.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      Owners / Members
+                    </p>
+                    <div className="space-y-1">
+                      {owners.map((o, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between text-sm bg-muted/40 px-3 py-1.5 rounded"
+                        >
+                          <span className="font-medium">{o.name}</span>
+                          <Badge variant="outline" className="text-[10px]">
+                            {o.role}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ── 6. Documents ── */}
+          <Card className={isVeteran ? "" : "lg:col-span-2"}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Documents
+              </CardTitle>
+              <CardDescription>
+                Upload PDFs, JPGs, or PNGs (max 10 MB each)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Upload */}
+              <div className="flex items-center gap-3">
+                <Label
+                  htmlFor="file-upload"
+                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-dashed border-border rounded-md text-sm hover:bg-muted/50 transition-colors"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  {uploading ? "Uploading…" : "Choose file"}
+                </Label>
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="hidden"
+                  onChange={handleUpload}
+                  disabled={uploading}
+                />
+                <span className="text-xs text-muted-foreground">
+                  PDF, JPG, PNG · 10 MB max
+                </span>
+              </div>
+              {uploadMsg && (
+                <p
+                  className={`text-sm font-medium ${
+                    uploadMsg.type === "success"
+                      ? "text-green-700"
+                      : "text-destructive"
+                  }`}
+                >
+                  {uploadMsg.text}
+                </p>
+              )}
+
+              {documents.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No documents uploaded yet.
+                </p>
+              ) : (
+                <div className="divide-y">
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between py-3 gap-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {doc.mime === "application/pdf" ? (
+                          <FileText className="h-5 w-5 text-red-500 shrink-0" />
+                        ) : (
+                          <Image className="h-5 w-5 text-blue-500 shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {doc.filename}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(doc.size / 1024).toFixed(0)} KB ·{" "}
+                            {new Date(doc.uploaded_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {doc.download_url && (
+                          <a
+                            href={doc.download_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors"
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                        )}
+                        <button
+                          onClick={() =>
+                            handleDeleteDoc(doc.id, doc.filename)
+                          }
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-destructive/10 text-destructive transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* ── 7. Internal Notes ── */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Case Management</CardTitle>
-              <CardDescription>Update status and details</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Internal Notes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                id="notes"
+                placeholder="Internal notes about this case…"
+                rows={5}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </CardContent>
+          </Card>
+
+          {/* ── 8. Status & Pipeline ── */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Status &amp; Pipeline
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">Current Status</Label>
                 <Select
                   value={status}
                   onValueChange={(v) => setStatus(v as CaseStatus)}
@@ -386,164 +971,177 @@ function CaseDetailContent() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="assignedTo">Assigned To</Label>
-                <Input
-                  id="assignedTo"
-                  placeholder="e.g., John Doe"
-                  value={assignedTo}
-                  onChange={(e) => setAssignedTo(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Internal notes about this case…"
-                  rows={5}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </div>
-
-              {message && (
-                <p
-                  className={`text-sm font-medium ${
-                    message.type === "success"
-                      ? "text-green-700"
-                      : "text-destructive"
-                  }`}
-                >
-                  {message.text}
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p>
+                  Pipeline: Lead → Eligibility → VVL → Intake → Review → Filing
+                  → Submitted → Accepted → Completed
                 </p>
-              )}
+              </div>
+            </CardContent>
+          </Card>
 
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full"
-              >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                Save Changes
-              </Button>
+          {/* ── 9. Assignment & Due Date ── */}
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Assignment &amp; Due Date
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="assignedTo">Assigned To</Label>
+                  <Input
+                    id="assignedTo"
+                    placeholder="e.g., John Doe"
+                    value={assignedTo}
+                    onChange={(e) => setAssignedTo(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dueDate">Due Date</Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Documents section */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Documents</CardTitle>
-            <CardDescription>
-              Upload PDFs, JPGs, or PNGs (max 10 MB each)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Upload */}
-            <div className="flex items-center gap-3">
-              <Label
-                htmlFor="file-upload"
-                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-dashed border-border rounded-md text-sm hover:bg-muted/50 transition-colors"
-              >
-                {uploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="h-4 w-4" />
-                )}
-                {uploading ? "Uploading…" : "Choose file"}
-              </Label>
-              <input
-                id="file-upload"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                className="hidden"
-                onChange={handleUpload}
-                disabled={uploading}
-              />
-              <span className="text-xs text-muted-foreground">
-                PDF, JPG, PNG · 10 MB max
-              </span>
-            </div>
-            {uploadMsg && (
-              <p
-                className={`text-sm font-medium ${
-                  uploadMsg.type === "success" ? "text-green-700" : "text-destructive"
-                }`}
-              >
-                {uploadMsg.text}
-              </p>
-            )}
-
-            {/* Document list */}
-            {documents.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                No documents uploaded yet.
-              </p>
-            ) : (
-              <div className="divide-y">
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between py-3 gap-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {doc.mime === "application/pdf" ? (
-                        <FileText className="h-5 w-5 text-red-500 shrink-0" />
-                      ) : (
-                        <Image className="h-5 w-5 text-blue-500 shrink-0" />
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {doc.filename}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {(doc.size / 1024).toFixed(0)} KB ·{" "}
-                          {new Date(doc.uploaded_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {doc.download_url && (
-                        <a
-                          href={doc.download_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors"
-                          title="Download"
-                        >
-                          <Download className="h-4 w-4" />
-                        </a>
-                      )}
-                      <button
-                        onClick={() => handleDeleteDoc(doc.id, doc.filename)}
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-destructive/10 text-destructive transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+        {/* ── 10. Launch Services Handoff ── */}
+        {(filing.status === "ACCEPTED" || filing.status === "COMPLETED") && isVeteran && (
+          <Card className="mt-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Rocket className="h-4 w-4" />
+                Launch Services Handoff
+              </CardTitle>
+              <CardDescription>
+                Track post-filing service interest and prepare the handoff
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Service interest checkboxes */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">
+                  Services Interested In
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {LAUNCH_SERVICE_OPTIONS.map((svc) => (
+                    <label
+                      key={svc}
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={handoffData.servicesInterested.includes(svc)}
+                        onChange={(e) => {
+                          setHandoffData((prev) => ({
+                            ...prev,
+                            servicesInterested: e.target.checked
+                              ? [...prev.servicesInterested, svc]
+                              : prev.servicesInterested.filter((s) => s !== svc),
+                          }));
+                        }}
+                        className="rounded border-border"
+                      />
+                      <span>{LAUNCH_SERVICE_LABELS[svc]}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
+
+              {/* Recommended next service */}
+              <div className="space-y-2">
+                <Label htmlFor="recommendedService">Recommended Next Service</Label>
+                <Select
+                  value={handoffData.recommendedService ?? "none"}
+                  onValueChange={(v) =>
+                    setHandoffData((prev) => ({
+                      ...prev,
+                      recommendedService: v === "none" ? null : v as typeof prev.recommendedService,
+                    }))
+                  }
+                >
+                  <SelectTrigger id="recommendedService" className="w-full">
+                    <SelectValue placeholder="Select a service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— None —</SelectItem>
+                    {LAUNCH_SERVICE_OPTIONS.map((svc) => (
+                      <SelectItem key={svc} value={svc}>
+                        {LAUNCH_SERVICE_LABELS[svc]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Launch ready toggle */}
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={handoffData.launchReady}
+                  onChange={(e) =>
+                    setHandoffData((prev) => ({
+                      ...prev,
+                      launchReady: e.target.checked,
+                    }))
+                  }
+                  className="rounded border-border"
+                />
+                <span className="font-medium">
+                  Case is launch-ready for post-filing services
+                </span>
+              </label>
+
+              {/* Handoff notes */}
+              <div className="space-y-2">
+                <Label htmlFor="handoffNotes">Handoff Notes</Label>
+                <Textarea
+                  id="handoffNotes"
+                  placeholder="Internal notes for the launch services handoff…"
+                  rows={3}
+                  value={handoffData.handoffNotes ?? ""}
+                  onChange={(e) =>
+                    setHandoffData((prev) => ({
+                      ...prev,
+                      handoffNotes: e.target.value || null,
+                    }))
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Save bar */}
+        <div className="mt-8 flex items-center gap-4">
+          <Button onClick={handleSave} disabled={saving} className="px-8">
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
             )}
-          </CardContent>
-        </Card>
+            Save Changes
+          </Button>
+          {message && (
+            <p
+              className={`text-sm font-medium ${
+                message.type === "success"
+                  ? "text-green-700"
+                  : "text-destructive"
+              }`}
+            >
+              {message.text}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

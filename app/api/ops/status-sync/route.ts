@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
-import { isOpsAuthorized } from "@/lib/ops-auth";
+import { requireOps } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { CASE_STATUSES } from "@/lib/types";
 
@@ -24,15 +24,14 @@ import { CASE_STATUSES } from "@/lib/types";
 const bodySchema = z.object({
   case_id: z.string().uuid("case_id must be a valid UUID."),
   status: z.enum(CASE_STATUSES, {
-    error: `status must be one of: ${CASE_STATUSES.join(", ")}`,
+    message: `status must be one of: ${CASE_STATUSES.join(", ")}`,
   }),
   ms_list_item_id: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
-  if (!isOpsAuthorized(request)) {
-    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing OPS_TOKEN.", 401);
-  }
+  const denied = requireOps(request);
+  if (denied) return denied;
 
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rl = rateLimit(`ops-status-sync:${ip}`, { limit: 60, windowMs: 60_000 });

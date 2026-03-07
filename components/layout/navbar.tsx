@@ -9,11 +9,12 @@ import { Menu, X } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Home" },
+  { href: "/free-filing", label: "Free Filing" },
+  { href: "/how-it-works", label: "How It Works" },
+  { href: "/verification-help", label: "Verification Help" },
   { href: "/services", label: "Services" },
-  { href: "/formation-filings", label: "Formation & Filings" },
-  { href: "/credit-enablement", label: "Credit Enablement" },
-  { href: "/veteran-owned", label: "Veteran-Owned" },
-  { href: "/mission", label: "Mission" },
+  { href: "/guides", label: "Guides" },
+  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -79,9 +80,9 @@ export default function Navbar() {
 
         {/* CTA + Mobile Toggle — right */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link href="/contact" className="hidden sm:block">
+          <Link href="/free-filing" className="hidden sm:block">
             <Button className="bg-gold hover:bg-gold-dark text-navy font-semibold shadow-sm hover:shadow-md transition-shadow">
-              Start Intake
+              Start My Free Filing
             </Button>
           </Link>
           <button
@@ -119,9 +120,9 @@ export default function Navbar() {
             );
           })}
           <div className="pt-2 pb-1">
-            <Link href="/contact">
+            <Link href="/free-filing">
               <Button className="w-full bg-gold hover:bg-gold-dark text-navy font-semibold h-12 text-[15px]">
-                Start Intake
+                Start My Free Filing
               </Button>
             </Link>
           </div>

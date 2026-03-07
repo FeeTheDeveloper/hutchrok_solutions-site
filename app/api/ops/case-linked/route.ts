@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
-import { isOpsAuthorized } from "@/lib/ops-auth";
+import { requireOps } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 
 /**
@@ -27,9 +27,8 @@ const bodySchema = z.object({
 
 export async function POST(request: NextRequest) {
   // Auth
-  if (!isOpsAuthorized(request)) {
-    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing OPS_TOKEN.", 401);
-  }
+  const denied = requireOps(request);
+  if (denied) return denied;
 
   // Rate-limit (per-IP, generous for service calls)
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";

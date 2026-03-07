@@ -4,41 +4,37 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  FormationIllustration,
-  ComplianceIllustration,
-  AdvisoryIllustration,
-} from "@/components/activity-illustrations";
-import {
   Shield,
   CheckCircle,
-  Building2,
   FileText,
-  Lightbulb,
-  Settings,
   ArrowRight,
-  Users,
+  Star,
+  BadgeCheck,
+  Building2,
+  Globe,
+  Palette,
+  Mail,
+  Server,
+  PenTool,
+  ClipboardList,
   Rocket,
-  TrendingUp,
-  Target,
 } from "lucide-react";
+import { HutchrokConcierge } from "@/components/concierge/hutchrok-concierge";
 
 export default function HomePage() {
   return (
     <>
       {/* ════════════════════════════════════════
-          HERO — Big Logo Splash
+          HERO
           ════════════════════════════════════════ */}
       <section className="relative bg-hero-premium overflow-hidden">
-        {/* Faint grid texture */}
         <div className="bg-grid-pattern absolute inset-0 pointer-events-none" />
-        {/* Subtle radial ring decoration */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.035]">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full border border-gold" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-gold" />
         </div>
 
         <div className="relative mx-auto max-w-5xl px-6 sm:px-8 lg:px-10 py-24 sm:py-32 lg:py-44 flex flex-col items-center text-center">
-          {/* Logo as the headline — generous size, no layout shift */}
           <Image
             src="/brand/logo.png"
             alt="Hutchrok Solutions Group"
@@ -49,34 +45,37 @@ export default function HomePage() {
             sizes="(max-width: 640px) 280px, (max-width: 1024px) 400px, 600px"
           />
 
-          {/* Subline */}
-          <p className="text-lg sm:text-xl lg:text-2xl font-semibold tracking-wide text-gold mb-3">
-            Veteran-Focused Business Enablement
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white mb-4 leading-tight max-w-3xl">
+            Veterans Can Start a Texas LLC for Free
+          </h1>
+
+          <p className="text-sm sm:text-base lg:text-lg text-white/65 mb-6 max-w-2xl leading-relaxed">
+            Hutchrok handles your intake, guides you through TVC verification,
+            prepares your Certificate of Formation, and manages the filing with
+            the Texas Secretary of State — at no cost to you.
           </p>
 
-          {/* Supporting line */}
-          <p className="text-sm sm:text-base lg:text-lg text-white/65 mb-10 max-w-xl leading-relaxed">
-            Compliant formation, operational structuring &amp; execution support.
+          <p className="text-xs sm:text-sm text-gold/70 mb-10 font-medium tracking-wide">
+            Free Texas LLC filing support for qualified veterans. No SOS account needed.
           </p>
 
-          {/* CTAs — stack on mobile, row on sm+ */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md sm:max-w-none">
-            <Link href="/contact" className="w-full sm:w-auto">
+            <Link href="/free-filing" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 className="w-full sm:w-auto bg-gold hover:bg-gold-dark text-navy font-bold text-base px-10 h-12 shadow-lg shadow-gold/10 hover:shadow-gold/20 transition-shadow"
               >
-                Start Intake
+                Start My Free Filing
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/services" className="w-full sm:w-auto">
+            <Link href="/eligibility" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="outline"
                 className="w-full sm:w-auto border-gold/40 text-gold hover:bg-gold/10 font-semibold text-base px-10 h-12"
               >
-                View Services
+                See If I Qualify
               </Button>
             </Link>
           </div>
@@ -87,30 +86,33 @@ export default function HomePage() {
           TRUST BAND
           ════════════════════════════════════════ */}
       <section className="bg-cream border-y border-border/30">
-        <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10 py-10 sm:py-12">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-0 text-center">
+        <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:px-10 py-10 sm:py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-6 text-center">
             {[
               {
-                icon: Settings,
-                title: "Systems-First Execution",
-                desc: "Structured processes from day one — no guesswork.",
+                icon: Shield,
+                title: "Veteran-Focused",
+                desc: "Built by veterans, for veterans. Every filing is handled with the care your service earned.",
               },
               {
-                icon: Shield,
-                title: "Compliance-First Setup",
-                desc: "Every formation built on a compliant foundation.",
+                icon: FileText,
+                title: "Operator-Reviewed Filings",
+                desc: "No automated submissions. A real person reviews and files every Certificate of Formation.",
               },
               {
                 icon: Building2,
-                title: "Built for Scale",
-                desc: "Holdings, subsidiaries, and multi-entity structuring.",
+                title: "Texas-Specific Expertise",
+                desc: "We work exclusively with Texas LLC formations and TVC verification — it's all we do.",
+              },
+              {
+                icon: CheckCircle,
+                title: "No SOS Account Required",
+                desc: "You don't need a Secretary of State account. Hutchrok handles the entire filing process for you.",
               },
             ].map((item, i) => (
               <div
                 key={item.title}
-                className={`flex flex-col items-center gap-3 px-4 ${
-                  i > 0 ? "sm:border-l sm:border-border/40" : ""
-                }`}
+                className="flex flex-col items-center gap-3 px-3"
               >
                 <div className="h-12 w-12 rounded-xl bg-gold/8 flex items-center justify-center">
                   <item.icon className="h-6 w-6 text-gold" />
@@ -126,103 +128,228 @@ export default function HomePage() {
       </section>
 
       {/* ════════════════════════════════════════
-          ACTIVITY VISUALS — Cohesive SVG Cards
+          CONCIERGE — Guided Assistant
           ════════════════════════════════════════ */}
       <section className="section-padding bg-white">
-        <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
-          <div className="text-center mb-12 lg:mb-16">
+        <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10">
+          <div className="text-center mb-8">
             <Badge variant="secondary" className="mb-3 text-gold bg-gold/10 text-xs tracking-wider uppercase">
-              What We Do
+              Guide
             </Badge>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy mb-3 leading-tight">
-              Compliant Business Formation &amp; Operations
+              Not Sure Where to Start?
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
-              Three core competencies, delivered with precision.
+              Tell us where you are in the process and we&apos;ll point you in the right direction.
+            </p>
+          </div>
+          <HutchrokConcierge />
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════
+          HOW IT WORKS — 5 Steps
+          ════════════════════════════════════════ */}
+      <section className="section-padding bg-white">
+        <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10">
+          <div className="text-center mb-12 lg:mb-16">
+            <Badge variant="secondary" className="mb-3 text-gold bg-gold/10 text-xs tracking-wider uppercase">
+              Process
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy mb-3 leading-tight">
+              How It Works
+            </h2>
+            <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
+              Five clear steps from veteran to LLC owner. We guide you at every stage.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {[
               {
-                Illustration: FormationIllustration,
-                title: "Formation & Filings",
-                desc: "LLC and corporate formation, EIN coordination, operating agreements, and state filings — all coordinated for you.",
+                step: 1,
+                title: "Check Eligibility",
+                desc: "Confirm you meet the requirements: U.S. veteran, honorable discharge, Texas LLC.",
+                icon: BadgeCheck,
               },
               {
-                Illustration: ComplianceIllustration,
-                title: "Compliance & Ops Setup",
-                desc: "Registered agent coordination, compliance calendars, record-keeping frameworks, and operational readiness.",
+                step: 2,
+                title: "Get TVC Verified",
+                desc: "Obtain your Veteran Verification Letter from the Texas Veterans Commission.",
+                icon: Shield,
               },
               {
-                Illustration: AdvisoryIllustration,
-                title: "Strategic Advisory",
-                desc: "Entity structuring guidance, holding company strategy, expansion planning, and operational efficiency.",
+                step: 3,
+                title: "Complete Intake",
+                desc: "Provide your LLC details — business name, registered agent, management type.",
+                icon: ClipboardList,
               },
-            ].map((card) => (
+              {
+                step: 4,
+                title: "We Prepare Filing",
+                desc: "Hutchrok prepares your Certificate of Formation and reviews every detail.",
+                icon: FileText,
+              },
+              {
+                step: 5,
+                title: "Launch Your Business",
+                desc: "We file with the Texas SOS. You receive your approved formation documents.",
+                icon: Rocket,
+              },
+            ].map((item) => (
               <div
-                key={card.title}
-                className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl border border-border/50 bg-cream/50 hover:border-gold/30 hover:shadow-md transition-all duration-300"
+                key={item.step}
+                className="relative bg-cream/60 rounded-2xl p-6 border border-border/50 text-center hover:shadow-md hover:border-gold/30 transition-all duration-300"
               >
-                <card.Illustration className="h-28 w-28 sm:h-32 sm:w-32 mb-6" />
-                <h3 className="text-lg font-bold text-navy mb-2">{card.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-                  {card.desc}
+                <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-navy flex items-center justify-center shadow-sm">
+                  <span className="text-base font-bold text-gold">{item.step}</span>
+                </div>
+                <item.icon className="h-7 w-7 text-gold/60 mx-auto mb-2" />
+                <h3 className="text-sm font-bold text-navy mb-1.5">{item.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {item.desc}
                 </p>
               </div>
             ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link href="/how-it-works">
+              <Button variant="outline" className="border-navy/80 text-navy hover:bg-navy hover:text-white font-medium">
+                See Full Process Details
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ════════════════════════════════════════
-          SERVICES OVERVIEW — 4 Cards with badges
+          WHO QUALIFIES
           ════════════════════════════════════════ */}
-      <section className="section-padding bg-cream bg-grid-pattern">
-        <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
+      <section className="section-padding bg-cream">
+        <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10">
           <div className="text-center mb-12 lg:mb-16">
             <Badge variant="secondary" className="mb-3 text-gold bg-gold/10 text-xs tracking-wider uppercase">
-              Our Services
+              Eligibility
             </Badge>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy mb-3 leading-tight">
-              End-to-End Business Enablement
+              Who Qualifies
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
-              From formation through operations, we provide the systems and support
-              your business needs to launch, stay compliant, and scale.
+              This program is built for U.S. military veterans forming a new Texas LLC.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
             {[
               {
-                icon: FileText,
-                tag: "Formation",
-                title: "Business Formation & Structuring",
-                desc: "LLC and corporate formation, EIN coordination, operating agreements, and state filing support.",
+                icon: Star,
+                title: "U.S. Military Veteran",
+                desc: "Honorably discharged from any branch of the U.S. Armed Forces.",
               },
               {
                 icon: Shield,
-                tag: "Compliance",
-                title: "Compliance & Operations Setup",
-                desc: "Registered agent coordination, compliance calendars, and operational readiness from day one.",
+                title: "TVC Verification Letter",
+                desc: "Must obtain (or already hold) a Veteran Verification Letter from the Texas Veterans Commission.",
               },
               {
-                icon: Lightbulb,
-                tag: "Advisory",
-                title: "Strategic Advisory",
-                desc: "Entity structuring guidance, holding company strategy, and expansion planning.",
+                icon: Building2,
+                title: "Texas LLC Only",
+                desc: "Filing a new Texas Limited Liability Company — single or multi-member.",
               },
               {
-                icon: Settings,
-                tag: "Managed",
-                title: "Managed Business Services",
-                desc: "Ongoing filing management, annual report tracking, and operational maintenance.",
+                icon: CheckCircle,
+                title: "One Free Filing",
+                desc: "One free LLC formation per qualified veteran through this program.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="flex items-start gap-4 p-6 rounded-2xl bg-white border border-border/40 hover:border-gold/30 hover:shadow-md transition-all duration-300"
+              >
+                <div className="h-12 w-12 rounded-xl bg-gold/8 flex items-center justify-center shrink-0">
+                  <item.icon className="h-6 w-6 text-gold" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-navy mb-1 text-[15px]">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link href="/free-filing">
+              <Button className="bg-gold hover:bg-gold-dark text-navy font-semibold">
+                See If I Qualify
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════
+          POST-FILING SERVICES — Paid Upsells
+          ════════════════════════════════════════ */}
+      <section className="section-padding bg-white">
+        <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
+          <div className="text-center mb-12 lg:mb-16">
+            <Badge variant="secondary" className="mb-3 text-gold bg-gold/10 text-xs tracking-wider uppercase">
+              After Your LLC
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy mb-3 leading-tight">
+              Launch Your Business the Right Way
+            </h2>
+            <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
+              Your free filing is just the start. Build a professional presence
+              with services designed for new business owners.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              {
+                icon: Globe,
+                title: "Business Website",
+                desc: "A professional, mobile-ready website built for your new LLC — designed to convert visitors into customers.",
+                tag: "Web Development",
+              },
+              {
+                icon: Palette,
+                title: "Brand Identity Package",
+                desc: "Complete visual identity including color palette, typography, and brand guidelines for a cohesive look.",
+                tag: "Branding",
+              },
+              {
+                icon: PenTool,
+                title: "Logo Design",
+                desc: "A custom logo that represents your business and makes a strong first impression across all materials.",
+                tag: "Design",
+              },
+              {
+                icon: Mail,
+                title: "Business Email Setup",
+                desc: "Professional email (you@yourbusiness.com) configured and ready to use from day one.",
+                tag: "Email",
+              },
+              {
+                icon: Server,
+                title: "Domain + Hosting",
+                desc: "Domain registration and reliable hosting setup so your business is live and accessible online.",
+                tag: "Infrastructure",
+              },
+              {
+                icon: FileText,
+                title: "Compliance & Ops Setup",
+                desc: "EIN coordination, operating agreements, registered agent support, and compliance calendar setup.",
+                tag: "Operations",
               },
             ].map((service) => (
               <Card
                 key={service.title}
-                className="border border-border/50 bg-white hover:border-gold/40 hover:shadow-lg transition-all duration-300 group flex flex-col"
+                className="border border-border/50 bg-cream/50 hover:border-gold/40 hover:shadow-lg transition-all duration-300 group flex flex-col"
               >
                 <CardContent className="p-6 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-4">
@@ -244,122 +371,17 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="text-center mt-10">
+          <p className="text-center text-xs text-muted-foreground mt-8">
+            These are optional paid services available after your LLC is filed. Your free filing comes with zero obligations.
+          </p>
+
+          <div className="text-center mt-6">
             <Link href="/services">
               <Button variant="outline" className="border-navy/80 text-navy hover:bg-navy hover:text-white font-medium">
-                Explore All Services
+                View All Services
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════
-          HOW IT WORKS — Numbered circles
-          ════════════════════════════════════════ */}
-      <section className="section-padding bg-white">
-        <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10">
-          <div className="text-center mb-12 lg:mb-16">
-            <Badge variant="secondary" className="mb-3 text-gold bg-gold/10 text-xs tracking-wider uppercase">
-              Process
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy mb-3 leading-tight">
-              How It Works
-            </h2>
-            <p className="text-muted-foreground max-w-md mx-auto text-sm sm:text-base leading-relaxed">
-              A clear, repeatable process designed to get you operational fast.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                step: 1,
-                title: "Intake",
-                desc: "Share your business goals and current stage. We assess your needs and build a tailored plan.",
-                icon: Target,
-              },
-              {
-                step: 2,
-                title: "Build & File",
-                desc: "We handle formation, filings, compliance setup, and operational structuring — all coordinated for you.",
-                icon: Rocket,
-              },
-              {
-                step: 3,
-                title: "Maintain & Scale",
-                desc: "Ongoing support keeps you compliant while you focus on growth. Expand when you're ready.",
-                icon: TrendingUp,
-              },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="relative bg-cream/60 rounded-2xl p-8 border border-border/50 text-center hover:shadow-md hover:border-gold/30 transition-all duration-300"
-              >
-                {/* Numbered circle */}
-                <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-navy flex items-center justify-center shadow-sm">
-                  <span className="text-lg font-bold text-gold">{item.step}</span>
-                </div>
-                <item.icon className="h-8 w-8 text-gold/60 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-navy mb-2">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-[260px] mx-auto">
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════
-          WHO WE SERVE
-          ════════════════════════════════════════ */}
-      <section className="section-padding bg-cream">
-        <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
-          <div className="text-center mb-12 lg:mb-16">
-            <Badge variant="secondary" className="mb-3 text-gold bg-gold/10 text-xs tracking-wider uppercase">
-              Our Clients
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy mb-3 leading-tight">
-              Who We Serve
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              {
-                icon: Shield,
-                title: "Veterans",
-                desc: "Transitioning from service to entrepreneurship with discipline and structure.",
-              },
-              {
-                icon: Users,
-                title: "First-Time Founders",
-                desc: "Building the right foundation from day one — no shortcuts, no gaps.",
-              },
-              {
-                icon: Building2,
-                title: "Small Businesses",
-                desc: "Getting compliant, organized, and positioned for sustainable growth.",
-              },
-              {
-                icon: TrendingUp,
-                title: "Scaling Operators",
-                desc: "Expanding into holding structures, subsidiaries, and multi-entity operations.",
-              },
-            ].map((persona) => (
-              <div
-                key={persona.title}
-                className="flex flex-col items-center text-center p-6 rounded-2xl bg-white border border-border/40 hover:border-gold/30 hover:shadow-md transition-all duration-300"
-              >
-                <div className="h-12 w-12 rounded-xl bg-gold/8 flex items-center justify-center mb-4">
-                  <persona.icon className="h-6 w-6 text-gold" />
-                </div>
-                <h3 className="font-semibold text-navy mb-1 text-[15px]">{persona.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{persona.desc}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -370,21 +392,35 @@ export default function HomePage() {
       <section className="bg-gradient-navy py-16 sm:py-20">
         <div className="mx-auto max-w-3xl px-6 sm:px-8 lg:px-10 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 leading-tight">
-            Ready to get compliant and operational?
+            Ready to file your Texas LLC — for free?
           </h2>
-          <p className="text-white/60 mb-10 max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
-            Start with a quick intake — we&apos;ll assess your needs and build a plan
-            tailored to your business goals.
+          <p className="text-white/60 mb-6 max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
+            Start your business without navigating the Texas system alone.
+            Hutchrok manages every step from intake to filing.
           </p>
-          <Link href="/contact">
-            <Button
-              size="lg"
-              className="bg-gold hover:bg-gold-dark text-navy font-bold text-base px-10 h-12 shadow-lg shadow-gold/10"
-            >
-              Start Intake
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+          <p className="text-xs text-gold/60 mb-10 font-medium">
+            Veteran-owned · Operator-reviewed · No filing fees · No SOS account required
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/free-filing">
+              <Button
+                size="lg"
+                className="bg-gold hover:bg-gold-dark text-navy font-bold text-base px-10 h-12 shadow-lg shadow-gold/10"
+              >
+                Start My Free Filing
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/verification-help">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-gold/40 text-gold hover:bg-gold/10 font-semibold text-base px-8 h-12"
+              >
+                I Need Verification Help
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </>

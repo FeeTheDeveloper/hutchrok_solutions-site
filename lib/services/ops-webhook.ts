@@ -30,7 +30,13 @@ export async function emitOpsEvent(
   event: OpsEventType,
   payload: Record<string, unknown>
 ): Promise<void> {
-  const url = process.env.OPS_WEBHOOK_URL;
+  let url: string;
+  try {
+    const { getConfig } = await import("@/lib/config");
+    url = getConfig().opsWebhookUrl;
+  } catch {
+    url = process.env.OPS_WEBHOOK_URL || "";
+  }
   if (!url) {
     console.debug("[ops/webhook] OPS_WEBHOOK_URL not configured, skipping.");
     return;

@@ -1,24 +1,22 @@
 import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
-
-/**
- * Validate the admin token from query params or Authorization header.
- */
-function isAuthorized(request: NextRequest): boolean {
-  const token =
-    request.nextUrl.searchParams.get("token") ||
-    request.headers.get("authorization")?.replace("Bearer ", "");
-  return !!token && token === process.env.ADMIN_TOKEN;
-}
+import { requireAdmin } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * GET /api/admin/cases?token=...&status=...
  * Returns all filing cases with joined intake data.
  */
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
+  const denied = requireAdmin(request);
+  if (denied) return denied;
+
+  // Rate limit admin list endpoint (30 req/min per token to prevent scraping)
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const rl = rateLimit(`admin-list:${ip}`, { limit: 30, windowMs: 60_000 });
+  if (!rl.allowed) {
+    return new Response("Too many requests.", { status: 429 });
   }
 
   const supabase = getSupabaseServer();
@@ -27,7 +25,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from("filing_cases")
     .select(
-      `*, intake_submissions ( name, email, phone, business_stage, service_needed, message )`
+      `*, intake_submissions ( name, email, phone, business_stage, service_needed, message, veteran_status, vvl_status, business_name, entity_type, business_purpose, principal_address, mailing_address, texas_confirmed, launch_timeline, all_owners_veterans, fully_veteran_owned, owner_details, organizer_name, organizer_title, registered_agent_preference, operator_review_confirmed, eligibility_answers )`
     )
     .order("created_at", { ascending: false });
 

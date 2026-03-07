@@ -20,7 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CASE_STATUSES, type FilingCase, type CaseStatus } from "@/lib/types";
-import { ShieldAlert, RefreshCw, FolderOpen } from "lucide-react";
+import {
+  ShieldAlert,
+  RefreshCw,
+  FolderOpen,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function AdminPage() {
@@ -38,20 +44,26 @@ export default function AdminPage() {
 }
 
 const STATUS_COLORS: Record<CaseStatus, string> = {
-  NEW: "bg-blue-100 text-blue-800 border-blue-200",
+  LEAD: "bg-slate-100 text-slate-800 border-slate-200",
+  ELIGIBILITY_PENDING: "bg-amber-100 text-amber-800 border-amber-200",
+  VVL_PENDING: "bg-orange-100 text-orange-800 border-orange-200",
+  READY_FOR_INTAKE: "bg-blue-100 text-blue-800 border-blue-200",
   IN_REVIEW: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  NEEDS_INFO: "bg-orange-100 text-orange-800 border-orange-200",
-  IN_PROGRESS: "bg-purple-100 text-purple-800 border-purple-200",
-  FILED: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  READY_FOR_FILING: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  SUBMITTED: "bg-purple-100 text-purple-800 border-purple-200",
+  ACCEPTED: "bg-emerald-100 text-emerald-800 border-emerald-200",
   COMPLETED: "bg-green-100 text-green-800 border-green-200",
 };
 
 const STATUS_LABELS: Record<CaseStatus, string> = {
-  NEW: "New",
+  LEAD: "Lead",
+  ELIGIBILITY_PENDING: "Eligibility Pending",
+  VVL_PENDING: "VVL Pending",
+  READY_FOR_INTAKE: "Ready for Intake",
   IN_REVIEW: "In Review",
-  NEEDS_INFO: "Needs Info",
-  IN_PROGRESS: "In Progress",
-  FILED: "Filed",
+  READY_FOR_FILING: "Ready for Filing",
+  SUBMITTED: "Submitted",
+  ACCEPTED: "Accepted",
   COMPLETED: "Completed",
 };
 
@@ -120,20 +132,35 @@ function AdminContent() {
     fetchCases(value);
   };
 
+  // Compute pipeline counts
+  const actionable = cases.filter((c) =>
+    ["LEAD", "ELIGIBILITY_PENDING", "VVL_PENDING", "READY_FOR_INTAKE"].includes(
+      c.status
+    )
+  ).length;
+  const inProgress = cases.filter((c) =>
+    ["IN_REVIEW", "READY_FOR_FILING", "SUBMITTED"].includes(c.status)
+  ).length;
+  const closed = cases.filter((c) =>
+    ["ACCEPTED", "COMPLETED"].includes(c.status)
+  ).length;
+
   return (
     <div className="min-h-screen bg-cream">
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-navy">Admin Console</h1>
+            <h1 className="text-3xl font-bold text-navy">
+              Operator Dashboard
+            </h1>
             <p className="text-muted-foreground mt-1">
-              Filing cases &amp; intake management
+              Veteran filing pipeline &amp; case management
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Select value={statusFilter} onValueChange={handleFilterChange}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter status" />
               </SelectTrigger>
               <SelectContent>
@@ -159,19 +186,45 @@ function AdminContent() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        {/* Summary row */}
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <Card className="py-3">
+            <CardContent className="text-center p-0">
+              <p className="text-2xl font-bold text-amber-700">{actionable}</p>
+              <p className="text-xs text-muted-foreground">Needs Action</p>
+            </CardContent>
+          </Card>
+          <Card className="py-3">
+            <CardContent className="text-center p-0">
+              <p className="text-2xl font-bold text-indigo-700">{inProgress}</p>
+              <p className="text-xs text-muted-foreground">In Progress</p>
+            </CardContent>
+          </Card>
+          <Card className="py-3">
+            <CardContent className="text-center p-0">
+              <p className="text-2xl font-bold text-green-700">{closed}</p>
+              <p className="text-xs text-muted-foreground">Closed</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Pipeline stats */}
+        <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2 mb-8">
           {CASE_STATUSES.map((s) => {
             const count = cases.filter((c) => c.status === s).length;
             return (
-              <Card key={s} className="py-3">
-                <CardContent className="text-center p-0">
-                  <p className="text-2xl font-bold text-navy">{count}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {STATUS_LABELS[s]}
-                  </p>
-                </CardContent>
-              </Card>
+              <button
+                key={s}
+                onClick={() => handleFilterChange(s)}
+                className={`rounded-lg border px-2 py-2 text-center transition-colors hover:ring-2 hover:ring-navy/20 ${
+                  statusFilter === s ? "ring-2 ring-navy" : ""
+                }`}
+              >
+                <p className="text-lg font-bold text-navy">{count}</p>
+                <p className="text-[10px] leading-tight text-muted-foreground">
+                  {STATUS_LABELS[s]}
+                </p>
+              </button>
             );
           })}
         </div>
@@ -195,60 +248,113 @@ function AdminContent() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {cases.map((c) => (
-              <Link
-                key={c.id}
-                href={`/admin/cases/${c.id}?token=${encodeURIComponent(token)}`}
-              >
-                <Card className="hover:shadow-md transition-shadow cursor-pointer mb-3">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      {/* Left: case info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-mono font-semibold text-navy text-sm">
-                            {c.case_number}
-                          </span>
-                          <Badge
-                            className={`text-[10px] px-2 py-0 border ${STATUS_COLORS[c.status]}`}
-                          >
-                            {STATUS_LABELS[c.status]}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-foreground truncate">
-                          {c.intake_submissions?.name ?? "—"} ·{" "}
-                          <span className="text-muted-foreground">
-                            {c.intake_submissions?.email}
-                          </span>
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {c.intake_submissions?.service_needed ?? "—"} ·{" "}
-                          {new Date(c.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
+            {cases.map((c) => {
+              const intake = c.intake_submissions;
+              const isVeteran = intake?.veteran_status === true;
+              const hasVvl = intake?.vvl_status === "have_vvl";
+              const intakeComplete =
+                isVeteran && !!intake?.business_name && !!intake?.organizer_name;
 
-                      {/* Right: meta */}
-                      <div className="text-right text-xs text-muted-foreground shrink-0">
-                        {c.assigned_to && (
-                          <p>
-                            Assigned:{" "}
-                            <span className="font-medium text-foreground">
-                              {c.assigned_to}
+              return (
+                <Link
+                  key={c.id}
+                  href={`/admin/cases/${c.id}?token=${encodeURIComponent(token)}`}
+                >
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer mb-3">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        {/* Left: case info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="font-mono font-semibold text-navy text-sm">
+                              {c.case_number}
                             </span>
+                            <Badge
+                              className={`text-[10px] px-2 py-0 border ${STATUS_COLORS[c.status]}`}
+                            >
+                              {STATUS_LABELS[c.status]}
+                            </Badge>
+                            {isVeteran && (
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] px-2 py-0 border-amber-400 text-amber-700"
+                              >
+                                Veteran
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-foreground truncate">
+                            {intake?.name ?? "—"}
+                            {intake?.business_name && (
+                              <span className="text-muted-foreground">
+                                {" · "}
+                                {intake.business_name}
+                              </span>
+                            )}
                           </p>
-                        )}
-                        {c.due_date && (
-                          <p>
-                            Due:{" "}
-                            {new Date(c.due_date).toLocaleDateString()}
-                          </p>
-                        )}
+                          <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            <span className="text-xs text-muted-foreground">
+                              {intake?.email}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(c.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right: blockers + meta */}
+                        <div className="flex flex-col items-end gap-1 shrink-0 text-xs">
+                          {isVeteran && (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`inline-flex items-center gap-1 ${
+                                  hasVvl ? "text-green-700" : "text-orange-600"
+                                }`}
+                              >
+                                {hasVvl ? (
+                                  <CheckCircle2 className="h-3 w-3" />
+                                ) : (
+                                  <AlertTriangle className="h-3 w-3" />
+                                )}
+                                VVL
+                              </span>
+                              <span
+                                className={`inline-flex items-center gap-1 ${
+                                  intakeComplete
+                                    ? "text-green-700"
+                                    : "text-orange-600"
+                                }`}
+                              >
+                                {intakeComplete ? (
+                                  <CheckCircle2 className="h-3 w-3" />
+                                ) : (
+                                  <AlertTriangle className="h-3 w-3" />
+                                )}
+                                Intake
+                              </span>
+                            </div>
+                          )}
+                          {c.assigned_to && (
+                            <p className="text-muted-foreground">
+                              Assigned:{" "}
+                              <span className="font-medium text-foreground">
+                                {c.assigned_to}
+                              </span>
+                            </p>
+                          )}
+                          {c.due_date && (
+                            <p className="text-muted-foreground">
+                              Due:{" "}
+                              {new Date(c.due_date).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

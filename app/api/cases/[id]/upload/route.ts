@@ -2,18 +2,14 @@ import { NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { ALLOWED_UPLOAD_TYPES, MAX_UPLOAD_SIZE } from "@/lib/types";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
-
-function isAuthorized(request: NextRequest): boolean {
-  const token =
-    request.nextUrl.searchParams.get("token") ||
-    request.headers.get("authorization")?.replace("Bearer ", "");
-  return !!token && token === process.env.ADMIN_TOKEN;
-}
+import { requireAdmin, isValidUUID } from "@/lib/auth";
+import { validateFileContent, sanitizeFilename } from "@/lib/upload-safety";
+import { recordAudit, AUDIT_ACTIONS } from "@/lib/audit";
 
 /**
  * POST /api/cases/[id]/upload?token=...
  * Accepts multipart form data with a "file" field.
- * Validates type (pdf/jpg/png) and size (10 MB).
+ * Validates type (pdf/jpg/png) via MIME + magic bytes, size (10 MB).
  * Stores in Supabase Storage bucket `case-documents` under /{case_number}/{filename}.
  * Creates a `case_documents` row.
  */
@@ -21,11 +17,13 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorized(request)) {
-    return apiError(ErrorCode.UNAUTHORIZED, "Invalid or missing token.", 401);
-  }
+  const denied = requireAdmin(request);
+  if (denied) return denied;
 
   const { id: caseId } = await params;
+  if (!isValidUUID(caseId)) {
+    return apiError(ErrorCode.BAD_REQUEST, "Invalid case ID format.", 400);
+  }
   const supabase = getSupabaseServer();
 
   // 1. Look up the case to get case_number for the storage path
@@ -78,11 +76,24 @@ export async function POST(
   const arrayBuffer = await file.arrayBuffer();
   const bytes = new Uint8Array(arrayBuffer);
 
-  // 6. Build storage path: {case_number}/{timestamp}-{filename}
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  // 6. Validate file content matches claimed MIME (magic bytes check)
+  const contentError = validateFileContent(bytes, file.type);
+  if (contentError) {
+    return apiError(ErrorCode.VALIDATION_ERROR, contentError, 400);
+  }
+
+  // 7. Sanitize filename and validate extension
+  const safeName = sanitizeFilename(file.name);
+  if (!safeName) {
+    return apiError(
+      ErrorCode.VALIDATION_ERROR,
+      "File has an unsupported extension. Allowed: .pdf, .jpg, .jpeg, .png.",
+      400
+    );
+  }
   const storagePath = `${filing.case_number}/${Date.now()}-${safeName}`;
 
-  // 7. Upload to Supabase Storage
+  // 8. Upload to Supabase Storage
   const { error: uploadErr } = await supabase.storage
     .from("case-documents")
     .upload(storagePath, bytes, {
@@ -95,7 +106,7 @@ export async function POST(
     return apiError(ErrorCode.INTERNAL_ERROR, "Failed to upload file to storage.", 500);
   }
 
-  // 8. Insert metadata row
+  // 9. Insert metadata row
   const { data: doc, error: docErr } = await supabase
     .from("case_documents")
     .insert({
@@ -112,6 +123,15 @@ export async function POST(
     console.error("[api/cases/upload] DB insert error:", docErr.message);
     return apiError(ErrorCode.INTERNAL_ERROR, "File uploaded but failed to save metadata.", 500);
   }
+
+  // Audit trail (fire-and-forget)
+  recordAudit({
+    case_id: caseId,
+    action: AUDIT_ACTIONS.DOCUMENT_UPLOADED,
+    actor: "operator",
+    old_value: null,
+    new_value: storagePath,
+  });
 
   return apiSuccess({ document: doc }, 201);
 }
