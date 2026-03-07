@@ -111,13 +111,21 @@ A step-by-step walkthrough to demonstrate the full intake-to-filing workflow. Fo
 
 | Route | Method | Description |
 | --- | --- | --- |
-| `/` | GET | Home — hero, services overview, how-it-works |
+| `/` | GET | Home — hero, trust band, authority signals, services, concierge |
 | `/contact` | GET | Intake form + contact info |
 | `/services` | GET | Detailed services + engagement packages |
 | `/formation-filings` | GET | Formation & filings details + FAQ |
 | `/credit-enablement` | GET | Business credit readiness & enablement |
 | `/veteran-owned` | GET | Brand story + veteran operator mindset |
 | `/mission` | GET | Mission pillars + systems-first blueprint |
+| `/free-filing` | GET | Core conversion page — $0 filing for veterans |
+| `/eligibility` | GET | Eligibility quiz with process transparency |
+| `/how-it-works` | GET | 5-step filing process walkthrough |
+| `/verification-help` | GET | TVC verification letter guidance |
+| `/launch-services` | GET | Post-filing service packages |
+| `/faq` | GET | Frequently asked questions |
+| `/guides` | GET | SEO content hub — 10 veteran-focused guides |
+| `/guides/[slug]` | GET | Individual guide pages (10 routes) |
 | `/admin?token=...` | GET | Admin console — case list with status filter |
 | `/admin/cases/[id]?token=...` | GET | Case detail — edit status, notes, docs |
 | `/api/intake` | POST | Submit intake (Zod validated, rate limited) |
@@ -218,13 +226,29 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 │   ├── formation-filings/page.tsx
 │   ├── credit-enablement/page.tsx
 │   ├── veteran-owned/page.tsx
-│   └── mission/page.tsx
+│   ├── mission/page.tsx
+│   ├── free-filing/page.tsx        # Core conversion page
+│   ├── eligibility/page.tsx        # Eligibility quiz
+│   ├── how-it-works/page.tsx       # 5-step process
+│   ├── verification-help/page.tsx
+│   ├── launch-services/page.tsx
+│   ├── faq/page.tsx
+│   └── guides/                     # SEO content cluster (10 guides)
+│       ├── page.tsx                # Guide index
+│       └── [slug]/page.tsx         # Individual guide routes
 ├── components/
 │   ├── layout/
 │   │   ├── navbar.tsx              # Sticky top nav
 │   │   └── footer.tsx              # Site footer
 │   ├── ui/                         # shadcn/ui primitives
+│   ├── concierge/
+│   │   ├── hutchrok-concierge.tsx   # Inline + floating concierge
+│   │   └── concierge-data.ts       # Decision tree + context nudges
+│   ├── authority-signals.tsx        # Trust & authority section components
+│   ├── guide-layout.tsx             # Reusable guide article layout
+│   ├── eligibility-quiz.tsx
 │   ├── intake-form.tsx             # Intake form (Zod client validation)
+│   ├── veteran-intake-form.tsx
 │   └── activity-illustrations.tsx
 ├── lib/
 │   ├── types.ts                    # Data models + enums
@@ -251,6 +275,16 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 └── public/
     └── brand/                      # Brand assets
 ```
+
+---
+
+## Growth Phases (Completed)
+
+| Phase | Focus | What Was Added |
+| --- | --- | --- |
+| 6 | SEO Content Cluster | 10 veteran-focused guide routes under `/guides`, reusable `GuideLayout` with related-guides linking, guides index page |
+| 7 | Concierge Enhancements | Guided decision-tree funnel, lead capture with email prompt, pathname-based context awareness, inline trust signals |
+| 8 | Authority Signals | 5 reusable components (`SocialProofStrip`, `WhyHutchrokSection`, `TexasExpertiseSection`, `TrustBadgeStrip`, `ProcessTransparencyBanner`) integrated across homepage, free-filing, how-it-works, and eligibility pages |
 
 ---
 

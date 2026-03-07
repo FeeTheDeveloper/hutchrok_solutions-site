@@ -24,6 +24,25 @@ export const metadata: Metadata = {
   },
 };
 
+const relatedGuides = [
+  {
+    href: "/guides/texas-veteran-business-benefits",
+    title: "Texas Veteran Business Benefits",
+  },
+  {
+    href: "/guides/start-a-business-in-texas-as-a-veteran",
+    title: "How to Start a Business in Texas as a Veteran",
+  },
+  {
+    href: "/guides/veteran-small-business-resources-texas",
+    title: "Veteran Small Business Resources in Texas",
+  },
+  {
+    href: "/guides/texas-business-grants-for-veterans",
+    title: "Texas Business Grants for Veterans",
+  },
+];
+
 export default function VeteranCertificationGuide() {
   return (
     <GuideLayout
@@ -32,6 +51,7 @@ export default function VeteranCertificationGuide() {
       subtitle="How to certify your business as veteran-owned at the state and federal level — and why it matters."
       publishedDate="2026-03-01"
       readingTime="7 min read"
+      relatedGuides={relatedGuides}
     >
       <p>
         Getting your business officially certified as veteran-owned can open

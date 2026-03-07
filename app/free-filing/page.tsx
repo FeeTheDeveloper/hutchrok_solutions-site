@@ -4,6 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { HutchrokConcierge } from "@/components/concierge/hutchrok-concierge";
 import {
+  SocialProofStrip,
+  ProcessTransparencyBanner,
+} from "@/components/authority-signals";
+import {
   Shield,
   CheckCircle,
   FileText,
@@ -122,6 +126,9 @@ export default function FreeFilingPage() {
         </div>
       </section>
 
+      {/* ── Social Proof ── */}
+      <SocialProofStrip />
+
       {/* ── What Hutchrok Does vs What You Do ── */}
       <section className="section-padding bg-cream">
         <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10">
@@ -230,6 +237,9 @@ export default function FreeFilingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Process Transparency ── */}
+      <ProcessTransparencyBanner />
 
       {/* ── Trust Indicators ── */}
       <section className="bg-white border-t border-border/30 py-10 sm:py-12">

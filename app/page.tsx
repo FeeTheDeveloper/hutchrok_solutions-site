@@ -20,6 +20,12 @@ import {
   Rocket,
 } from "lucide-react";
 import { HutchrokConcierge } from "@/components/concierge/hutchrok-concierge";
+import {
+  SocialProofStrip,
+  WhyHutchrokSection,
+  TexasExpertiseSection,
+  TrustBadgeStrip,
+} from "@/components/authority-signals";
 
 export default function HomePage() {
   return (
@@ -126,6 +132,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ════════════════════════════════════════
+          SOCIAL PROOF — Stats Strip
+          ════════════════════════════════════════ */}
+      <SocialProofStrip />
 
       {/* ════════════════════════════════════════
           CONCIERGE — Guided Assistant
@@ -291,6 +302,16 @@ export default function HomePage() {
       </section>
 
       {/* ════════════════════════════════════════
+          WHY HUTCHROK — Mission Authority
+          ════════════════════════════════════════ */}
+      <WhyHutchrokSection />
+
+      {/* ════════════════════════════════════════
+          TEXAS EXPERTISE — Local Authority
+          ════════════════════════════════════════ */}
+      <TexasExpertiseSection />
+
+      {/* ════════════════════════════════════════
           POST-FILING SERVICES — Paid Upsells
           ════════════════════════════════════════ */}
       <section className="section-padding bg-white">
@@ -385,6 +406,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ════════════════════════════════════════
+          TRUST BADGES — Credibility Strip
+          ════════════════════════════════════════ */}
+      <TrustBadgeStrip />
 
       {/* ════════════════════════════════════════
           CTA STRIP

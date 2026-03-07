@@ -2,7 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, BookOpen, Shield, Building2, Award } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Shield,
+  Building2,
+  Award,
+  FileCheck,
+  ScrollText,
+  DollarSign,
+  Compass,
+  Briefcase,
+  Library,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Veteran Business Guides — Free Resources for Starting a Business in Texas",
@@ -14,6 +26,12 @@ export const metadata: Metadata = {
     "Texas LLC guide",
     "veteran business certification",
     "Texas veteran business benefits",
+    "Texas veteran LLC filing fee waiver",
+    "veteran verification letter Texas",
+    "Texas business grants for veterans",
+    "veteran entrepreneur guide",
+    "best businesses for veterans",
+    "veteran small business resources Texas",
   ],
   openGraph: {
     title: "Veteran Business Guides | Hutchrok Solutions Group",
@@ -56,6 +74,54 @@ const guides = [
       "Comprehensive overview of every program, incentive, and resource available to veteran entrepreneurs in Texas — from SBA programs to tax benefits.",
     icon: BookOpen,
     readingTime: "8 min read",
+  },
+  {
+    href: "/guides/texas-veteran-llc-filing-fee-waiver",
+    title: "Texas Veteran LLC Filing Fee Waiver",
+    description:
+      "How to waive the $300 LLC filing fee using your Veteran Verification Letter. Step-by-step process under Texas Business Organizations Code §3.005(b).",
+    icon: FileCheck,
+    readingTime: "7 min read",
+  },
+  {
+    href: "/guides/texas-veteran-verification-letter",
+    title: "How to Get Your Veteran Verification Letter",
+    description:
+      "Step-by-step guide to requesting your VVL from the Texas Veterans Commission — the key to free LLC filing.",
+    icon: ScrollText,
+    readingTime: "6 min read",
+  },
+  {
+    href: "/guides/texas-business-grants-for-veterans",
+    title: "Texas Business Grants for Veterans",
+    description:
+      "Grants, loans, and funding programs for veteran entrepreneurs in Texas. Federal, state, and private funding sources.",
+    icon: DollarSign,
+    readingTime: "9 min read",
+  },
+  {
+    href: "/guides/texas-veteran-entrepreneur-guide",
+    title: "Texas Veteran Entrepreneur Guide",
+    description:
+      "A complete roadmap from military service to business ownership in Texas. Planning, formation, launch, and growth.",
+    icon: Compass,
+    readingTime: "10 min read",
+  },
+  {
+    href: "/guides/best-businesses-for-veterans",
+    title: "Best Businesses for Veterans",
+    description:
+      "Top industries and business ideas that leverage military skills. Security, consulting, trades, tech, and more.",
+    icon: Briefcase,
+    readingTime: "9 min read",
+  },
+  {
+    href: "/guides/veteran-small-business-resources-texas",
+    title: "Veteran Small Business Resources in Texas",
+    description:
+      "Complete directory of federal, state, and nonprofit resources for veteran entrepreneurs in Texas.",
+    icon: Library,
+    readingTime: "10 min read",
   },
 ];
 

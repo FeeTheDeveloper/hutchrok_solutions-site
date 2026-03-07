@@ -24,6 +24,25 @@ export const metadata: Metadata = {
   },
 };
 
+const relatedGuides = [
+  {
+    href: "/guides/texas-business-grants-for-veterans",
+    title: "Texas Business Grants for Veterans",
+  },
+  {
+    href: "/guides/texas-veteran-owned-business-certification",
+    title: "Texas Veteran-Owned Business Certification",
+  },
+  {
+    href: "/guides/veteran-small-business-resources-texas",
+    title: "Veteran Small Business Resources in Texas",
+  },
+  {
+    href: "/guides/texas-veteran-llc-filing-fee-waiver",
+    title: "Texas Veteran LLC Filing Fee Waiver",
+  },
+];
+
 export default function VeteranBusinessBenefitsGuide() {
   return (
     <GuideLayout
@@ -32,6 +51,7 @@ export default function VeteranBusinessBenefitsGuide() {
       subtitle="Every program, incentive, and resource available to veteran entrepreneurs in Texas — all in one place."
       publishedDate="2026-03-01"
       readingTime="8 min read"
+      relatedGuides={relatedGuides}
     >
       <p>
         Texas has one of the largest veteran populations in the United States,

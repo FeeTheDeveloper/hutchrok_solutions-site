@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import EligibilityQuiz from "@/components/eligibility-quiz";
 import { Shield, CheckCircle, FileText, Users } from "lucide-react";
+import { ProcessTransparencyBanner } from "@/components/authority-signals";
 
 export const metadata = {
   title: "Check Your Eligibility — Free Texas LLC Filing for Veterans",
@@ -70,6 +71,9 @@ export default function EligibilityPage() {
           </div>
         </div>
       </section>
+
+      {/* Process Transparency */}
+      <ProcessTransparencyBanner />
 
       {/* Disclaimer */}
       <section className="bg-white border-t border-border/30 py-8">

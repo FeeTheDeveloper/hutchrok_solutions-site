@@ -23,6 +23,25 @@ export const metadata: Metadata = {
   },
 };
 
+const relatedGuides = [
+  {
+    href: "/guides/start-a-business-in-texas-as-a-veteran",
+    title: "How to Start a Business in Texas as a Veteran",
+  },
+  {
+    href: "/guides/texas-veteran-llc-filing-fee-waiver",
+    title: "Texas Veteran LLC Filing Fee Waiver",
+  },
+  {
+    href: "/guides/texas-veteran-verification-letter",
+    title: "How to Get Your Veteran Verification Letter",
+  },
+  {
+    href: "/guides/texas-veteran-business-benefits",
+    title: "Texas Veteran Business Benefits",
+  },
+];
+
 export default function HowToStartLLCGuide() {
   return (
     <GuideLayout
@@ -31,6 +50,7 @@ export default function HowToStartLLCGuide() {
       subtitle="A complete, step-by-step guide to forming your Texas Limited Liability Company in 2026."
       publishedDate="2026-03-01"
       readingTime="9 min read"
+      relatedGuides={relatedGuides}
     >
       <p>
         Texas is consistently one of the top states for new business formation.

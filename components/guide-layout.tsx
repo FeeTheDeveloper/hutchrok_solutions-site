@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, ChevronRight } from "lucide-react";
 
 interface GuideLayoutProps {
   badge: string;
@@ -9,6 +9,7 @@ interface GuideLayoutProps {
   subtitle: string;
   publishedDate: string;
   readingTime: string;
+  relatedGuides?: { href: string; title: string }[];
   children: React.ReactNode;
 }
 
@@ -22,6 +23,7 @@ export function GuideLayout({
   subtitle,
   publishedDate,
   readingTime,
+  relatedGuides,
   children,
 }: GuideLayoutProps) {
   return (
@@ -64,6 +66,31 @@ export function GuideLayout({
           {children}
         </div>
       </article>
+
+      {/* Related Guides */}
+      {relatedGuides && relatedGuides.length > 0 && (
+        <section className="bg-white border-t border-border/50 py-12 sm:py-16">
+          <div className="mx-auto max-w-3xl px-6 sm:px-8 lg:px-10">
+            <h2 className="text-xl sm:text-2xl font-bold text-navy mb-6">
+              Related Guides
+            </h2>
+            <div className="grid gap-3">
+              {relatedGuides.map((guide) => (
+                <Link
+                  key={guide.href}
+                  href={guide.href}
+                  className="group flex items-center justify-between rounded-xl border border-border/50 px-5 py-4 hover:border-gold/30 hover:bg-cream/50 transition-all"
+                >
+                  <span className="text-sm sm:text-base font-medium text-navy group-hover:text-gold transition-colors">
+                    {guide.title}
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-gold shrink-0 ml-4 transition-colors" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Bottom CTA */}
       <section className="bg-cream section-padding">

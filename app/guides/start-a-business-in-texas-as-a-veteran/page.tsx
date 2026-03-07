@@ -22,6 +22,25 @@ export const metadata: Metadata = {
   },
 };
 
+const relatedGuides = [
+  {
+    href: "/guides/how-to-start-an-llc-in-texas",
+    title: "How to Start an LLC in Texas",
+  },
+  {
+    href: "/guides/texas-veteran-llc-filing-fee-waiver",
+    title: "Texas Veteran LLC Filing Fee Waiver",
+  },
+  {
+    href: "/guides/texas-veteran-entrepreneur-guide",
+    title: "Texas Veteran Entrepreneur Guide",
+  },
+  {
+    href: "/guides/best-businesses-for-veterans",
+    title: "Best Businesses for Veterans",
+  },
+];
+
 export default function StartBusinessVeteranGuide() {
   return (
     <GuideLayout
@@ -30,6 +49,7 @@ export default function StartBusinessVeteranGuide() {
       subtitle="Everything you need to know about launching your veteran-owned Texas LLC — including how to file for free."
       publishedDate="2026-03-01"
       readingTime="8 min read"
+      relatedGuides={relatedGuides}
     >
       <p>
         Texas is one of the best states in the country for veteran

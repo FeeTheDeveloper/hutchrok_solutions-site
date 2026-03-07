@@ -10,6 +10,7 @@ import {
   ArrowRight,
   CheckCircle,
 } from "lucide-react";
+import { TrustBadgeStrip } from "@/components/authority-signals";
 
 export const metadata = {
   title: "How It Works",
@@ -181,6 +182,9 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </section>
+
+      {/* Trust Badges */}
+      <TrustBadgeStrip />
 
       {/* CTA */}
       <section className="bg-gradient-navy py-16 sm:py-20">
