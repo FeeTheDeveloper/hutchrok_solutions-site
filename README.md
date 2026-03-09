@@ -1,12 +1,12 @@
 # Hutchrok Solutions Group — Veteran Business Formation Platform
 
-Full-stack veteran business formation platform with compliance-first intake, filing case management, authenticated client dashboard, and Microsoft 365 operational wiring. Built on Next.js 16, Clerk authentication, Supabase, and deployed on Vercel.
+Full-stack veteran business formation platform with compliance-first intake, filing case management, authenticated client dashboard, and Microsoft 365 operational wiring. Built on Next.js 16, Supabase, and deployed on Vercel. Clerk authentication is supported but fully optional — the app runs without Clerk keys via a graceful fallback.
 
 ---
 
 ## Features
 
-- **Clerk authentication** — sign-in/sign-up, session-protected client dashboard, role-based scaffolding for RBAC
+- **Optional Clerk authentication** — sign-in/sign-up, session-protected client dashboard, role-based scaffolding for RBAC. App degrades gracefully when Clerk keys are absent (dashboard redirects to home, auth UI hidden)
 - **Client dashboard** — authenticated workspace with case status placeholders, quick actions, and embedded concierge
 - **Intake form submission** → persists to Supabase + auto-creates a filing case with a unique case number
 - **Admin console** to manage cases, update statuses, add notes, and assign team members
@@ -24,7 +24,7 @@ Full-stack veteran business formation platform with compliance-first intake, fil
 | --- | --- |
 | Framework | Next.js 16 (App Router) + TypeScript |
 | Styling | Tailwind CSS v4 + shadcn/ui |
-| Authentication | Clerk (session-based, RBAC-ready) |
+| Authentication | Clerk (optional, session-based, RBAC-ready) |
 | Database | Supabase Postgres |
 | File Storage | Supabase Storage (private bucket + signed URLs) |
 | Validation | Zod (shared client/server schema) |
@@ -54,19 +54,21 @@ Create a `.env.local` file in the project root (and set these in your Vercel pro
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_ANON_KEY=eyJhbGciOiJI...your-anon-key
 ADMIN_TOKEN=some-strong-random-secret
+
+# Optional — omit both to run without Clerk auth
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
 ```
 
-| Variable | Purpose |
-| --- | --- |
-| `SUPABASE_URL` | Your Supabase project URL (Settings → API) |
-| `SUPABASE_ANON_KEY` | Supabase anon/public key (Settings → API) |
-| `ADMIN_TOKEN` | Shared secret used to protect the admin console via `?token=...` query param. Replace with real auth (NextAuth, Clerk, etc.) in a future iteration. |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (Dashboard → API Keys). Required for build. |
-| `CLERK_SECRET_KEY` | Clerk secret key (Dashboard → API Keys). Required for server-side auth. |
-| `OPS_TOKEN` | Shared secret that Power Automate (or any external caller) sends in the `X-Ops-Token` header to authenticate ops integration endpoints. |
-| `OPS_WEBHOOK_URL` | *(Optional)* Power Automate HTTP-trigger URL. When set, the app emits outbound webhook events on status changes and document inserts. |
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `SUPABASE_URL` | Yes | Your Supabase project URL (Settings → API) |
+| `SUPABASE_ANON_KEY` | Yes | Supabase anon/public key (Settings → API) |
+| `ADMIN_TOKEN` | Yes | Shared secret used to protect the admin console via `?token=...` query param |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | No | Clerk publishable key. When absent, auth UI is hidden and `/dashboard` redirects to `/` |
+| `CLERK_SECRET_KEY` | No | Clerk secret key. Must be set alongside the publishable key for auth to activate |
+| `OPS_TOKEN` | No | Shared secret that Power Automate sends in the `X-Ops-Token` header for ops endpoints |
+| `OPS_WEBHOOK_URL` | No | Power Automate HTTP-trigger URL. When set, the app emits outbound webhook events |
 
 > **Never commit `.env.local` to the repository.** The `.gitignore` already excludes it.
 
@@ -218,12 +220,13 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 
 ```text
 ├── app/
-│   ├── layout.tsx                  # Root layout (ClerkProvider + nav + footer)
+│   ├── layout.tsx                  # Root layout (Providers + nav + footer)
+│   ├── providers.tsx               # AppAuthContext + optional ClerkProvider wrapper
 │   ├── page.tsx                    # Home page
 │   ├── globals.css                 # Tailwind + brand theme
-│   ├── sign-in/[[...sign-in]]/     # Clerk sign-in route
-│   ├── sign-up/[[...sign-up]]/     # Clerk sign-up route
-│   ├── dashboard/page.tsx          # Authenticated client dashboard
+│   ├── sign-in/[[...sign-in]]/     # Clerk sign-in route (force-dynamic)
+│   ├── sign-up/[[...sign-up]]/     # Clerk sign-up route (force-dynamic)
+│   ├── dashboard/page.tsx          # Authenticated client dashboard (force-dynamic)
 │   ├── api/
 │   │   ├── intake/route.ts         # POST intake (Zod + rate limit)
 │   │   ├── admin/cases/
@@ -253,10 +256,19 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 │   ├── faq/page.tsx
 │   └── guides/                     # SEO content cluster (10 guides)
 │       ├── page.tsx                # Guide index
-│       └── [slug]/page.tsx         # Individual guide routes
+│       ├── best-businesses-for-veterans/
+│       ├── how-to-start-an-llc-in-texas/
+│       ├── start-a-business-in-texas-as-a-veteran/
+│       ├── texas-business-grants-for-veterans/
+│       ├── texas-veteran-business-benefits/
+│       ├── texas-veteran-entrepreneur-guide/
+│       ├── texas-veteran-llc-filing-fee-waiver/
+│       ├── texas-veteran-owned-business-certification/
+│       ├── texas-veteran-verification-letter/
+│       └── veteran-small-business-resources-texas/
 ├── components/
 │   ├── layout/
-│   │   ├── navbar.tsx              # Sticky top nav (Clerk auth-aware)
+│   │   ├── navbar.tsx              # Sticky top nav (useAppAuth-aware)
 │   │   └── footer.tsx              # Site footer
 │   ├── ui/                         # shadcn/ui primitives
 │   ├── concierge/
@@ -291,7 +303,7 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 │   ├── DEMO_CHECKLIST.md           # QA / demo walkthrough
 │   └── filings/
 │       └── FORM_ROUTING.md         # Filing type → form mapping
-├── middleware.ts                    # Clerk + admin token auth middleware
+├── middleware.ts                    # Auth middleware (Clerk when available, fallback otherwise)
 └── public/
     └── brand/                      # Brand assets
 ```
@@ -308,6 +320,7 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 | 9 | Clerk Auth Scaffolding | Clerk sign-in/sign-up pages, session-protected `/dashboard`, role extraction (`lib/auth/roles.ts`), auth-aware navbar with `SignedIn`/`SignedOut` UI, `ClerkProvider` in root layout, unified `clerkMiddleware` |
 | 10 | Concierge Mode System | Upgraded concierge from single decision tree to mode-based architecture (`public`/`client`/`admin`) with structured intents, `concierge-config.ts` and `concierge-engine.ts`, auth-aware mode resolution via Clerk session and role hooks |
 | 11 | Dashboard + Concierge Integration | Authenticated `/dashboard` with workspace snapshot helper, quick actions grid, embedded concierge with `preferContextNudge`, dashboard-specific context nudges |
+| 12 | Optional Clerk Auth | `Providers` wrapper with `AppAuthContext`, `useAppAuth()` hook, `CLERK_ENABLED` build-time flag, middleware fallback handler, `force-dynamic` on auth pages, graceful degradation when Clerk keys are absent |
 
 ---
 
@@ -469,24 +482,39 @@ The case detail page (`/admin/cases/[id]`) now displays:
 Vercel has first-class support for Next.js — no adapter needed. Push to `main` and Vercel builds + deploys automatically.
 
 ```bash
-# Production build (local verification — requires Clerk keys)
+# Production build (local verification)
 npm run build
 ```
+
+> **Note:** The repo contains `open-next.config.ts` and `wrangler.toml` from an earlier Cloudflare evaluation. These files are **not used** by Vercel and can be safely ignored — they do not affect the build.
 
 ### Vercel Project Settings
 
 - **Framework Preset:** Next.js (auto-detected)
 - **Build command:** `npm run build` (default)
 - **Output directory:** `.next` (default)
-- **Environment variables:** set the following in Settings → Environment Variables:
-  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` — **required for build**
-  - `CLERK_SECRET_KEY` — **required for server-side auth**
-  - `SUPABASE_URL`
-  - `SUPABASE_ANON_KEY`
-  - `ADMIN_TOKEN`
-  - `OPS_TOKEN` *(if using ops endpoints)*
+- **Node.js version:** 20.x
+- **Environment variables:** set the following in **Settings → Environment Variables**:
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `SUPABASE_URL` | Yes | |
+| `SUPABASE_ANON_KEY` | Yes | |
+| `ADMIN_TOKEN` | Yes | |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | No | Omit to run without auth — app degrades gracefully |
+| `CLERK_SECRET_KEY` | No | Must be set alongside the publishable key |
+| `OPS_TOKEN` | No | Only needed if using ops endpoints |
+| `OPS_WEBHOOK_URL` | No | Only needed for outbound Power Automate events |
 
 Vercel automatically handles serverless functions for API routes and edge middleware.
+
+### Deploy without Clerk (minimum viable deploy)
+
+Set only `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `ADMIN_TOKEN`. The app will build and run with authentication disabled — the dashboard redirects to `/`, sign-in/sign-up UI is hidden, and the concierge defaults to public mode.
+
+### Deploy with Clerk
+
+Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` to enable full auth: session-protected dashboard, role-based concierge modes, sign-in/sign-up pages, and `UserButton` in the navbar.
 
 ---
 
