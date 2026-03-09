@@ -1,17 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+
+const isDashboardRoute = createRouteMatcher(["/dashboard(.*)"]);
+const isAdminRoute = createRouteMatcher(["/admin", "/admin(.*)"]);
 
 /**
- * Edge middleware — runs before page/route handlers.
- *
- * Protects /admin/* pages from loading without a valid token.
- * The actual token validation still happens in API routes (defense-in-depth),
- * but this prevents the admin UI from rendering at all without credentials.
+ * Unified auth middleware:
+ * - Clerk session protection for `/dashboard` and all nested dashboard routes.
+ * - Existing admin token protection for `/admin` routes.
  */
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export default clerkMiddleware(async (auth, request) => {
+  if (isDashboardRoute(request)) {
+    await auth.protect();
+  }
 
-  // Only protect admin UI routes (not API routes — those have their own guards)
-  if (pathname.startsWith("/admin")) {
+  if (isAdminRoute(request)) {
+    // Keep current admin token flow intact until Clerk RBAC migration is complete.
     const token =
       request.headers.get("authorization")?.replace("Bearer ", "") ||
       request.nextUrl.searchParams.get("token");
@@ -19,7 +23,6 @@ export function middleware(request: NextRequest) {
     const expected = process.env.ADMIN_TOKEN;
 
     if (!token || !expected || token !== expected) {
-      // Return a minimal 401 page instead of loading the admin UI
       return new NextResponse(
         `<!DOCTYPE html>
 <html><head><title>Unauthorized</title></head>
@@ -34,12 +37,13 @@ export function middleware(request: NextRequest) {
         },
       );
     }
+
+    // TODO(auth-rbac): Replace token-only admin gate with Clerk role check (`admin`) while preserving API hardening.
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-  // Only run on admin UI pages, never on API routes or static files
-  matcher: ["/admin", "/admin/:path*"],
+  matcher: ["/dashboard", "/dashboard/:path*", "/admin", "/admin/:path*"],
 };
