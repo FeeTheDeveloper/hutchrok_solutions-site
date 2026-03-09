@@ -1,16 +1,19 @@
-# Hutchrok Solutions Group — Intake → Filing Cases → Admin Console
+# Hutchrok Solutions Group — Veteran Business Formation Platform
 
-Compliance-first intake system for business formation and filings workflow. Captures client information, auto-creates filing cases, and provides an admin console for case management, document uploads, and status tracking — ready for Microsoft 365 operational wiring.
+Full-stack veteran business formation platform with compliance-first intake, filing case management, authenticated client dashboard, and Microsoft 365 operational wiring. Built on Next.js 16, Clerk authentication, Supabase, and deployed on Vercel.
 
 ---
 
 ## Features
 
+- **Clerk authentication** — sign-in/sign-up, session-protected client dashboard, role-based scaffolding for RBAC
+- **Client dashboard** — authenticated workspace with case status placeholders, quick actions, and embedded concierge
 - **Intake form submission** → persists to Supabase + auto-creates a filing case with a unique case number
 - **Admin console** to manage cases, update statuses, add notes, and assign team members
 - **Document uploads** to a private Supabase Storage bucket with signed-URL downloads
 - **Zod validation** shared between client and server for consistent field-level errors
 - **Rate limiting** on public endpoints (in-memory, Vercel-safe)
+- **Mode-based concierge** — public, client, and admin modes with intent mapping, context-aware nudges, and lead capture
 - **Backend-ready foundation** for Microsoft 365 operational workflows (SharePoint, Power Automate, Lists)
 
 ---
@@ -21,6 +24,7 @@ Compliance-first intake system for business formation and filings workflow. Capt
 | --- | --- |
 | Framework | Next.js 16 (App Router) + TypeScript |
 | Styling | Tailwind CSS v4 + shadcn/ui |
+| Authentication | Clerk (session-based, RBAC-ready) |
 | Database | Supabase Postgres |
 | File Storage | Supabase Storage (private bucket + signed URLs) |
 | Validation | Zod (shared client/server schema) |
@@ -50,6 +54,8 @@ Create a `.env.local` file in the project root (and set these in your Vercel pro
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_ANON_KEY=eyJhbGciOiJI...your-anon-key
 ADMIN_TOKEN=some-strong-random-secret
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
 ```
 
 | Variable | Purpose |
@@ -57,6 +63,8 @@ ADMIN_TOKEN=some-strong-random-secret
 | `SUPABASE_URL` | Your Supabase project URL (Settings → API) |
 | `SUPABASE_ANON_KEY` | Supabase anon/public key (Settings → API) |
 | `ADMIN_TOKEN` | Shared secret used to protect the admin console via `?token=...` query param. Replace with real auth (NextAuth, Clerk, etc.) in a future iteration. |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (Dashboard → API Keys). Required for build. |
+| `CLERK_SECRET_KEY` | Clerk secret key (Dashboard → API Keys). Required for server-side auth. |
 | `OPS_TOKEN` | Shared secret that Power Automate (or any external caller) sends in the `X-Ops-Token` header to authenticate ops integration endpoints. |
 | `OPS_WEBHOOK_URL` | *(Optional)* Power Automate HTTP-trigger URL. When set, the app emits outbound webhook events on status changes and document inserts. |
 
@@ -126,6 +134,9 @@ A step-by-step walkthrough to demonstrate the full intake-to-filing workflow. Fo
 | `/faq` | GET | Frequently asked questions |
 | `/guides` | GET | SEO content hub — 10 veteran-focused guides |
 | `/guides/[slug]` | GET | Individual guide pages (10 routes) |
+| `/sign-in` | GET | Clerk sign-in page (redirects to dashboard) |
+| `/sign-up` | GET | Clerk sign-up page (redirects to dashboard) |
+| `/dashboard` | GET | Authenticated client dashboard — case status, quick actions, concierge |
 | `/admin?token=...` | GET | Admin console — case list with status filter |
 | `/admin/cases/[id]?token=...` | GET | Case detail — edit status, notes, docs |
 | `/api/intake` | POST | Submit intake (Zod validated, rate limited) |
@@ -207,17 +218,24 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 
 ```text
 ├── app/
-│   ├── layout.tsx                  # Root layout (nav + footer)
+│   ├── layout.tsx                  # Root layout (ClerkProvider + nav + footer)
 │   ├── page.tsx                    # Home page
 │   ├── globals.css                 # Tailwind + brand theme
+│   ├── sign-in/[[...sign-in]]/     # Clerk sign-in route
+│   ├── sign-up/[[...sign-up]]/     # Clerk sign-up route
+│   ├── dashboard/page.tsx          # Authenticated client dashboard
 │   ├── api/
 │   │   ├── intake/route.ts         # POST intake (Zod + rate limit)
 │   │   ├── admin/cases/
 │   │   │   ├── route.ts            # GET all cases
 │   │   │   └── [id]/route.ts       # GET/PATCH single case
-│   │   └── cases/[id]/
-│   │       ├── upload/route.ts     # POST file upload
-│   │       └── documents/route.ts  # GET list / DELETE doc
+│   │   ├── cases/[id]/
+│   │   │   ├── upload/route.ts     # POST file upload
+│   │   │   └── documents/route.ts  # GET list / DELETE doc
+│   │   └── ops/                    # Power Automate inbound webhooks
+│   │       ├── case-linked/route.ts
+│   │       ├── status-sync/route.ts
+│   │       └── doc-published/route.ts
 │   ├── admin/
 │   │   ├── page.tsx                # Admin console
 │   │   └── cases/[id]/page.tsx     # Case detail + documents
@@ -238,14 +256,15 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 │       └── [slug]/page.tsx         # Individual guide routes
 ├── components/
 │   ├── layout/
-│   │   ├── navbar.tsx              # Sticky top nav
+│   │   ├── navbar.tsx              # Sticky top nav (Clerk auth-aware)
 │   │   └── footer.tsx              # Site footer
 │   ├── ui/                         # shadcn/ui primitives
 │   ├── concierge/
-│   │   ├── hutchrok-concierge.tsx   # Inline + floating concierge
-│   │   └── concierge-data.ts       # Decision tree + context nudges
-│   ├── authority-signals.tsx        # Trust & authority section components
-│   ├── guide-layout.tsx             # Reusable guide article layout
+│   │   ├── hutchrok-concierge.tsx  # Inline + floating concierge (auth-aware)
+│   │   ├── concierge-config.ts     # Mode configs, intents, nodes, context nudges
+│   │   └── concierge-engine.ts     # Mode resolution + node/nudge lookup
+│   ├── authority-signals.tsx       # Trust & authority section components
+│   ├── guide-layout.tsx            # Reusable guide article layout
 │   ├── eligibility-quiz.tsx
 │   ├── intake-form.tsx             # Intake form (Zod client validation)
 │   ├── veteran-intake-form.tsx
@@ -256,6 +275,10 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 │   ├── validation.ts               # Zod intake schema (shared)
 │   ├── rate-limit.ts               # In-memory rate limiter
 │   ├── api-response.ts             # Standardized API response helpers
+│   ├── auth/
+│   │   └── roles.ts                # Clerk role extraction (server + client)
+│   ├── dashboard/
+│   │   └── workspace.ts            # Dashboard workspace snapshot helper
 │   ├── supabase/
 │   │   ├── server.ts               # Server-side Supabase client
 │   │   └── client.ts               # Browser-side Supabase client
@@ -267,11 +290,8 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 ├── docs/
 │   ├── DEMO_CHECKLIST.md           # QA / demo walkthrough
 │   └── filings/
-│       ├── FORM_ROUTING.md         # Filing type → form mapping
-│       ├── 201_boc.pdf             # Form 201 placeholder
-│       ├── 202_boc.pdf             # Form 202 placeholder
-│       ├── 205_boc.pdf             # Form 205 placeholder
-│       └── 05-904.pdf              # Form 05-904 placeholder
+│       └── FORM_ROUTING.md         # Filing type → form mapping
+├── middleware.ts                    # Clerk + admin token auth middleware
 └── public/
     └── brand/                      # Brand assets
 ```
@@ -285,6 +305,9 @@ See [`docs/filings/FORM_ROUTING.md`](docs/filings/FORM_ROUTING.md) for the full 
 | 6 | SEO Content Cluster | 10 veteran-focused guide routes under `/guides`, reusable `GuideLayout` with related-guides linking, guides index page |
 | 7 | Concierge Enhancements | Guided decision-tree funnel, lead capture with email prompt, pathname-based context awareness, inline trust signals |
 | 8 | Authority Signals | 5 reusable components (`SocialProofStrip`, `WhyHutchrokSection`, `TexasExpertiseSection`, `TrustBadgeStrip`, `ProcessTransparencyBanner`) integrated across homepage, free-filing, how-it-works, and eligibility pages |
+| 9 | Clerk Auth Scaffolding | Clerk sign-in/sign-up pages, session-protected `/dashboard`, role extraction (`lib/auth/roles.ts`), auth-aware navbar with `SignedIn`/`SignedOut` UI, `ClerkProvider` in root layout, unified `clerkMiddleware` |
+| 10 | Concierge Mode System | Upgraded concierge from single decision tree to mode-based architecture (`public`/`client`/`admin`) with structured intents, `concierge-config.ts` and `concierge-engine.ts`, auth-aware mode resolution via Clerk session and role hooks |
+| 11 | Dashboard + Concierge Integration | Authenticated `/dashboard` with workspace snapshot helper, quick actions grid, embedded concierge with `preferContextNudge`, dashboard-specific context nudges |
 
 ---
 
@@ -446,7 +469,7 @@ The case detail page (`/admin/cases/[id]`) now displays:
 Vercel has first-class support for Next.js — no adapter needed. Push to `main` and Vercel builds + deploys automatically.
 
 ```bash
-# Production build (local verification)
+# Production build (local verification — requires Clerk keys)
 npm run build
 ```
 
@@ -455,7 +478,13 @@ npm run build
 - **Framework Preset:** Next.js (auto-detected)
 - **Build command:** `npm run build` (default)
 - **Output directory:** `.next` (default)
-- **Environment variables:** set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `ADMIN_TOKEN`, and `OPS_TOKEN` in Settings → Environment Variables
+- **Environment variables:** set the following in Settings → Environment Variables:
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` — **required for build**
+  - `CLERK_SECRET_KEY` — **required for server-side auth**
+  - `SUPABASE_URL`
+  - `SUPABASE_ANON_KEY`
+  - `ADMIN_TOKEN`
+  - `OPS_TOKEN` *(if using ops endpoints)*
 
 Vercel automatically handles serverless functions for API routes and edge middleware.
 

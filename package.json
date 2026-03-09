@@ -6,10 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "pages:build": "npx @opennextjs/cloudflare build",
-    "pages:dev": "npx @opennextjs/cloudflare dev",
-    "pages:preview": "npx wrangler dev"
+    "lint": "eslint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
@@ -25,7 +22,6 @@
     "@clerk/nextjs": "^6.16.0"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^1.16.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
