@@ -21,12 +21,15 @@ import {
   Star,
 } from "lucide-react";
 import {
-  CONCIERGE_TREE,
-  CONTEXT_NUDGES,
   TRUST_SIGNALS,
+  type ConciergeMode,
   type ConciergeOption,
-  type ConciergeNode,
-} from "@/components/concierge/concierge-data";
+} from "@/components/concierge/concierge-config";
+import {
+  getNode,
+  resolveConciergeModeFromPath,
+  resolveContextNudge,
+} from "@/components/concierge/concierge-engine";
 
 /* ── Icon resolver ── */
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -49,20 +52,6 @@ function OptionIcon({ name, className }: { name?: string; className?: string }) 
   const Icon = ICON_MAP[name];
   if (!Icon) return null;
   return <Icon className={className} />;
-}
-
-/* ── Resolve context nudge from pathname ── */
-function resolveContextNudge(pathname: string) {
-  // Check most-specific paths first (longer prefixes)
-  const sorted = Object.keys(CONTEXT_NUDGES).sort(
-    (a, b) => b.length - a.length,
-  );
-  for (const prefix of sorted) {
-    if (pathname.startsWith(prefix)) {
-      return CONTEXT_NUDGES[prefix];
-    }
-  }
-  return null;
 }
 
 /* ════════════════════════════════════════
@@ -191,7 +180,7 @@ function TrustSignals({ compact = false }: { compact?: boolean }) {
    Inline concierge — for embedding in pages
    ════════════════════════════════════════ */
 
-export function HutchrokConcierge() {
+export function HutchrokConcierge({ mode = "public" }: { mode?: ConciergeMode }) {
   const [nodeId, setNodeId] = useState("root");
   const [history, setHistory] = useState<string[]>([]);
   const [showLead, setShowLead] = useState(false);
@@ -199,7 +188,7 @@ export function HutchrokConcierge() {
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const node = CONCIERGE_TREE[nodeId] ?? CONCIERGE_TREE["root"];
+  const node = getNode(mode, nodeId);
 
   const navigate = useCallback(
     (next: string) => {
@@ -215,8 +204,6 @@ export function HutchrokConcierge() {
     if (idleTimer.current) clearTimeout(idleTimer.current);
     if (node.showLeadCapture && !leadCaptured) {
       idleTimer.current = setTimeout(() => setShowLead(true), 8000);
-    } else {
-      setShowLead(false);
     }
     return () => {
       if (idleTimer.current) clearTimeout(idleTimer.current);
@@ -264,7 +251,7 @@ export function HutchrokConcierge() {
         {node.showTrust && <TrustSignals />}
 
         {/* Lead capture */}
-        {showLead && !leadCaptured && (
+        {showLead && displayShowLeadCapture && !leadCaptured && (
           <LeadCapturePrompt
             onCapture={() => {
               setLeadCaptured(true);
@@ -299,8 +286,9 @@ export function HutchrokConcierge() {
    Floating concierge — bottom-right FAB
    ════════════════════════════════════════ */
 
-export function ConciergeFloating() {
+export function ConciergeFloating({ mode }: { mode?: ConciergeMode }) {
   const pathname = usePathname();
+  const resolvedMode = mode ?? resolveConciergeModeFromPath(pathname);
   const [open, setOpen] = useState(false);
   const [nodeId, setNodeId] = useState("root");
   const [history, setHistory] = useState<string[]>([]);
@@ -310,8 +298,8 @@ export function ConciergeFloating() {
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const node = CONCIERGE_TREE[nodeId] ?? CONCIERGE_TREE["root"];
-  const nudge = resolveContextNudge(pathname);
+  const node = getNode(resolvedMode, nodeId);
+  const nudge = resolveContextNudge(resolvedMode, pathname);
 
   // Determine what content to display — context nudge or tree node
   const isShowingNudge = contextMode && nudge && nodeId === "root";
@@ -342,10 +330,14 @@ export function ConciergeFloating() {
 
   // When path changes, reset to context mode
   useEffect(() => {
-    setContextMode(true);
-    setNodeId("root");
-    setHistory([]);
-    setShowLead(false);
+    const resetTimer = setTimeout(() => {
+      setContextMode(true);
+      setNodeId("root");
+      setHistory([]);
+      setShowLead(false);
+    }, 0);
+
+    return () => clearTimeout(resetTimer);
   }, [pathname]);
 
   // Show lead capture after 8s idle on nodes that support it
@@ -353,8 +345,6 @@ export function ConciergeFloating() {
     if (idleTimer.current) clearTimeout(idleTimer.current);
     if (displayShowLeadCapture && !leadCaptured && open) {
       idleTimer.current = setTimeout(() => setShowLead(true), 8000);
-    } else {
-      setShowLead(false);
     }
     return () => {
       if (idleTimer.current) clearTimeout(idleTimer.current);
@@ -444,7 +434,7 @@ export function ConciergeFloating() {
             {displayShowTrust && <TrustSignals compact />}
 
             {/* Lead capture */}
-            {showLead && !leadCaptured && (
+            {showLead && node.showLeadCapture && !leadCaptured && (
               <LeadCapturePrompt
                 compact
                 onCapture={() => {
