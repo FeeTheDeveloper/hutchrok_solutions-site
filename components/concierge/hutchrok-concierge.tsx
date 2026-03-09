@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useAuth, useSession } from "@clerk/nextjs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,9 +28,10 @@ import {
 } from "@/components/concierge/concierge-config";
 import {
   getNode,
-  resolveConciergeModeFromPath,
+  resolveConciergeModeFromAuth,
   resolveContextNudge,
 } from "@/components/concierge/concierge-engine";
+import { getRoleFromClaims } from "@/lib/auth/roles";
 
 /* ── Icon resolver ── */
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -180,7 +182,18 @@ function TrustSignals({ compact = false }: { compact?: boolean }) {
    Inline concierge — for embedding in pages
    ════════════════════════════════════════ */
 
-export function HutchrokConcierge({ mode = "public" }: { mode?: ConciergeMode }) {
+export function HutchrokConcierge({ mode }: { mode?: ConciergeMode }) {
+  const pathname = usePathname();
+  const { isSignedIn } = useAuth();
+  const { session } = useSession();
+  const role = getRoleFromClaims(session?.claims ?? null);
+  const resolvedMode =
+    mode ??
+    resolveConciergeModeFromAuth({
+      isSignedIn: Boolean(isSignedIn),
+      role,
+      pathname,
+    });
   const [nodeId, setNodeId] = useState("root");
   const [history, setHistory] = useState<string[]>([]);
   const [showLead, setShowLead] = useState(false);
@@ -188,7 +201,7 @@ export function HutchrokConcierge({ mode = "public" }: { mode?: ConciergeMode })
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const node = getNode(mode, nodeId);
+  const node = getNode(resolvedMode, nodeId);
 
   const navigate = useCallback(
     (next: string) => {
@@ -251,7 +264,7 @@ export function HutchrokConcierge({ mode = "public" }: { mode?: ConciergeMode })
         {node.showTrust && <TrustSignals />}
 
         {/* Lead capture */}
-        {showLead && displayShowLeadCapture && !leadCaptured && (
+        {showLead && node.showLeadCapture && !leadCaptured && (
           <LeadCapturePrompt
             onCapture={() => {
               setLeadCaptured(true);
@@ -288,7 +301,16 @@ export function HutchrokConcierge({ mode = "public" }: { mode?: ConciergeMode })
 
 export function ConciergeFloating({ mode }: { mode?: ConciergeMode }) {
   const pathname = usePathname();
-  const resolvedMode = mode ?? resolveConciergeModeFromPath(pathname);
+  const { isSignedIn } = useAuth();
+  const { session } = useSession();
+  const role = getRoleFromClaims(session?.claims ?? null);
+  const resolvedMode =
+    mode ??
+    resolveConciergeModeFromAuth({
+      isSignedIn: Boolean(isSignedIn),
+      role,
+      pathname,
+    });
   const [open, setOpen] = useState(false);
   const [nodeId, setNodeId] = useState("root");
   const [history, setHistory] = useState<string[]>([]);

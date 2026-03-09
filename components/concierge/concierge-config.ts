@@ -131,11 +131,11 @@ const PUBLIC_NODES: Record<string, ConciergeNode> = {
       "Pick where you are in the process and I’ll route you to the right next step.",
     showTrust: true,
     options: [
-      { label: "Take eligibility quiz", icon: "BadgeCheck", href: "/eligibility" },
+      { label: "Sign in to your workspace", icon: "ArrowRight", href: "/sign-in" },
       { label: "Start intake form", icon: "FileText", href: "/contact" },
+      { label: "Check eligibility", icon: "BadgeCheck", href: "/eligibility" },
       { label: "Book consultation / contact", icon: "Mail", href: "/contact" },
       { label: "Explore service pages", icon: "Rocket", next: "public-services" },
-      { label: "Get filing guidance", icon: "Info", next: "public-filing-guidance" },
     ],
   },
   "public-services": {
@@ -203,9 +203,10 @@ const CLIENT_NODES: Record<string, ConciergeNode> = {
     id: "client-next-step",
     intentId: "nextStep",
     message: "Next-step guidance prioritizes unblockers first.",
-    subtitle: "We’ll surface missing inputs, signature requests, or filing approvals.",
+    subtitle:
+      "Placeholder: this will map to your active case checklist once dynamic tasks are connected.",
     options: [
-      { label: "View case tasks", icon: "CheckCircle", href: "/dashboard" },
+      { label: "Open dashboard next steps", icon: "CheckCircle", href: "/dashboard" },
       { label: "Contact support", icon: "Mail", href: "/contact" },
       { label: "Go back", icon: "ChevronLeft", next: "root" },
     ],
@@ -214,9 +215,10 @@ const CLIENT_NODES: Record<string, ConciergeNode> = {
     id: "client-doc-upload",
     intentId: "documentUpload",
     message: "For document uploads, we validate file type and naming guidance.",
-    subtitle: "Upload from your case workspace and we’ll confirm receipt.",
+    subtitle:
+      "Placeholder: uploads will route to case-specific document requests when connected.",
     options: [
-      { label: "Open case workspace", icon: "FileText", href: "/dashboard" },
+      { label: "Open uploads in dashboard", icon: "FileText", href: "/dashboard" },
       { label: "Upload troubleshooting", icon: "HelpCircle", href: "/contact" },
       { label: "Go back", icon: "ChevronLeft", next: "root" },
     ],
@@ -238,7 +240,8 @@ const ADMIN_NODES: Record<string, ConciergeNode> = {
     id: "root",
     intentId: "caseTriage",
     message: "Operator concierge is ready. What workflow are you running?",
-    subtitle: "Use prompts for triage, intake checks, form routing, and sync visibility.",
+    subtitle:
+      "Use prompts for triage, intake checks, form routing, and sync visibility (role-aware placeholder hooks enabled).",
     options: [
       { label: "Case triage guidance", icon: "Info", next: "admin-triage" },
       { label: "Intake completeness prompts", icon: "CheckCircle", next: "admin-intake" },
@@ -249,7 +252,8 @@ const ADMIN_NODES: Record<string, ConciergeNode> = {
   "admin-triage": {
     id: "admin-triage",
     intentId: "caseTriage",
-    message: "Triage prompts focus on urgency, blocker type, and owner assignment.",
+    message:
+      "Triage prompts focus on urgency, blocker type, and owner assignment (placeholder for live queue metadata).",
     options: [
       { label: "Open admin queue", icon: "ArrowRight", href: "/admin" },
       { label: "Go back", icon: "ChevronLeft", next: "root" },
@@ -258,7 +262,8 @@ const ADMIN_NODES: Record<string, ConciergeNode> = {
   "admin-intake": {
     id: "admin-intake",
     intentId: "intakeCompleteness",
-    message: "Intake completeness checks highlight missing legal and contact fields.",
+    message:
+      "Intake completeness checks highlight missing legal and contact fields (placeholder for field-level validators).",
     options: [
       { label: "Review intake records", icon: "ArrowRight", href: "/admin" },
       { label: "Go back", icon: "ChevronLeft", next: "root" },
@@ -267,7 +272,8 @@ const ADMIN_NODES: Record<string, ConciergeNode> = {
   "admin-filing": {
     id: "admin-filing",
     intentId: "filingFormSuggest",
-    message: "Filing suggestion prompts map case type to the best form bundle.",
+    message:
+      "Filing suggestion prompts map case type to the best form bundle (placeholder for rules engine outputs).",
     options: [
       { label: "Open filing workflows", icon: "FileText", href: "/admin" },
       { label: "Go back", icon: "ChevronLeft", next: "root" },
@@ -276,7 +282,8 @@ const ADMIN_NODES: Record<string, ConciergeNode> = {
   "admin-sync": {
     id: "admin-sync",
     intentId: "opsSync",
-    message: "Ops sync prompts show latest document publish and status sync events.",
+    message:
+      "Ops sync prompts show latest document publish and status sync events (placeholder for event stream integration).",
     options: [
       { label: "View ops dashboard", icon: "ArrowRight", href: "/admin" },
       { label: "Go back", icon: "ChevronLeft", next: "root" },
