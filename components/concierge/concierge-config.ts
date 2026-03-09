@@ -131,7 +131,6 @@ const PUBLIC_NODES: Record<string, ConciergeNode> = {
       "Pick where you are in the process and I’ll route you to the right next step.",
     showTrust: true,
     options: [
-      { label: "Sign in to your workspace", icon: "ArrowRight", href: "/sign-in" },
       { label: "Start intake form", icon: "FileText", href: "/contact" },
       { label: "Check eligibility", icon: "BadgeCheck", href: "/eligibility" },
       { label: "Book consultation / contact", icon: "Mail", href: "/contact" },

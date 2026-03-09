@@ -6,7 +6,7 @@ Full-stack veteran business formation platform with compliance-first intake, fil
 
 ## Features
 
-- **Optional Clerk authentication** — sign-in/sign-up, session-protected client dashboard, role-based scaffolding for RBAC. App degrades gracefully when Clerk keys are absent (dashboard redirects to home, auth UI hidden)
+- **Optional Clerk authentication** — session-protected client dashboard, role-based scaffolding for RBAC. App degrades gracefully when Clerk keys are absent (dashboard redirects to home, auth UI hidden)
 - **Client dashboard** — authenticated workspace with case status placeholders, quick actions, and embedded concierge
 - **Intake form submission** → persists to Supabase + auto-creates a filing case with a unique case number
 - **Admin console** to manage cases, update statuses, add notes, and assign team members
