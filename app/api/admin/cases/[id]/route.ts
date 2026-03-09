@@ -7,7 +7,7 @@ import { emitStatusChangeEvents } from "@/lib/notifications";
 import { recordCaseUpdate, AUDIT_ACTIONS } from "@/lib/audit";
 import { recordAudit } from "@/lib/audit/logger";
 
-const INTAKE_JOIN = `*, intake_submissions ( name, email, phone, business_stage, service_needed, message, veteran_status, vvl_status, business_name, entity_type, business_purpose, principal_address, mailing_address, texas_confirmed, launch_timeline, all_owners_veterans, fully_veteran_owned, owner_details, organizer_name, organizer_title, registered_agent_preference, operator_review_confirmed, eligibility_answers )`;
+const INTAKE_JOIN = `*, intake_submissions ( name, email, phone, business_stage, service_needed, message, veteran_status, vvl_status, branch_of_service, years_of_service, business_name, entity_type, dba_name, nonprofit_purpose, business_purpose, principal_address, mailing_address, texas_confirmed, launch_timeline, all_owners_veterans, fully_veteran_owned, owner_details, organizer_name, organizer_title, registered_agent_preference, operator_review_confirmed, eligibility_answers ), case_documents ( id, filename, mime, size, storage_path, uploaded_at )`;
 
 /**
  * GET /api/admin/cases/[id]?token=...

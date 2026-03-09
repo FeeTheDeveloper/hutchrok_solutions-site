@@ -26,6 +26,8 @@ import {
   QUICK_ACTIONS,
   LAUNCH_SERVICE_OPTIONS,
   LAUNCH_SERVICE_LABELS,
+  ENTITY_TYPES,
+  BRANCHES_OF_SERVICE,
   type FilingCase,
   type CaseStatus,
   type CaseDocument,
@@ -117,6 +119,14 @@ const RA_LABELS: Record<string, string> = {
   hutchrok: "Hutchrok recommended",
   other: "Already has one",
 };
+
+const ENTITY_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  ENTITY_TYPES.map((t) => [t.value, t.label])
+);
+
+const BRANCH_LABELS: Record<string, string> = Object.fromEntries(
+  BRANCHES_OF_SERVICE.map((b) => [b.value, b.label])
+);
 
 function CaseDetailContent() {
   const searchParams = useSearchParams();
@@ -500,41 +510,89 @@ function CaseDetailContent() {
           </Card>
         )}
 
-        {/* Microsoft 365 Ops info */}
-        {(filing.sharepoint_folder_url || filing.ops_synced_at) && (
-          <Card className="mb-6">
-            <CardContent className="py-4">
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-                {filing.sharepoint_folder_url && (
+        {/* ── Operations ── */}
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Operations
+            </CardTitle>
+            <CardDescription>
+              Microsoft 365 integration &amp; sync status
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">SharePoint Folder</p>
+                {filing.sharepoint_folder_url ? (
                   <a
                     href={filing.sharepoint_folder_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-blue-700 hover:underline font-medium"
+                    className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:underline font-medium"
                   >
-                    <ExternalLink className="h-4 w-4" />
-                    SharePoint Folder
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Open in SharePoint
                   </a>
-                )}
-                {filing.ops_synced_at && (
-                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    Last ops sync:{" "}
-                    {new Date(filing.ops_synced_at).toLocaleString()}
-                  </span>
-                )}
-                {filing.ms_list_item_id && (
-                  <span className="text-xs text-muted-foreground">
-                    MS List ID:{" "}
-                    <code className="bg-muted px-1 py-0.5 rounded">
-                      {filing.ms_list_item_id}
-                    </code>
-                  </span>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not synced</p>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Microsoft List Item ID</p>
+                {filing.ms_list_item_id ? (
+                  <code className="text-sm bg-muted px-1.5 py-0.5 rounded">
+                    {filing.ms_list_item_id}
+                  </code>
+                ) : (
+                  <p className="text-sm text-muted-foreground">—</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Last Ops Sync</p>
+              <p className="text-sm">
+                {filing.ops_synced_at
+                  ? new Date(filing.ops_synced_at).toLocaleString()
+                  : "Never synced"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Filing Actions ── */}
+        <Card className="mb-6 border-indigo-200 bg-indigo-50/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileCheck className="h-4 w-4 text-indigo-700" />
+              Filing Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-indigo-300 text-indigo-800 hover:bg-indigo-100"
+                onClick={() => fetchCase()}
+              >
+                <RefreshCw className="h-3 w-3 mr-1.5" />
+                Refresh Case
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-indigo-300 text-indigo-800 hover:bg-indigo-100"
+                disabled={saving}
+                onClick={() => handleQuickAction("READY_FOR_FILING" as CaseStatus)}
+              >
+                <CheckCircle2 className="h-3 w-3 mr-1.5" />
+                Mark Ready for Filing
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* ── Quick Actions ── */}
         {(() => {
@@ -603,6 +661,18 @@ function CaseDetailContent() {
                     value={intake?.service_needed}
                   />
                 </>
+              )}
+              {isVeteran && intake?.branch_of_service && (
+                <Field
+                  label="Branch of Service"
+                  value={BRANCH_LABELS[intake.branch_of_service] ?? intake.branch_of_service}
+                />
+              )}
+              {isVeteran && intake?.years_of_service != null && (
+                <Field
+                  label="Years of Service"
+                  value={String(intake.years_of_service)}
+                />
               )}
               {intake?.message && (
                 <div>
@@ -741,8 +811,20 @@ function CaseDetailContent() {
                 <Field label="Business Name" value={intake?.business_name} />
                 <Field
                   label="Entity Type"
-                  value={intake?.entity_type?.toUpperCase()}
+                  value={
+                    ENTITY_TYPE_LABELS[intake?.entity_type ?? ""] ??
+                    intake?.entity_type?.toUpperCase() ?? "—"
+                  }
                 />
+                {intake?.entity_type === "dba" && (
+                  <Field label="DBA Name" value={intake?.dba_name} />
+                )}
+                {intake?.entity_type === "nonprofit" && (
+                  <Field
+                    label="Nonprofit Purpose"
+                    value={intake?.nonprofit_purpose}
+                  />
+                )}
                 <Field
                   label="Business Purpose"
                   value={intake?.business_purpose}
@@ -826,9 +908,14 @@ function CaseDetailContent() {
               <CardTitle className="text-base flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Documents
+                {documents.length > 0 && (
+                  <Badge variant="outline" className="text-[10px] ml-1">
+                    {documents.length}
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>
-                Upload PDFs, JPGs, or PNGs (max 10 MB each)
+                Uploaded client documents &amp; generated filings · PDF, JPG, PNG (max 10 MB)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -893,6 +980,16 @@ function CaseDetailContent() {
                           <p className="text-xs text-muted-foreground">
                             {(doc.size / 1024).toFixed(0)} KB ·{" "}
                             {new Date(doc.uploaded_at).toLocaleDateString()}
+                            {doc.filename.startsWith("COF-") && (
+                              <Badge variant="outline" className="text-[9px] ml-1.5 py-0 px-1 align-middle border-green-300 text-green-700">
+                                Filing
+                              </Badge>
+                            )}
+                            {doc.filename.toLowerCase().includes("vvl") && (
+                              <Badge variant="outline" className="text-[9px] ml-1.5 py-0 px-1 align-middle border-amber-300 text-amber-700">
+                                VVL
+                              </Badge>
+                            )}
                           </p>
                         </div>
                       </div>

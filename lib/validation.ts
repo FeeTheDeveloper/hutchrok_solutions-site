@@ -59,15 +59,25 @@ export function validateIntake(data: unknown): {
   return { success: false, fieldErrors };
 }
 
-// ── Veteran Filing Intake Schema ──
+// ── Veteran Filing Intake Schema (Phase 2) ──
 
 const ownerDetailSchema = z.object({
   name: z.string().trim().min(1, "Owner name is required.").max(200),
   role: z.string().trim().min(1, "Role is required.").max(100),
 });
 
-export const veteranIntakeSchema = z.object({
-  // Step 1: Contact
+const entityTypeEnum = z.enum(["llc", "dba", "nonprofit"], {
+  message: "Entity type is required.",
+});
+
+const branchOfServiceEnum = z.enum(
+  ["army", "navy", "air_force", "marines", "coast_guard", "space_force", "other"],
+  { message: "Branch of service is required." },
+);
+
+/** Base object schema — no refinements, used for .pick() on step schemas */
+const veteranIntakeBaseSchema = z.object({
+  // Step 0: Contact + Veteran Details
   name: z.string().trim().min(1, "Full legal name is required.").max(200),
   email: z.string().trim().min(1, "Email is required.").email("Enter a valid email."),
   phone: z.string().trim().min(1, "Phone number is required.").max(30),
@@ -77,11 +87,19 @@ export const veteranIntakeSchema = z.object({
   vvlStatus: z.enum(["have_vvl", "applied", "not_started"], {
     message: "VVL status is required.",
   }),
+  branchOfService: branchOfServiceEnum.optional(),
+  yearsOfService: z
+    .number({ message: "Years of service is required." })
+    .min(0, "Years of service cannot be negative.")
+    .max(50, "Years of service seems too high.")
+    .optional(),
   notes: z.string().max(5000).optional().default(""),
 
-  // Step 2: Business
+  // Step 1: Business + Entity-specific
   businessName: z.string().trim().min(1, "Business name is required.").max(300),
-  entityType: z.literal("llc"),
+  entityType: entityTypeEnum,
+  dbaName: z.string().trim().max(300).optional(),
+  nonprofitPurpose: z.string().trim().max(2000).optional(),
   businessPurpose: z.string().trim().min(1, "Business purpose is required.").max(1000),
   principalAddress: z.string().trim().min(1, "Principal address is required.").max(500),
   mailingAddress: z.string().max(500).optional().default(""),
@@ -92,7 +110,7 @@ export const veteranIntakeSchema = z.object({
     message: "Launch timeline is required.",
   }),
 
-  // Step 3: Ownership
+  // Step 2: Ownership + Filing
   allOwnersVeterans: z.boolean(),
   fullyVeteranOwned: z.boolean(),
   ownerDetails: z
@@ -112,31 +130,119 @@ export const veteranIntakeSchema = z.object({
   eligibilityAnswers: z.record(z.string(), z.boolean().nullable()).nullable().optional(),
 });
 
+/** Full veteran intake schema with conditional validation */
+export const veteranIntakeSchema = veteranIntakeBaseSchema.superRefine((data, ctx) => {
+  // Veteran-conditional: require service details
+  if (data.veteranStatus === true) {
+    if (!data.branchOfService) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Branch of service is required for veterans.",
+        path: ["branchOfService"],
+      });
+    }
+    if (data.yearsOfService === undefined || data.yearsOfService === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Years of service is required for veterans.",
+        path: ["yearsOfService"],
+      });
+    }
+  }
+
+  // Entity-conditional: DBA → dbaName
+  if (data.entityType === "dba") {
+    if (!data.dbaName || data.dbaName.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "DBA name is required for DBA entities.",
+        path: ["dbaName"],
+      });
+    }
+  }
+
+  // Entity-conditional: nonprofit → nonprofitPurpose
+  if (data.entityType === "nonprofit") {
+    if (!data.nonprofitPurpose || data.nonprofitPurpose.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Nonprofit purpose is required for nonprofit entities.",
+        path: ["nonprofitPurpose"],
+      });
+    }
+  }
+});
+
 export type VeteranIntakeInput = z.infer<typeof veteranIntakeSchema>;
 
 /** Step-level schemas for client-side progressive validation */
 export const veteranIntakeStepSchemas = [
-  // Step 0: Contact
-  veteranIntakeSchema.pick({
-    name: true,
-    email: true,
-    phone: true,
-    veteranStatus: true,
-    vvlStatus: true,
-    notes: true,
-  }),
-  // Step 1: Business
-  veteranIntakeSchema.pick({
-    businessName: true,
-    entityType: true,
-    businessPurpose: true,
-    principalAddress: true,
-    mailingAddress: true,
-    texasConfirmed: true,
-    launchTimeline: true,
-  }),
-  // Step 2: Ownership
-  veteranIntakeSchema.pick({
+  // Step 0: Contact + Veteran Details
+  veteranIntakeBaseSchema
+    .pick({
+      name: true,
+      email: true,
+      phone: true,
+      veteranStatus: true,
+      vvlStatus: true,
+      branchOfService: true,
+      yearsOfService: true,
+      notes: true,
+    })
+    .superRefine((data, ctx) => {
+      if (data.veteranStatus === true) {
+        if (!data.branchOfService) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Branch of service is required for veterans.",
+            path: ["branchOfService"],
+          });
+        }
+        if (data.yearsOfService === undefined || data.yearsOfService === null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Years of service is required for veterans.",
+            path: ["yearsOfService"],
+          });
+        }
+      }
+    }),
+
+  // Step 1: Business + Entity-specific
+  veteranIntakeBaseSchema
+    .pick({
+      businessName: true,
+      entityType: true,
+      dbaName: true,
+      nonprofitPurpose: true,
+      businessPurpose: true,
+      principalAddress: true,
+      mailingAddress: true,
+      texasConfirmed: true,
+      launchTimeline: true,
+    })
+    .superRefine((data, ctx) => {
+      if (data.entityType === "dba" && (!data.dbaName || data.dbaName.trim().length === 0)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "DBA name is required for DBA entities.",
+          path: ["dbaName"],
+        });
+      }
+      if (
+        data.entityType === "nonprofit" &&
+        (!data.nonprofitPurpose || data.nonprofitPurpose.trim().length === 0)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Nonprofit purpose is required for nonprofit entities.",
+          path: ["nonprofitPurpose"],
+        });
+      }
+    }),
+
+  // Step 2: Ownership + Filing
+  veteranIntakeBaseSchema.pick({
     allOwnersVeterans: true,
     fullyVeteranOwned: true,
     ownerDetails: true,

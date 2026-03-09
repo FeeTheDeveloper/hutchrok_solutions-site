@@ -121,8 +121,12 @@ async function handleVeteranIntake(
       // Veteran fields
       veteran_status: data.veteranStatus,
       vvl_status: data.vvlStatus,
+      branch_of_service: data.branchOfService || null,
+      years_of_service: data.yearsOfService ?? null,
       business_name: data.businessName,
       entity_type: data.entityType,
+      dba_name: data.dbaName || null,
+      nonprofit_purpose: data.nonprofitPurpose || null,
       business_purpose: data.businessPurpose,
       principal_address: data.principalAddress,
       mailing_address: data.mailingAddress || null,

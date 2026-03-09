@@ -25,6 +25,8 @@ export interface OwnerDetail {
 export type VvlStatus = "have_vvl" | "applied" | "not_started";
 export type LaunchTimeline = "asap" | "1_3_months" | "3_6_months" | "6_plus_months" | "not_sure";
 export type RegisteredAgentPreference = "self" | "hutchrok" | "other";
+export type BusinessEntityType = "llc" | "dba" | "nonprofit";
+export type BranchOfService = "army" | "navy" | "air_force" | "marines" | "coast_guard" | "space_force" | "other";
 
 export const VVL_STATUSES: { value: VvlStatus; label: string }[] = [
   { value: "have_vvl", label: "I have my VVL" },
@@ -46,6 +48,22 @@ export const REGISTERED_AGENT_OPTIONS: { value: RegisteredAgentPreference; label
   { value: "other", label: "I already have a registered agent" },
 ];
 
+export const ENTITY_TYPES: { value: BusinessEntityType; label: string }[] = [
+  { value: "llc", label: "LLC" },
+  { value: "dba", label: "DBA (Assumed Name)" },
+  { value: "nonprofit", label: "Nonprofit Corporation" },
+];
+
+export const BRANCHES_OF_SERVICE: { value: BranchOfService; label: string }[] = [
+  { value: "army", label: "Army" },
+  { value: "navy", label: "Navy" },
+  { value: "air_force", label: "Air Force" },
+  { value: "marines", label: "Marines" },
+  { value: "coast_guard", label: "Coast Guard" },
+  { value: "space_force", label: "Space Force" },
+  { value: "other", label: "Other" },
+];
+
 export const OWNER_ROLES = ["Member", "Manager", "Member-Manager"] as const;
 
 export interface VeteranIntakeFormData {
@@ -58,7 +76,9 @@ export interface VeteranIntakeFormData {
   notes: string;
   // Business
   businessName: string;
-  entityType: "llc";
+  entityType: BusinessEntityType;
+  dbaName?: string;
+  nonprofitPurpose?: string;
   businessPurpose: string;
   principalAddress: string;
   mailingAddress: string;
@@ -72,6 +92,9 @@ export interface VeteranIntakeFormData {
   organizerTitle: string;
   registeredAgentPreference: RegisteredAgentPreference;
   operatorReviewConfirmed: boolean;
+  // Service background
+  branchOfService?: BranchOfService;
+  yearsOfService?: number;
   // Context
   eligibilityAnswers: Record<string, boolean | null> | null;
 }
@@ -116,6 +139,11 @@ export interface IntakeSubmissionJoin {
   organizer_title: string | null;
   registered_agent_preference: string | null;
   operator_review_confirmed: boolean | null;
+  // Phase 2 expansion
+  dba_name: string | null;
+  nonprofit_purpose: string | null;
+  branch_of_service: string | null;
+  years_of_service: number | null;
   eligibility_answers: Record<string, boolean | null> | null;
 }
 

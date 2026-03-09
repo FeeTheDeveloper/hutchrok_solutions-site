@@ -18,8 +18,10 @@ import {
   LAUNCH_TIMELINES,
   REGISTERED_AGENT_OPTIONS,
   OWNER_ROLES,
+  ENTITY_TYPES,
+  BRANCHES_OF_SERVICE,
 } from "@/lib/types";
-import type { OwnerDetail } from "@/lib/types";
+import type { OwnerDetail, BusinessEntityType, BranchOfService } from "@/lib/types";
 import { validateVeteranIntakeStep } from "@/lib/validation";
 import { loadAnswers, type QuizAnswers } from "@/lib/eligibility";
 import { cn } from "@/lib/utils";
@@ -55,9 +57,13 @@ interface FormState {
   phone: string;
   veteranStatus: boolean;
   vvlStatus: string;
+  branchOfService: string;
+  yearsOfService: string;
   notes: string;
   businessName: string;
-  entityType: "llc";
+  entityType: BusinessEntityType;
+  dbaName: string;
+  nonprofitPurpose: string;
   businessPurpose: string;
   principalAddress: string;
   mailingAddress: string;
@@ -79,9 +85,13 @@ const INITIAL_STATE: FormState = {
   phone: "",
   veteranStatus: false,
   vvlStatus: "",
+  branchOfService: "",
+  yearsOfService: "",
   notes: "",
   businessName: "",
   entityType: "llc",
+  dbaName: "",
+  nonprofitPurpose: "",
   businessPurpose: "",
   principalAddress: "",
   mailingAddress: "",
@@ -146,9 +156,17 @@ export default function VeteranIntakeForm() {
     []
   );
 
+  /** Prepare form state for validation — coerce string fields to expected types */
+  function formDataForValidation() {
+    return {
+      ...form,
+      yearsOfService: form.yearsOfService !== "" ? Number(form.yearsOfService) : undefined,
+    };
+  }
+
   function validateStep(): boolean {
     if (step >= STEPS.length - 1) return true; // review step — no fields to validate
-    const result = validateVeteranIntakeStep(step, form);
+    const result = validateVeteranIntakeStep(step, formDataForValidation());
     if (result.success) {
       setErrors({});
       return true;
@@ -171,8 +189,9 @@ export default function VeteranIntakeForm() {
 
   async function handleSubmit() {
     // Validate all content steps
+    const coerced = formDataForValidation();
     for (let i = 0; i < STEPS.length - 1; i++) {
-      const result = validateVeteranIntakeStep(i, form);
+      const result = validateVeteranIntakeStep(i, coerced);
       if (!result.success) {
         setStep(i);
         setErrors(result.fieldErrors ?? {});
@@ -190,9 +209,13 @@ export default function VeteranIntakeForm() {
         phone: form.phone,
         veteranStatus: form.veteranStatus,
         vvlStatus: form.vvlStatus,
+        branchOfService: form.branchOfService || undefined,
+        yearsOfService: form.yearsOfService ? Number(form.yearsOfService) : undefined,
         notes: form.notes,
         businessName: form.businessName,
         entityType: form.entityType,
+        dbaName: form.entityType === "dba" ? form.dbaName : undefined,
+        nonprofitPurpose: form.entityType === "nonprofit" ? form.nonprofitPurpose : undefined,
         businessPurpose: form.businessPurpose,
         principalAddress: form.principalAddress,
         mailingAddress: form.mailingAddressSame ? "" : form.mailingAddress,
@@ -463,6 +486,41 @@ function StepContact({
         </Select>
       </Field>
 
+      {form.veteranStatus && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Branch of Service" error={errors.branchOfService} required>
+            <Select
+              value={form.branchOfService}
+              onValueChange={(val) => update("branchOfService", val)}
+            >
+              <SelectTrigger
+                className={errors.branchOfService ? "border-destructive" : ""}
+              >
+                <SelectValue placeholder="Select branch" />
+              </SelectTrigger>
+              <SelectContent>
+                {BRANCHES_OF_SERVICE.map((b) => (
+                  <SelectItem key={b.value} value={b.value}>
+                    {b.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Years of Service" error={errors.yearsOfService} required>
+            <Input
+              type="number"
+              min={0}
+              max={50}
+              placeholder="e.g. 8"
+              value={form.yearsOfService}
+              onChange={(e) => update("yearsOfService", e.target.value)}
+              className={errors.yearsOfService ? "border-destructive" : ""}
+            />
+          </Field>
+        </div>
+      )}
+
       <Field label="Notes or Questions" error={errors.notes}>
         <Textarea
           placeholder="Anything you'd like us to know before we review your intake…"
@@ -493,13 +551,33 @@ function StepBusiness({
       <div>
         <h3 className="text-lg font-bold text-navy mb-1">Business Details</h3>
         <p className="text-sm text-muted-foreground">
-          Tell us about the Texas LLC you'd like to form.
+          Tell us about the Texas entity you'd like to form.
         </p>
       </div>
 
-      <Field label="Desired LLC Name" error={errors.businessName} required>
+      <Field label="Entity Type" error={errors.entityType} required>
+        <Select
+          value={form.entityType}
+          onValueChange={(val) => update("entityType", val as BusinessEntityType)}
+        >
+          <SelectTrigger
+            className={errors.entityType ? "border-destructive" : ""}
+          >
+            <SelectValue placeholder="Select entity type" />
+          </SelectTrigger>
+          <SelectContent>
+            {ENTITY_TYPES.map((t) => (
+              <SelectItem key={t.value} value={t.value}>
+                {t.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+
+      <Field label="Business Name" error={errors.businessName} required>
         <Input
-          placeholder="e.g. Lone Star Ventures LLC"
+          placeholder={form.entityType === "dba" ? "e.g. Lone Star Consulting" : "e.g. Lone Star Ventures LLC"}
           value={form.businessName}
           onChange={(e) => update("businessName", e.target.value)}
           className={errors.businessName ? "border-destructive" : ""}
@@ -508,6 +586,29 @@ function StepBusiness({
           We'll check name availability with the Texas SOS before filing.
         </p>
       </Field>
+
+      {form.entityType === "dba" && (
+        <Field label="DBA / Assumed Name" error={errors.dbaName} required>
+          <Input
+            placeholder="The name you'll do business as"
+            value={form.dbaName}
+            onChange={(e) => update("dbaName", e.target.value)}
+            className={errors.dbaName ? "border-destructive" : ""}
+          />
+        </Field>
+      )}
+
+      {form.entityType === "nonprofit" && (
+        <Field label="Nonprofit Purpose" error={errors.nonprofitPurpose} required>
+          <Textarea
+            placeholder="Describe the charitable, educational, or other nonprofit purpose…"
+            rows={3}
+            value={form.nonprofitPurpose}
+            onChange={(e) => update("nonprofitPurpose", e.target.value)}
+            className={errors.nonprofitPurpose ? "border-destructive" : ""}
+          />
+        </Field>
+      )}
 
       <Field
         label="Business Purpose / Industry"
@@ -813,13 +914,29 @@ function StepReview({
           "VVL Status",
           VVL_STATUSES.find((s) => s.value === form.vvlStatus)?.label ?? "—",
         ],
+        ...(form.veteranStatus && form.branchOfService
+          ? [[
+              "Branch of Service",
+              BRANCHES_OF_SERVICE.find((b) => b.value === form.branchOfService)?.label ?? "—",
+            ]]
+          : []),
+        ...(form.veteranStatus && form.yearsOfService
+          ? [["Years of Service", form.yearsOfService]]
+          : []),
         ...(form.notes ? [["Notes", form.notes]] : []),
       ],
     },
     {
       title: "Business",
       items: [
-        ["LLC Name", form.businessName],
+        ["Entity Type", ENTITY_TYPES.find((t) => t.value === form.entityType)?.label ?? "—"],
+        ["Business Name", form.businessName],
+        ...(form.entityType === "dba" && form.dbaName
+          ? [["DBA Name", form.dbaName]]
+          : []),
+        ...(form.entityType === "nonprofit" && form.nonprofitPurpose
+          ? [["Nonprofit Purpose", form.nonprofitPurpose]]
+          : []),
         ["Purpose", form.businessPurpose],
         ["Principal Address", form.principalAddress],
         [
