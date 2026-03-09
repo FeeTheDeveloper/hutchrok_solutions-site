@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignInButton, UserButton } from "@clerk/nextjs";
+import { useAppAuth, CLERK_ENABLED } from "@/app/providers";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
@@ -23,6 +24,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { isSignedIn } = useAppAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -75,22 +77,24 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <SignedIn>
-            <Link href="/dashboard" className="hidden md:block">
-              <Button variant="outline" className="border-navy/20 text-navy hover:bg-cream">
-                Dashboard
-              </Button>
-            </Link>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
+          {isSignedIn && (
+            <>
+              <Link href="/dashboard" className="hidden md:block">
+                <Button variant="outline" className="border-navy/20 text-navy hover:bg-cream">
+                  Dashboard
+                </Button>
+              </Link>
+              {CLERK_ENABLED && <UserButton afterSignOutUrl="/" />}
+            </>
+          )}
 
-          <SignedOut>
+          {!isSignedIn && CLERK_ENABLED && (
             <SignInButton mode="modal">
               <Button variant="outline" className="hidden sm:inline-flex border-navy/20 text-navy hover:bg-cream">
                 Sign In
               </Button>
             </SignInButton>
-          </SignedOut>
+          )}
 
           <Link href="/free-filing" className="hidden sm:block">
             <Button className="bg-gold hover:bg-gold-dark text-navy font-semibold shadow-sm hover:shadow-md transition-shadow">
@@ -132,14 +136,14 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <SignedIn>
+          {isSignedIn && (
             <Link href="/dashboard" className="block pt-2" onClick={() => setMobileOpen(false)}>
               <Button variant="outline" className="w-full border-navy/20 text-navy h-11">
                 Dashboard
               </Button>
             </Link>
-          </SignedIn>
-          <SignedOut>
+          )}
+          {!isSignedIn && CLERK_ENABLED && (
             <div className="pt-2">
               <SignInButton mode="modal">
                 <Button variant="outline" className="w-full border-navy/20 text-navy h-11">
@@ -147,7 +151,7 @@ export default function Navbar() {
                 </Button>
               </SignInButton>
             </div>
-          </SignedOut>
+          )}
           <div className="pt-2 pb-1">
             <Link href="/free-filing" onClick={() => setMobileOpen(false)}>
               <Button className="w-full bg-gold hover:bg-gold-dark text-navy font-semibold h-12 text-[15px]">

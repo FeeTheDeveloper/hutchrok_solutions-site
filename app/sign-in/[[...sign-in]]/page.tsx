@@ -1,5 +1,7 @@
 import { SignIn } from "@clerk/nextjs";
 
+export const dynamic = "force-dynamic";
+
 export default function SignInPage() {
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4 py-10">

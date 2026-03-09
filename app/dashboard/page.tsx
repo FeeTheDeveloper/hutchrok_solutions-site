@@ -1,4 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
+
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
+import { Providers } from "@/app/providers";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import { ConciergeFloating } from "@/components/concierge/hutchrok-concierge";
@@ -53,12 +53,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <ClerkProvider>
+        <Providers>
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <Footer />
           <ConciergeFloating />
-        </ClerkProvider>
+        </Providers>
       </body>
     </html>
   );

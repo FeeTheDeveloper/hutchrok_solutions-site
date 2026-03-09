@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAppAuth } from "@/app/providers";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +31,6 @@ import {
   resolveConciergeModeFromAuth,
   resolveContextNudge,
 } from "@/components/concierge/concierge-engine";
-import { getRoleFromMetadata } from "@/lib/auth/roles";
 
 /* ── Icon resolver ── */
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -190,13 +189,11 @@ export function HutchrokConcierge({
   preferContextNudge?: boolean;
 }) {
   const pathname = usePathname();
-  const { isSignedIn } = useAuth();
-  const { user } = useUser();
-  const role = getRoleFromMetadata(user?.publicMetadata);
+  const { isSignedIn, role } = useAppAuth();
   const resolvedMode =
     mode ??
     resolveConciergeModeFromAuth({
-      isSignedIn: Boolean(isSignedIn),
+      isSignedIn,
       role,
       pathname,
     });
@@ -314,13 +311,11 @@ export function HutchrokConcierge({
 
 export function ConciergeFloating({ mode }: { mode?: ConciergeMode }) {
   const pathname = usePathname();
-  const { isSignedIn } = useAuth();
-  const { user } = useUser();
-  const role = getRoleFromMetadata(user?.publicMetadata);
+  const { isSignedIn, role } = useAppAuth();
   const resolvedMode =
     mode ??
     resolveConciergeModeFromAuth({
-      isSignedIn: Boolean(isSignedIn),
+      isSignedIn,
       role,
       pathname,
     });
