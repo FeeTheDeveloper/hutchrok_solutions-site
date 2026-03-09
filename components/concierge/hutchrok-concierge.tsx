@@ -182,7 +182,13 @@ function TrustSignals({ compact = false }: { compact?: boolean }) {
    Inline concierge — for embedding in pages
    ════════════════════════════════════════ */
 
-export function HutchrokConcierge({ mode }: { mode?: ConciergeMode }) {
+export function HutchrokConcierge({
+  mode,
+  preferContextNudge = false,
+}: {
+  mode?: ConciergeMode;
+  preferContextNudge?: boolean;
+}) {
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
   const { session } = useSession();
@@ -202,6 +208,13 @@ export function HutchrokConcierge({ mode }: { mode?: ConciergeMode }) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   const node = getNode(resolvedMode, nodeId);
+  const nudge = resolveContextNudge(resolvedMode, pathname);
+  const isShowingNudge = preferContextNudge && nudge && nodeId === "root";
+  const displayMessage = isShowingNudge ? nudge.message : node.message;
+  const displaySubtitle = isShowingNudge ? nudge.subtitle : node.subtitle;
+  const displayOptions = isShowingNudge ? nudge.options : node.options;
+  const displayShowTrust = isShowingNudge ? true : node.showTrust;
+  const displayShowLeadCapture = isShowingNudge ? false : node.showLeadCapture;
 
   const navigate = useCallback(
     (next: string) => {
@@ -215,13 +228,13 @@ export function HutchrokConcierge({ mode }: { mode?: ConciergeMode }) {
   // Show lead capture after 8s idle on nodes that support it
   useEffect(() => {
     if (idleTimer.current) clearTimeout(idleTimer.current);
-    if (node.showLeadCapture && !leadCaptured) {
+    if (displayShowLeadCapture && !leadCaptured) {
       idleTimer.current = setTimeout(() => setShowLead(true), 8000);
     }
     return () => {
       if (idleTimer.current) clearTimeout(idleTimer.current);
     };
-  }, [nodeId, node.showLeadCapture, leadCaptured]);
+  }, [nodeId, displayShowLeadCapture, leadCaptured]);
 
   // Scroll into view on node change (on mobile especially)
   useEffect(() => {
@@ -243,11 +256,11 @@ export function HutchrokConcierge({ mode }: { mode?: ConciergeMode }) {
           </div>
           <div>
             <p className="font-semibold text-navy text-[15px] sm:text-base leading-relaxed">
-              {node.message}
+              {displayMessage}
             </p>
-            {node.subtitle && (
+            {displaySubtitle && (
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                {node.subtitle}
+                {displaySubtitle}
               </p>
             )}
           </div>
@@ -255,16 +268,16 @@ export function HutchrokConcierge({ mode }: { mode?: ConciergeMode }) {
 
         {/* Options as buttons */}
         <div className="flex flex-col gap-2.5" role="group" aria-label="Options">
-          {node.options.map((opt) => (
+          {displayOptions.map((opt) => (
             <OptionButton key={opt.label} option={opt} onNavigate={navigate} />
           ))}
         </div>
 
         {/* Trust signals */}
-        {node.showTrust && <TrustSignals />}
+        {displayShowTrust && <TrustSignals />}
 
         {/* Lead capture */}
-        {showLead && node.showLeadCapture && !leadCaptured && (
+        {showLead && displayShowLeadCapture && !leadCaptured && (
           <LeadCapturePrompt
             onCapture={() => {
               setLeadCaptured(true);
