@@ -13,6 +13,7 @@ Full-stack veteran business formation platform with compliance-first intake, fil
 - **Document uploads** to a private Supabase Storage bucket with signed-URL downloads
 - **Zod validation** shared between client and server for consistent field-level errors
 - **Rate limiting** on public endpoints (in-memory, Vercel-safe)
+- **Veteran Claim Defense** — VA claim filing assistance, denial appeals, evidence coordination, and disability rating review
 - **Mode-based concierge** — public, client, and admin modes with intent mapping, context-aware nudges, and lead capture
 - **Backend-ready foundation** for Microsoft 365 operational workflows (SharePoint, Power Automate, Lists)
 

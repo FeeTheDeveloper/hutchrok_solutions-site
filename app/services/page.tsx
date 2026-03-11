@@ -10,6 +10,7 @@ import {
   Settings,
   ArrowRight,
   CheckCircle,
+  Gavel,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -69,6 +70,19 @@ const services = [
       "Document management and organization",
       "Operational process monitoring",
       "Periodic compliance reviews and updates",
+    ],
+  },
+  {
+    icon: Gavel,
+    title: "Veteran Claim Defense",
+    desc: "We help veterans navigate and defend their benefit claims, ensuring they receive the support they've earned through service.",
+    bullets: [
+      "VA claim filing assistance and coordination",
+      "Claim denial review and appeal support",
+      "Evidence gathering and documentation preparation",
+      "Nexus letter coordination",
+      "Disability rating review and optimization",
+      "Supplemental claim and higher-level review guidance",
     ],
   },
 ];
