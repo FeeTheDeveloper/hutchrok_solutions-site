@@ -16,14 +16,17 @@ import {
 import {
   VVL_STATUSES,
   LAUNCH_TIMELINES,
-  REGISTERED_AGENT_OPTIONS,
   OWNER_ROLES,
   ENTITY_TYPES,
   BRANCHES_OF_SERVICE,
 } from "@/lib/types";
-import type { OwnerDetail, BusinessEntityType, BranchOfService } from "@/lib/types";
+import type {
+  OwnerDetail,
+  BusinessEntityType,
+  RegisteredAgentPreference,
+} from "@/lib/types";
 import { validateVeteranIntakeStep } from "@/lib/validation";
-import { loadAnswers, type QuizAnswers } from "@/lib/eligibility";
+import { loadAnswers } from "@/lib/eligibility";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle,
@@ -75,7 +78,7 @@ interface FormState {
   ownerDetails: OwnerDetail[];
   organizerName: string;
   organizerTitle: string;
-  registeredAgentPreference: string;
+  registeredAgentPreference: RegisteredAgentPreference;
   operatorReviewConfirmed: boolean;
 }
 
@@ -103,7 +106,7 @@ const INITIAL_STATE: FormState = {
   ownerDetails: [{ name: "", role: "Member" }],
   organizerName: "",
   organizerTitle: "",
-  registeredAgentPreference: "",
+  registeredAgentPreference: "hutchrok",
   operatorReviewConfirmed: false,
 };
 
@@ -226,7 +229,7 @@ export default function VeteranIntakeForm() {
         ownerDetails: form.ownerDetails,
         organizerName: form.organizerName,
         organizerTitle: form.organizerTitle,
-        registeredAgentPreference: form.registeredAgentPreference,
+        registeredAgentPreference: "hutchrok",
         operatorReviewConfirmed: form.operatorReviewConfirmed,
         eligibilityAnswers: eligibilityData,
       };
@@ -852,31 +855,14 @@ function StepOwnership({
         </Field>
       </div>
 
-      <Field
-        label="Registered Agent Preference"
-        error={errors.registeredAgentPreference}
-        required
-      >
-        <Select
-          value={form.registeredAgentPreference}
-          onValueChange={(val) => update("registeredAgentPreference", val)}
-        >
-          <SelectTrigger
-            className={
-              errors.registeredAgentPreference ? "border-destructive" : ""
-            }
-          >
-            <SelectValue placeholder="Who will serve as registered agent?" />
-          </SelectTrigger>
-          <SelectContent>
-            {REGISTERED_AGENT_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
+      <div className="rounded-lg border border-border/40 bg-cream/50 p-4">
+        <p className="text-sm font-medium text-navy">
+          Registered Agent
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Hutchrok will serve as your registered agent for this filing.
+        </p>
+      </div>
 
       <FormCheckbox
         checked={form.operatorReviewConfirmed}
@@ -973,9 +959,7 @@ function StepReview({
         ["Organizer", form.organizerName + (form.organizerTitle ? ` — ${form.organizerTitle}` : "")],
         [
           "Registered Agent",
-          REGISTERED_AGENT_OPTIONS.find(
-            (o) => o.value === form.registeredAgentPreference
-          )?.label ?? "—",
+          "Hutchrok will serve as your registered agent",
         ],
         [
           "Operator Review",

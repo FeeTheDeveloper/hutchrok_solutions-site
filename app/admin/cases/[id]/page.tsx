@@ -114,12 +114,6 @@ const TIMELINE_LABELS: Record<string, string> = {
   not_sure: "Not sure",
 };
 
-const RA_LABELS: Record<string, string> = {
-  self: "Self",
-  hutchrok: "Hutchrok recommended",
-  other: "Already has one",
-};
-
 const ENTITY_TYPE_LABELS: Record<string, string> = Object.fromEntries(
   ENTITY_TYPES.map((t) => [t.value, t.label])
 );
@@ -869,10 +863,7 @@ function CaseDetailContent() {
                 )}
                 <Field
                   label="Registered Agent"
-                  value={
-                    RA_LABELS[intake?.registered_agent_preference ?? ""] ??
-                    intake?.registered_agent_preference
-                  }
+                  value="Hutchrok will serve as your registered agent"
                 />
                 <Field
                   label="Operator Review Confirmed"

@@ -119,9 +119,7 @@ const veteranIntakeBaseSchema = z.object({
     .max(10),
   organizerName: z.string().trim().min(1, "Organizer name is required.").max(200),
   organizerTitle: z.string().trim().max(200).optional().default(""),
-  registeredAgentPreference: z.enum(["self", "hutchrok", "other"], {
-    message: "Registered agent preference is required.",
-  }),
+  registeredAgentPreference: z.literal("hutchrok"),
   operatorReviewConfirmed: z.literal(true, {
     message: "Review confirmation is required.",
   }),

@@ -47,9 +47,7 @@ export const form205Builder: DocumentBuilder<Form205Payload> = {
       entityType: "llc",
       filingState: "TX",
       registeredAgent: {
-        name: intake.registered_agent_preference === "self"
-          ? intake.organizer_name ?? intake.name
-          : "TBD — Hutchrok Coordinated",
+        name: "Hutchrok",
         address: intake.principal_address ?? "",
       },
       organizer: {

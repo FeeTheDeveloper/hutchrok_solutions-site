@@ -24,7 +24,7 @@ export interface OwnerDetail {
 
 export type VvlStatus = "have_vvl" | "applied" | "not_started";
 export type LaunchTimeline = "asap" | "1_3_months" | "3_6_months" | "6_plus_months" | "not_sure";
-export type RegisteredAgentPreference = "self" | "hutchrok" | "other";
+export type RegisteredAgentPreference = "hutchrok";
 export type BusinessEntityType = "llc" | "dba" | "nonprofit";
 export type BranchOfService = "army" | "navy" | "air_force" | "marines" | "coast_guard" | "space_force" | "other";
 
@@ -43,9 +43,10 @@ export const LAUNCH_TIMELINES: { value: LaunchTimeline; label: string }[] = [
 ];
 
 export const REGISTERED_AGENT_OPTIONS: { value: RegisteredAgentPreference; label: string }[] = [
-  { value: "self", label: "I'll serve as my own registered agent" },
-  { value: "hutchrok", label: "I'd like Hutchrok to recommend one" },
-  { value: "other", label: "I already have a registered agent" },
+  {
+    value: "hutchrok",
+    label: "Hutchrok will serve as your registered agent",
+  },
 ];
 
 export const ENTITY_TYPES: { value: BusinessEntityType; label: string }[] = [
@@ -137,7 +138,7 @@ export interface IntakeSubmissionJoin {
   owner_details: OwnerDetail[] | null;
   organizer_name: string | null;
   organizer_title: string | null;
-  registered_agent_preference: string | null;
+  registered_agent_preference: RegisteredAgentPreference | null;
   operator_review_confirmed: boolean | null;
   // Phase 2 expansion
   dba_name: string | null;
