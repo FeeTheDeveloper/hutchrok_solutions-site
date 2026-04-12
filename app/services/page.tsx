@@ -11,7 +11,13 @@ import {
   ArrowRight,
   CheckCircle,
   Gavel,
+  Globe,
+  Palette,
+  PenTool,
+  Mail,
+  Server,
 } from "lucide-react";
+import { formatStartingPrice, PAID_SERVICES } from "@/lib/paid-services";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -138,6 +144,15 @@ const packages = [
   },
 ];
 
+const paidServiceIcons = {
+  "business-website": Globe,
+  "brand-identity-package": Palette,
+  "logo-design": PenTool,
+  "business-email-setup": Mail,
+  "domain-hosting": Server,
+  "compliance-ops-setup": FileText,
+} as const;
+
 export default function ServicesPage() {
   return (
     <>
@@ -201,6 +216,58 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      <section className="py-16 sm:py-24 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <Badge variant="secondary" className="mb-3 text-gold bg-gold/10">
+              Optional Upsells
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-navy mb-4">
+              Optional Paid Services After Your LLC
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Your veteran free-filing path stays separate. These paid offers are
+              available only if you want post-formation help.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {PAID_SERVICES.map((service) => {
+              const Icon = paidServiceIcons[service.slug];
+              return (
+                <Card key={service.slug} className="border border-border/60 bg-white">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <Icon className="h-5 w-5 text-gold" />
+                      <Badge variant="outline" className="text-gold border-gold/40">
+                        {service.tag}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-xl text-navy">{service.title}</CardTitle>
+                    <p className="text-sm font-semibold text-navy">
+                      {formatStartingPrice(service.startingPrice)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{service.description}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Link href={`/service-request?service=${service.slug}`}>
+                      <Button className="w-full bg-gold hover:bg-gold-dark text-navy font-semibold">
+                        {service.primaryCtaLabel}
+                      </Button>
+                    </Link>
+                    <Link href="/contact">
+                      <Button variant="outline" className="w-full border-navy/20 text-navy hover:bg-cream">
+                        Talk to Hutchrok
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Packages */}
       <section className="py-16 sm:py-24 bg-cream">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -251,9 +318,9 @@ export default function ServicesPage() {
           </div>
 
           <div className="text-center mt-10">
-            <Link href="/contact">
+            <Link href="/service-request">
               <Button className="bg-gold hover:bg-gold-dark text-navy font-bold px-8">
-                Start Intake
+                Request a Paid Service
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
