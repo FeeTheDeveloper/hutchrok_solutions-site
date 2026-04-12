@@ -83,24 +83,16 @@ export default function ServiceRequestForm({
 
     setSubmitting(true);
     try {
-      const message = [
-        `Business Name: ${form.businessName}`,
-        `Selected Service: ${selectedService?.title ?? form.serviceSlug}`,
-        "",
-        "Project Details:",
-        form.projectDetails,
-      ].join("\n");
-
-      const res = await fetch("/api/intake", {
+      const res = await fetch("/api/service-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
           email: form.email,
           phone: form.phone,
-          businessStage: "newly-formed",
-          serviceNeeded: selectedService?.tag.toLowerCase() ?? "paid-service",
-          message,
+          businessName: form.businessName,
+          selectedService: selectedService?.title ?? form.serviceSlug,
+          projectDetails: form.projectDetails,
         }),
       });
 
@@ -125,8 +117,9 @@ export default function ServiceRequestForm({
         <CheckCircle className="h-12 w-12 text-gold mx-auto mb-3" />
         <h3 className="text-2xl font-bold text-navy mb-2">Request Submitted</h3>
         <p className="text-muted-foreground text-sm sm:text-base">
-          Thanks for your request. A Hutchrok operator will follow up in 1–2 business days
-          to confirm scope, timeline, and next steps.
+          Thanks for your request. Your intake was sent to contact@hutchrok.com.
+          A Hutchrok operator will follow up in 1–2 business days to confirm scope,
+          timeline, and next steps.
         </p>
       </div>
     );
