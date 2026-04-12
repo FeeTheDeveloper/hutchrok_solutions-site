@@ -35,6 +35,21 @@ export const intakeSchema = z.object({
 
 export type IntakeInput = z.infer<typeof intakeSchema>;
 
+export const paidServiceRequestSchema = z.object({
+  name: z.string().trim().min(1, "Name is required.").max(200),
+  email: z.string().trim().min(1, "Email is required.").email("Enter a valid email."),
+  phone: z.string().trim().min(1, "Phone number is required.").max(30),
+  businessName: z.string().trim().min(1, "Business name is required.").max(300),
+  selectedService: z.string().trim().min(1, "Selected service is required.").max(200),
+  projectDetails: z
+    .string()
+    .trim()
+    .min(1, "Project details are required.")
+    .max(5000, "Project details must be under 5,000 characters."),
+});
+
+export type PaidServiceRequestInput = z.infer<typeof paidServiceRequestSchema>;
+
 /**
  * Validate intake data and return a flat field→message error map
  * compatible with the existing UI error display.
@@ -45,6 +60,26 @@ export function validateIntake(data: unknown): {
   fieldErrors?: Record<string, string>;
 } {
   const result = intakeSchema.safeParse(data);
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (key && !fieldErrors[String(key)]) {
+      fieldErrors[String(key)] = issue.message;
+    }
+  }
+  return { success: false, fieldErrors };
+}
+
+export function validatePaidServiceRequest(data: unknown): {
+  success: boolean;
+  data?: PaidServiceRequestInput;
+  fieldErrors?: Record<string, string>;
+} {
+  const result = paidServiceRequestSchema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data };
   }

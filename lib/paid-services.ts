@@ -15,6 +15,7 @@ export interface PaidService {
   features: string[];
   primaryCtaLabel: string;
   secondaryCtaLabel?: string;
+  secondaryCtaHref?: string;
 }
 
 export const PAID_SERVICES: PaidService[] = [
@@ -22,7 +23,7 @@ export const PAID_SERVICES: PaidService[] = [
     slug: "business-website",
     title: "Business Website",
     description:
-      "A professional, mobile-ready website built for your new LLC and designed to convert visitors into customers.",
+      "Launch with a conversion-ready website that makes your new business look established from day one.",
     tag: "Web Development",
     startingPrice: 500,
     features: [
@@ -32,14 +33,15 @@ export const PAID_SERVICES: PaidService[] = [
       "Contact forms and lead capture",
       "Hosting setup included",
     ],
-    primaryCtaLabel: "Start Checkout Intake",
-    secondaryCtaLabel: "Talk to an Operator",
+    primaryCtaLabel: "Start Website Intake",
+    secondaryCtaLabel: "Ask a Question",
+    secondaryCtaHref: "mailto:contact@hutchrok.com?subject=Business%20Website%20Question",
   },
   {
     slug: "brand-identity-package",
     title: "Brand Identity Package",
     description:
-      "Complete visual identity including color palette, typography, and brand guidelines for a cohesive look.",
+      "Build a complete brand system so your LLC looks polished, credible, and consistent everywhere customers find you.",
     tag: "Branding",
     startingPrice: 300,
     features: [
@@ -50,13 +52,14 @@ export const PAID_SERVICES: PaidService[] = [
       "Brand asset library",
     ],
     primaryCtaLabel: "Request Brand Package",
-    secondaryCtaLabel: "Ask Questions",
+    secondaryCtaLabel: "Talk to Hutchrok",
+    secondaryCtaHref: "mailto:contact@hutchrok.com?subject=Brand%20Identity%20Package%20Question",
   },
   {
     slug: "logo-design",
     title: "Logo Design",
     description:
-      "A custom logo that represents your business and makes a strong first impression across all materials.",
+      "Get a professional logo set built for websites, social, print, and every launch asset you need.",
     tag: "Design",
     startingPrice: 150,
     features: [
@@ -67,13 +70,14 @@ export const PAID_SERVICES: PaidService[] = [
       "Brand mark + wordmark",
     ],
     primaryCtaLabel: "Book Logo Design",
-    secondaryCtaLabel: "Speak With Hutchrok",
+    secondaryCtaLabel: "Email the Team",
+    secondaryCtaHref: "mailto:contact@hutchrok.com?subject=Logo%20Design%20Question",
   },
   {
     slug: "business-email-setup",
     title: "Business Email Setup",
     description:
-      "Professional email (you@yourbusiness.com) configured and ready to use from day one.",
+      "Set up professional email with the right security records so you can communicate like a real company immediately.",
     tag: "Email",
     startingPrice: 100,
     features: [
@@ -84,13 +88,14 @@ export const PAID_SERVICES: PaidService[] = [
       "Migration assistance",
     ],
     primaryCtaLabel: "Request Email Setup",
-    secondaryCtaLabel: "Contact Sales",
+    secondaryCtaLabel: "Ask Setup Questions",
+    secondaryCtaHref: "mailto:contact@hutchrok.com?subject=Business%20Email%20Setup%20Question",
   },
   {
     slug: "domain-hosting",
     title: "Domain + Hosting",
     description:
-      "Domain registration and reliable hosting setup so your business is live and accessible online.",
+      "Secure your domain and hosting stack with a clean setup that keeps your business online and reliable.",
     tag: "Infrastructure",
     startingPrice: 125,
     features: [
@@ -101,13 +106,14 @@ export const PAID_SERVICES: PaidService[] = [
       "Performance monitoring",
     ],
     primaryCtaLabel: "Start Hosting Setup",
-    secondaryCtaLabel: "Get Help Choosing",
+    secondaryCtaLabel: "Get Advice",
+    secondaryCtaHref: "mailto:contact@hutchrok.com?subject=Domain%20and%20Hosting%20Question",
   },
   {
     slug: "compliance-ops-setup",
     title: "Compliance & Ops Setup",
     description:
-      "EIN coordination, operating agreements, registered agent support, and compliance calendar setup.",
+      "Put legal and operational guardrails in place early so you can grow without cleanup later.",
     tag: "Operations",
     startingPrice: 225,
     features: [
@@ -118,7 +124,8 @@ export const PAID_SERVICES: PaidService[] = [
       "Annual report tracking",
     ],
     primaryCtaLabel: "Book Compliance Setup",
-    secondaryCtaLabel: "See How It Works",
+    secondaryCtaLabel: "Speak to Operations",
+    secondaryCtaHref: "mailto:contact@hutchrok.com?subject=Compliance%20and%20Ops%20Setup%20Question",
   },
 ];
 
@@ -130,6 +137,15 @@ export const PAID_SERVICE_BY_SLUG: Record<PaidServiceSlug, PaidService> =
     },
     {} as Record<PaidServiceSlug, PaidService>
   );
+
+export const PAID_SERVICE_ICON = {
+  "business-website": "Globe",
+  "brand-identity-package": "Palette",
+  "logo-design": "PenTool",
+  "business-email-setup": "Mail",
+  "domain-hosting": "Server",
+  "compliance-ops-setup": "FileText",
+} as const;
 
 export function formatStartingPrice(amount: number): string {
   return `Starting at $${amount.toLocaleString("en-US")}`;

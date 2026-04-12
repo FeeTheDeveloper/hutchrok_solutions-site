@@ -255,11 +255,13 @@ export default function ServicesPage() {
                         {service.primaryCtaLabel}
                       </Button>
                     </Link>
-                    <Link href="/contact">
-                      <Button variant="outline" className="w-full border-navy/20 text-navy hover:bg-cream">
-                        Talk to Hutchrok
-                      </Button>
-                    </Link>
+                    {service.secondaryCtaLabel && service.secondaryCtaHref && (
+                      <Link href={service.secondaryCtaHref}>
+                        <Button variant="outline" className="w-full border-navy/20 text-navy hover:bg-cream">
+                          {service.secondaryCtaLabel}
+                        </Button>
+                      </Link>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -280,7 +282,7 @@ export default function ServicesPage() {
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Each package is designed around a specific stage of business growth.
-              Pricing details available during intake.
+              Starting prices are shown above, then scope is finalized during intake.
             </p>
           </div>
 

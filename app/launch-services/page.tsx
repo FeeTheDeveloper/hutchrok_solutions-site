@@ -105,8 +105,8 @@ export default function LaunchServicesPage() {
                           {service.primaryCtaLabel}
                         </Button>
                       </Link>
-                      {service.secondaryCtaLabel && (
-                        <Link href="/contact">
+                      {service.secondaryCtaLabel && service.secondaryCtaHref && (
+                        <Link href={service.secondaryCtaHref}>
                           <Button
                             variant="outline"
                             className="w-full border-navy/20 text-navy hover:bg-cream h-10"
