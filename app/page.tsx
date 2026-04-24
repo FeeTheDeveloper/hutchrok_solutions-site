@@ -27,6 +27,7 @@ import {
   TexasExpertiseSection,
   TrustBadgeStrip,
 } from "@/components/authority-signals";
+import { VeteranOwnedBadge } from "@/components/VeteranOwnedBadge";
 
 const paidServiceIcons = {
   "business-website": Globe,
@@ -433,6 +434,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <VeteranOwnedBadge />
     </>
   );
 }
