@@ -20,12 +20,22 @@ import {
   Rocket,
 } from "lucide-react";
 import { HutchrokConcierge } from "@/components/concierge/hutchrok-concierge";
+import { formatStartingPrice, PAID_SERVICES } from "@/lib/paid-services";
 import {
   SocialProofStrip,
   WhyHutchrokSection,
   TexasExpertiseSection,
   TrustBadgeStrip,
 } from "@/components/authority-signals";
+
+const paidServiceIcons = {
+  "business-website": Globe,
+  "brand-identity-package": Palette,
+  "logo-design": PenTool,
+  "business-email-setup": Mail,
+  "domain-hosting": Server,
+  "compliance-ops-setup": FileText,
+} as const;
 
 export default function HomePage() {
   return (
@@ -115,7 +125,7 @@ export default function HomePage() {
                 title: "No SOS Account Required",
                 desc: "You don't need a Secretary of State account. Hutchrok handles the entire filing process for you.",
               },
-            ].map((item, i) => (
+            ].map((item) => (
               <div
                 key={item.title}
                 className="flex flex-col items-center gap-3 px-3"
@@ -320,9 +330,9 @@ export default function HomePage() {
             <Badge variant="secondary" className="mb-3 text-gold bg-gold/10 text-xs tracking-wider uppercase">
               After Your LLC
             </Badge>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy mb-3 leading-tight">
-              Launch Your Business the Right Way
-            </h2>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy mb-3 leading-tight">
+              Optional Paid Services After Your LLC
+          </h2>
             <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
               Your free filing is just the start. Build a professional presence
               with services designed for new business owners.
@@ -330,52 +340,17 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[
-              {
-                icon: Globe,
-                title: "Business Website",
-                desc: "A professional, mobile-ready website built for your new LLC — designed to convert visitors into customers.",
-                tag: "Web Development",
-              },
-              {
-                icon: Palette,
-                title: "Brand Identity Package",
-                desc: "Complete visual identity including color palette, typography, and brand guidelines for a cohesive look.",
-                tag: "Branding",
-              },
-              {
-                icon: PenTool,
-                title: "Logo Design",
-                desc: "A custom logo that represents your business and makes a strong first impression across all materials.",
-                tag: "Design",
-              },
-              {
-                icon: Mail,
-                title: "Business Email Setup",
-                desc: "Professional email (you@yourbusiness.com) configured and ready to use from day one.",
-                tag: "Email",
-              },
-              {
-                icon: Server,
-                title: "Domain + Hosting",
-                desc: "Domain registration and reliable hosting setup so your business is live and accessible online.",
-                tag: "Infrastructure",
-              },
-              {
-                icon: FileText,
-                title: "Compliance & Ops Setup",
-                desc: "EIN coordination, operating agreements, registered agent support, and compliance calendar setup.",
-                tag: "Operations",
-              },
-            ].map((service) => (
+            {PAID_SERVICES.map((service) => {
+              const Icon = paidServiceIcons[service.slug];
+              return (
               <Card
-                key={service.title}
+                key={service.slug}
                 className="border border-border/50 bg-cream/50 hover:border-gold/40 hover:shadow-lg transition-all duration-300 group flex flex-col"
               >
                 <CardContent className="p-6 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-4">
                     <div className="h-11 w-11 rounded-lg bg-gold/8 flex items-center justify-center group-hover:bg-gold/15 transition-colors">
-                      <service.icon className="h-5 w-5 text-gold" />
+                      <Icon className="h-5 w-5 text-gold" />
                     </div>
                     <Badge variant="outline" className="text-[10px] tracking-wider uppercase text-gold/80 border-gold/25 font-medium">
                       {service.tag}
@@ -384,12 +359,21 @@ export default function HomePage() {
                   <h3 className="font-semibold text-navy text-[15px] leading-snug mb-2">
                     {service.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed flex-1">
-                    {service.desc}
+                  <p className="text-sm font-semibold text-navy mb-2">
+                    {formatStartingPrice(service.startingPrice)}
                   </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    {service.description}
+                  </p>
+                  <Link href={`/service-request?service=${service.slug}`} className="mt-auto">
+                    <Button className="w-full bg-gold hover:bg-gold-dark text-navy font-semibold h-10">
+                      {service.primaryCtaLabel}
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
@@ -397,9 +381,9 @@ export default function HomePage() {
           </p>
 
           <div className="text-center mt-6">
-            <Link href="/services">
+            <Link href="/launch-services">
               <Button variant="outline" className="border-navy/80 text-navy hover:bg-navy hover:text-white font-medium">
-                View All Services
+                See Paid Service Options
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>

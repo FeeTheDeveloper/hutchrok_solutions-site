@@ -70,6 +70,8 @@ CLERK_SECRET_KEY=sk_test_...
 | `CLERK_SECRET_KEY` | No | Clerk secret key. Must be set alongside the publishable key for auth to activate |
 | `OPS_TOKEN` | No | Shared secret that Power Automate sends in the `X-Ops-Token` header for ops endpoints |
 | `OPS_WEBHOOK_URL` | No | Power Automate HTTP-trigger URL. When set, the app emits outbound webhook events |
+| `RESEND_API_KEY` | No* | Enables paid-service request email delivery to `contact@hutchrok.com` via `/api/service-request` |
+| `RESEND_FROM_EMAIL` | No | Optional sender identity for paid-service request emails |
 
 > **Never commit `.env.local` to the repository.** The `.gitignore` already excludes it.
 
@@ -143,6 +145,7 @@ A step-by-step walkthrough to demonstrate the full intake-to-filing workflow. Fo
 | `/admin?token=...` | GET | Admin console — case list with status filter |
 | `/admin/cases/[id]?token=...` | GET | Case detail — edit status, notes, docs |
 | `/api/intake` | POST | Submit intake (Zod validated, rate limited) |
+| `/api/service-request` | POST | Submit paid service request intake + deliver to `contact@hutchrok.com` |
 | `/api/admin/cases?token=...` | GET | List all cases (optional `status` filter) |
 | `/api/admin/cases/[id]?token=...` | GET/PATCH | Read or update a single case |
 | `/api/cases/[id]/upload?token=...` | POST | Upload a document (multipart, 10 MB max) |
