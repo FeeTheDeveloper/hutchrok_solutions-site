@@ -135,12 +135,13 @@ export async function fillForm205(
   // RA street address is Hutchrok's own and not stored on the case — left for operator.
 
   // ── Governing persons (members) ──
+  const owners = payload.owners ?? [];
   const gp = [
     { first: F.gp1First, mi: F.gp1Mi, last: F.gp1Last },
     { first: F.gp2First, mi: F.gp2Mi, last: F.gp2Last },
     { first: F.gp3First, mi: F.gp3Mi, last: F.gp3Last },
   ];
-  payload.owners.slice(0, 3).forEach((owner, i) => {
+  owners.slice(0, 3).forEach((owner, i) => {
     const { first, mi, last } = splitName(owner.name);
     set(gp[i].first, first);
     set(gp[i].mi, mi);
@@ -166,8 +167,8 @@ export async function fillForm205(
 
   // ── Supplemental provisions + operator review note ──
   const ownersExtra =
-    payload.owners.length > 3
-      ? `\nAdditional members (overflow): ${payload.owners
+    owners.length > 3
+      ? `\nAdditional members (overflow): ${owners
           .slice(3)
           .map((o) => `${o.name} (${o.role})`)
           .join("; ")}.`

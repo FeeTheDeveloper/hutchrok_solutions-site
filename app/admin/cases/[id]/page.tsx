@@ -629,8 +629,9 @@ function CaseDetailContent() {
                 <CheckCircle2 className="h-3 w-3 mr-1.5" />
                 Mark Ready for Filing
               </Button>
-              {intake?.entity_type !== "dba" &&
-                intake?.entity_type !== "nonprofit" && (
+              {intake &&
+                intake.entity_type !== "dba" &&
+                intake.entity_type !== "nonprofit" && (
                   <Button
                     size="sm"
                     className="bg-indigo-700 text-white hover:bg-indigo-800"

@@ -72,23 +72,27 @@ export const clientEmailChannel: NotificationChannel = {
       "Veteran-owned · Operator-reviewed",
     ].join("\n");
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: [contact.email],
-        subject: `Your filing update — ${meta.label} (${event.caseNumber})`,
-        text,
-      }),
-    });
-
-    if (!res.ok) {
-      const body = await res.text();
-      console.error(`[client-email] Resend error (${res.status}): ${body}`);
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to: [contact.email],
+          subject: `Your filing update — ${meta.label} (${event.caseNumber})`,
+          text,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        console.error(`[client-email] Resend error (${res.status}): ${body}`);
+      }
+    } catch (err) {
+      // Promise.allSettled in the dispatcher would otherwise swallow this.
+      console.error("[client-email] Network error sending email:", err);
     }
   },
 };
@@ -116,23 +120,25 @@ export const clientSmsChannel: NotificationChannel = {
       Body: body,
     });
 
-    const res = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`,
-      {
-        method: "POST",
-        headers: {
-          Authorization:
-            "Basic " +
-            Buffer.from(`${TWILIO_SID}:${TWILIO_TOKEN}`).toString("base64"),
-          "Content-Type": "application/x-www-form-urlencoded",
+    try {
+      const res = await fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`,
+        {
+          method: "POST",
+          headers: {
+            // btoa keeps this compatible with non-Node (edge) runtimes.
+            Authorization: "Basic " + btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`),
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: params.toString(),
         },
-        body: params.toString(),
-      },
-    );
-
-    if (!res.ok) {
-      const txt = await res.text();
-      console.error(`[client-sms] Twilio error (${res.status}): ${txt}`);
+      );
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error(`[client-sms] Twilio error (${res.status}): ${txt}`);
+      }
+    } catch (err) {
+      console.error("[client-sms] Network error sending SMS:", err);
     }
   },
 };

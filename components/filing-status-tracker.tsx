@@ -33,6 +33,11 @@ const ENTITY_LABELS: Record<string, string> = {
   llc: "Texas LLC",
   dba: "DBA (Assumed Name)",
   nonprofit: "Nonprofit Corporation",
+  corp: "For-Profit Corporation",
+  professional_corp: "Professional Corporation",
+  professional_association: "Professional Association",
+  professional_llc: "Professional LLC",
+  limited_partnership: "Limited Partnership",
 };
 
 /**
@@ -70,7 +75,10 @@ export function FilingStatusTracker({ data }: { data: TrackedCase }) {
             <span className="inline-flex items-center rounded-full bg-gold/10 px-3 py-1 text-sm font-semibold text-gold-dark">
               {data.statusLabel}
             </span>
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground sm:justify-end">
+            <p
+              className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground sm:justify-end"
+              suppressHydrationWarning
+            >
               <Clock className="h-3.5 w-3.5" />
               Updated {formatDate(data.updatedAt)}
             </p>
@@ -205,7 +213,10 @@ export function FilingStatusTracker({ data }: { data: TrackedCase }) {
                 <span className="text-navy font-medium truncate">
                   {doc.filename}
                 </span>
-                <span className="ml-auto text-xs text-muted-foreground shrink-0">
+                <span
+                  className="ml-auto text-xs text-muted-foreground shrink-0"
+                  suppressHydrationWarning
+                >
                   {formatDate(doc.uploadedAt)}
                 </span>
               </li>
