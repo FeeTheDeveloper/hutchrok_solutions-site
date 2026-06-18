@@ -140,3 +140,23 @@ export function getCaseStatusMeta(status: string): CaseStatusMeta {
     CASE_STATUS_META[status as CaseStatus] ?? CASE_STATUS_META.LEAD
   );
 }
+
+/**
+ * Statuses worth proactively notifying the client about. Internal-only
+ * transitions (LEAD, ELIGIBILITY_PENDING) are intentionally excluded so we
+ * don't spam clients with operations noise.
+ */
+const CLIENT_NOTIFY_STATUSES = new Set<CaseStatus>([
+  "VVL_PENDING",
+  "READY_FOR_INTAKE",
+  "IN_REVIEW",
+  "READY_FOR_FILING",
+  "SUBMITTED",
+  "ACCEPTED",
+  "COMPLETED",
+]);
+
+/** Whether a transition into this status should trigger a client notification. */
+export function shouldNotifyClient(status: string): boolean {
+  return CLIENT_NOTIFY_STATUSES.has(status as CaseStatus);
+}

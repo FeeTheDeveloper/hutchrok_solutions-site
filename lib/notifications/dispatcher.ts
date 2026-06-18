@@ -13,6 +13,11 @@ import {
   type CaseEvent,
   type CaseEventName,
 } from "./events";
+import {
+  clientEmailChannel,
+  clientSmsChannel,
+  type NotifyContact,
+} from "./client-channels";
 
 // ── Channel interface (for future providers) ──
 
@@ -48,44 +53,14 @@ const opsWebhookChannel: NotificationChannel = {
   },
 };
 
-// ── Future channel stubs ──
-
-/** Email channel placeholder — connect to Resend, SES, etc. */
-const _emailChannel: NotificationChannel = {
-  name: "email",
-  enabled: false,
-  async send(_event) {
-    // TODO: Wire to email provider in a future phase
-  },
-};
-
-/** Microsoft Teams channel placeholder */
-const _teamsChannel: NotificationChannel = {
-  name: "teams",
-  enabled: false,
-  async send(_event) {
-    // TODO: Wire to Teams webhook / Graph API
-  },
-};
-
-/** Power Automate channel placeholder */
-const _powerAutomateChannel: NotificationChannel = {
-  name: "power-automate",
-  enabled: false,
-  async send(_event) {
-    // TODO: Wire to Power Automate HTTP trigger
-  },
-};
-
 // ── Channel registry ──
 
 const channels: NotificationChannel[] = [
   logChannel,
   opsWebhookChannel,
-  // Add channels here as they're enabled:
-  // _emailChannel,
-  // _teamsChannel,
-  // _powerAutomateChannel,
+  // Client-facing channels — self-disable when their provider env is absent.
+  clientEmailChannel,
+  clientSmsChannel,
 ];
 
 // ── Dispatcher ──
@@ -124,11 +99,14 @@ export async function emitStatusChangeEvents(
   caseNumber: string,
   oldStatus: string,
   newStatus: string,
+  contact?: NotifyContact,
 ): Promise<void> {
-  // Always emit the generic status_changed event
+  // Always emit the generic status_changed event. Contact details ride along
+  // so client-facing channels (email/SMS) can reach the applicant.
   await emitCaseEvent(CASE_EVENTS.STATUS_CHANGED, caseId, caseNumber, {
     old_status: oldStatus,
     new_status: newStatus,
+    ...(contact ? { contact } : {}),
   });
 
   // Emit the specific lifecycle event for the new status

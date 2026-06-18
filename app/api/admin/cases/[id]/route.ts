@@ -99,11 +99,23 @@ export async function PATCH(
 
   // Emit lifecycle events when status changes
   if (updates.status) {
+    const intake = (data as { intake_submissions?: {
+      name?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      business_name?: string | null;
+    } | null }).intake_submissions;
     emitStatusChangeEvents(
       id,
       data.case_number,
       (body._old_status as string) ?? "",
       updates.status as string,
+      {
+        email: intake?.email ?? null,
+        phone: intake?.phone ?? null,
+        clientName: intake?.name ?? null,
+        businessName: intake?.business_name ?? null,
+      },
     );
   }
 
