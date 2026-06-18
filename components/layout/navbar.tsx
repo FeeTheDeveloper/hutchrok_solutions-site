@@ -16,6 +16,7 @@ const navLinks = [
   { href: "/track", label: "Track Filing" },
   { href: "/verification-help", label: "Verification Help" },
   { href: "/services", label: "Services" },
+  { href: "/get-started", label: "10% Off" },
   { href: "/guides", label: "Guides" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },

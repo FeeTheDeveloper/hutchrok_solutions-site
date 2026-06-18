@@ -51,6 +51,42 @@ export const paidServiceRequestSchema = z.object({
 export type PaidServiceRequestInput = z.infer<typeof paidServiceRequestSchema>;
 
 /**
+ * Marketing lead sign-up schema. Captures a new lead for the 10%-off
+ * marketing services promotion. Business name and interests are optional so
+ * the form stays low-friction.
+ */
+export const leadSignupSchema = z.object({
+  name: z.string().trim().min(1, "Name is required.").max(200),
+  email: z.string().trim().min(1, "Email is required.").email("Enter a valid email."),
+  phone: z.string().trim().max(30).optional().default(""),
+  businessName: z.string().trim().max(300).optional().default(""),
+  interests: z.array(z.string().max(100)).max(20).optional().default([]),
+  marketingOptIn: z.boolean().optional().default(false),
+});
+
+export type LeadSignupInput = z.infer<typeof leadSignupSchema>;
+
+export function validateLeadSignup(data: unknown): {
+  success: boolean;
+  data?: LeadSignupInput;
+  fieldErrors?: Record<string, string>;
+} {
+  const result = leadSignupSchema.safeParse(data);
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (key && !fieldErrors[String(key)]) {
+      fieldErrors[String(key)] = issue.message;
+    }
+  }
+  return { success: false, fieldErrors };
+}
+
+/**
  * Validate intake data and return a flat field→message error map
  * compatible with the existing UI error display.
  */
