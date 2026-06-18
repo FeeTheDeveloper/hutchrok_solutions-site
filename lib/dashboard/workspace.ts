@@ -19,14 +19,14 @@ export function getDashboardWorkspaceSnapshot(name?: string | null): DashboardWo
       "Live status and timeline will populate here once case data is connected from Supabase.",
     quickActions: [
       {
-        label: "View Case Status",
-        description: "Review your filing stage, owner, and latest timeline updates.",
-        href: "/dashboard",
+        label: "Track My Filing",
+        description: "Check your live filing stage, timeline, and documents by case number.",
+        href: "/track",
       },
       {
-        label: "Upload Documents",
-        description: "Submit requested case documents securely from your dashboard.",
-        href: "/dashboard",
+        label: "Start a New Filing",
+        description: "Begin a free Texas LLC formation intake in a few guided steps.",
+        href: "/contact",
       },
       {
         label: "Contact Support",

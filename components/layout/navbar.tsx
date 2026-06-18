@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/free-filing", label: "Free Filing" },
   { href: "/how-it-works", label: "How It Works" },
+  { href: "/track", label: "Track Filing" },
   { href: "/verification-help", label: "Verification Help" },
   { href: "/services", label: "Services" },
   { href: "/guides", label: "Guides" },
