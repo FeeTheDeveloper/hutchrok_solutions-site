@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 interface ServiceRequestPageProps {
-  searchParams: Promise<{ service?: string }>;
+  searchParams: Promise<{ service?: string; discount?: string }>;
 }
 
 export default async function ServiceRequestPage({
@@ -25,6 +25,7 @@ export default async function ServiceRequestPage({
   const params = await searchParams;
   const serviceSlug = (params.service ?? "") as PaidServiceSlug;
   const selectedService = PAID_SERVICE_BY_SLUG[serviceSlug] ?? null;
+  const discountCode = params.discount ?? "";
 
   return (
     <>
@@ -58,7 +59,10 @@ export default async function ServiceRequestPage({
             </div>
           )}
 
-          <ServiceRequestForm initialServiceSlug={selectedService?.slug} />
+          <ServiceRequestForm
+            initialServiceSlug={selectedService?.slug}
+            initialDiscountCode={discountCode}
+          />
 
           <div className="bg-white border border-border/50 rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">

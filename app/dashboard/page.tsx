@@ -8,6 +8,7 @@ import { HutchrokConcierge } from "@/components/concierge/hutchrok-concierge";
 import { Button } from "@/components/ui/button";
 import { getRoleFromClaims } from "@/lib/auth/roles";
 import { getDashboardWorkspaceSnapshot } from "@/lib/dashboard/workspace";
+import FilingTracker from "@/components/filing-tracker";
 
 export default async function DashboardPage() {
   const { userId, sessionClaims } = await auth();
@@ -66,13 +67,16 @@ export default async function DashboardPage() {
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>{workspace.caseStatusLabel}</CardTitle>
+            <CardTitle>Track Your Filing</CardTitle>
             <CardDescription>
-              Placeholder panel for veteran filing case timeline, status, and document tasks.
+              Enter your case number to see your live filing status, timeline, and documents.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            {workspace.caseStatusDetail}
+          <CardContent>
+            <FilingTracker
+              initialEmail={user?.primaryEmailAddress?.emailAddress ?? ""}
+              compact
+            />
           </CardContent>
         </Card>
 

@@ -311,6 +311,51 @@ function CaseDetailContent() {
     }
   };
 
+  const [generating, setGenerating] = useState(false);
+
+  const handleGenerateForm205 = async () => {
+    setGenerating(true);
+    setMessage(null);
+    try {
+      const res = await fetch(
+        `/api/filings/document?token=${encodeURIComponent(token)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ caseId }),
+        }
+      );
+      if (!res.ok) {
+        let text = "Failed to generate Form 205.";
+        try {
+          const json = await res.json();
+          text = json.error?.message ?? text;
+        } catch {
+          /* non-JSON response */
+        }
+        setMessage({ type: "error", text });
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Form-205-${filing?.case_number ?? "draft"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setMessage({
+        type: "success",
+        text: "Form 205 generated. Review the management option and registered-agent address before filing.",
+      });
+    } catch {
+      setMessage({ type: "error", text: "Network error generating Form 205." });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const handleQuickAction = async (targetStatus: CaseStatus) => {
     const oldStatus = filing?.status;
     setSaving(true);
@@ -584,7 +629,31 @@ function CaseDetailContent() {
                 <CheckCircle2 className="h-3 w-3 mr-1.5" />
                 Mark Ready for Filing
               </Button>
+              {intake &&
+                intake.entity_type !== "dba" &&
+                intake.entity_type !== "nonprofit" && (
+                  <Button
+                    size="sm"
+                    className="bg-indigo-700 text-white hover:bg-indigo-800"
+                    disabled={generating}
+                    onClick={handleGenerateForm205}
+                    title="Auto-fill the official Texas Form 205 from this case's intake data"
+                  >
+                    {generating ? (
+                      <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                    ) : (
+                      <Download className="h-3 w-3 mr-1.5" />
+                    )}
+                    Generate Form 205
+                  </Button>
+                )}
             </div>
+            <p className="mt-3 text-xs text-indigo-700/80">
+              Auto-fills the official Texas Certificate of Formation (Form 205)
+              from intake data. The PDF stays editable — set the Article 3
+              management option and confirm the registered-agent address before
+              filing.
+            </p>
           </CardContent>
         </Card>
 

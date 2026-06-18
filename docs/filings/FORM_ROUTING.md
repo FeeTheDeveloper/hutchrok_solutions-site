@@ -4,12 +4,18 @@ This document maps each filing type to the correct Texas Secretary of State (SOS
 
 ## Routing Table
 
-| Filing Type | Entity Type | Primary Form(s) | Notes / Checklist Items |
+| Filing Type | Entity Type Key | Primary Form(s) | Notes / Checklist Items |
 | --- | --- | --- | --- |
-| LLC Formation (Texas) | Limited Liability Company | Form 205 (`205_boc.pdf`) | Requires registered agent info, management structure (member-managed or manager-managed), organizer signature |
-| For-Profit Corp Formation (Texas) | For-Profit Corporation | Form 201 (`201_boc.pdf`) | Requires share structure, registered agent, initial directors, incorporator signature |
-| Nonprofit Corp Formation (Texas) | Nonprofit Corporation | Form 202 (`202_boc.pdf`) | Requires purpose clause (IRS-compliant if seeking 501(c)(3)), registered agent, initial directors |
+| LLC Formation (Texas) | `llc` | Form 205 (`205_boc.pdf`) | Requires registered agent info, management structure (member-managed or manager-managed), organizer signature |
+| For-Profit Corp Formation (Texas) | `corp` | Form 201 (`201_boc.pdf`) | Requires share structure, registered agent, initial directors, incorporator signature |
+| Nonprofit Corp Formation (Texas) | `nonprofit` | Form 202 (`202_boc.pdf`) | Requires purpose clause (IRS-compliant if seeking 501(c)(3)), registered agent, initial directors |
+| Professional Corp Formation (Texas) | `professional_corp` | Form 203 (`203_boc.pdf`) | Licensed professional services; requires registered agent, initial directors, incorporator signature, professional-service purpose statement |
+| Professional Association Formation (Texas) | `professional_association` | Form 204 (`204_boc.pdf`) | For associations of licensed professionals; requires registered agent and governing-authority details |
+| Professional LLC Formation (Texas) | `professional_llc` | Form 206 (`206_boc.pdf`) | Licensed professional LLC; requires registered agent, management structure, professional-service purpose statement |
+| Limited Partnership Formation (Texas) | `limited_partnership` | Form 207 (`207_boc.pdf`) | Requires general partner(s), registered agent, partnership details |
 | Veteran-Owned Business Certification | Any (existing entity) | Form 05-904 (`05-904.pdf`) | Requires TVC verification letters, ownership percentage documentation (must total 100% veteran ownership), DD-214 or equivalent |
+
+> **Form source:** Official current versions of all formation forms above are bundled in this directory (`docs/filings/`). Entity-type keys match `ENTITY_TEMPLATE_MAP` in [`lib/filings/template-map.ts`](../../lib/filings/template-map.ts). Always re-verify the latest version against the [Texas Secretary of State](https://www.sos.state.tx.us/corp/forms_702.shtml) before filing.
 
 ## Workflow Notes
 

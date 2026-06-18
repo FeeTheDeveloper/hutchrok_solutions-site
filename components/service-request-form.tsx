@@ -21,6 +21,7 @@ import {
 
 interface ServiceRequestFormProps {
   initialServiceSlug?: string;
+  initialDiscountCode?: string;
 }
 
 interface ServiceRequestState {
@@ -43,11 +44,13 @@ const INITIAL_STATE: ServiceRequestState = {
 
 export default function ServiceRequestForm({
   initialServiceSlug,
+  initialDiscountCode,
 }: ServiceRequestFormProps) {
   const [form, setForm] = useState<ServiceRequestState>({
     ...INITIAL_STATE,
     serviceSlug: initialServiceSlug ?? "",
   });
+  const discountCode = (initialDiscountCode ?? "").trim().toUpperCase();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -92,7 +95,9 @@ export default function ServiceRequestForm({
           phone: form.phone,
           businessName: form.businessName,
           selectedService: selectedService?.title ?? form.serviceSlug,
-          projectDetails: form.projectDetails,
+          projectDetails: discountCode
+            ? `[Discount code: ${discountCode}]\n\n${form.projectDetails}`
+            : form.projectDetails,
         }),
       });
 
@@ -130,6 +135,17 @@ export default function ServiceRequestForm({
       {errors.form && (
         <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg">
           {errors.form}
+        </div>
+      )}
+
+      {discountCode && (
+        <div className="flex items-center gap-2 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2.5 text-sm">
+          <CheckCircle className="h-4 w-4 text-gold shrink-0" />
+          <span className="text-navy">
+            Discount code{" "}
+            <span className="font-mono font-bold">{discountCode}</span> applied —
+            we&apos;ll reflect it on your quote.
+          </span>
         </div>
       )}
 

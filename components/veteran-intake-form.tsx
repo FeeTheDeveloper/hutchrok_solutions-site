@@ -286,6 +286,7 @@ export default function VeteranIntakeForm() {
     return (
       <SuccessState
         caseNumber={caseNumber}
+        email={form.email}
         hasVvlFile={!!vvlFile}
         uploading={uploading}
         uploadDone={uploadDone}
@@ -1066,15 +1067,22 @@ function StepReview({
 
 function SuccessState({
   caseNumber,
+  email,
   hasVvlFile,
   uploading,
   uploadDone,
 }: {
   caseNumber: string | null;
+  email: string;
   hasVvlFile: boolean;
   uploading: boolean;
   uploadDone: boolean;
 }) {
+  const trackHref = caseNumber
+    ? `/track?case=${encodeURIComponent(caseNumber)}${
+        email ? `&email=${encodeURIComponent(email)}` : ""
+      }`
+    : "/track";
   return (
     <div className="text-center py-8">
       <div className="mx-auto mb-5 h-16 w-16 rounded-full bg-gold/10 flex items-center justify-center">
@@ -1122,23 +1130,25 @@ function SuccessState({
             We file with the Texas Secretary of State on your behalf.
           </li>
         </ol>
+        <p className="mt-4 text-xs text-muted-foreground">
+          Track every stage online anytime using your case number
+          {caseNumber ? "" : " (sent to your email)"} — no phone calls needed.
+        </p>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <Link href={trackHref}>
+          <Button className="bg-gold hover:bg-gold-dark text-navy font-bold gap-2">
+            Track My Filing
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </Link>
         <Link href="/free-filing">
           <Button
             variant="outline"
             className="border-navy/30 text-navy hover:bg-navy hover:text-white font-medium"
           >
             View Free Filing Details
-          </Button>
-        </Link>
-        <Link href="/">
-          <Button
-            variant="outline"
-            className="border-border text-muted-foreground hover:text-navy font-medium"
-          >
-            Return Home
           </Button>
         </Link>
       </div>
