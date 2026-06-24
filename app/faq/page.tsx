@@ -117,11 +117,11 @@ const faqs = [
       },
       {
         q: "Is Hutchrok veteran-owned?",
-        a: "Yes. Hutchrok Solutions Group is a veteran-owned and veteran-operated business based in Dallas, TX.",
+        a: "Yes. Hutchrok Solutions Group is a veteran-owned and veteran-operated business located at 990 S State Hwy 5 (TX-5), Fairview, TX 75069.",
       },
       {
         q: "How do I contact Hutchrok?",
-        a: "You can reach us through our contact page, or email contact@hutchrok.com. We're based in Dallas, TX.",
+        a: "You can reach us through our contact page, or email contact@hutchrok.com. Our address is 990 S State Hwy 5 (TX-5), Fairview, TX 75069.",
       },
     ],
   },

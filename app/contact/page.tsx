@@ -97,7 +97,9 @@ export default function ContactPage() {
                     <MapPin className="h-5 w-5 text-gold mt-0.5 shrink-0" />
                     <div>
                       <p className="font-medium text-navy">Location</p>
-                      <p className="text-muted-foreground">Dallas, TX</p>
+                      <p className="text-muted-foreground">
+                        990 S State Hwy 5 (TX-5), Fairview, TX 75069
+                      </p>
                     </div>
                   </li>
                 </ul>

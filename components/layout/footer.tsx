@@ -97,9 +97,9 @@ export default function Footer() {
                 <Mail className="h-4 w-4 text-gold" />
                 <span>contact@hutchrok.com</span>
               </li>
-              <li className="flex items-center gap-2 text-sm text-white/70">
-                <MapPin className="h-4 w-4 text-gold" />
-                <span>Dallas, TX</span>
+              <li className="flex items-start gap-2 text-sm text-white/70">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+                <span>990 S State Hwy 5 (TX-5), Fairview, TX 75069</span>
               </li>
             </ul>
           </div>
