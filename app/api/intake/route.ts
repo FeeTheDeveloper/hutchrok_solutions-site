@@ -85,7 +85,14 @@ export async function POST(request: NextRequest) {
     } else {
       console.error("[api/intake] Error:", error);
     }
-    return apiError(ErrorCode.BAD_REQUEST, "Invalid request.", 400);
+    // A thrown error here is almost always infrastructure (database
+    // unreachable / missing config), not bad user input — so don't tell the
+    // applicant their submission is "invalid". Give them a real path forward.
+    return apiError(
+      ErrorCode.INTERNAL_ERROR,
+      "We couldn't submit your application right now. Please try again in a few minutes. If this keeps happening, email us at contact@hutchrok.com and we'll help you finish.",
+      503
+    );
   }
 }
 
@@ -152,8 +159,8 @@ async function handleVeteranIntake(
     );
     return apiError(
       ErrorCode.INTERNAL_ERROR,
-      "Failed to save submission. Please try again.",
-      500
+      "We couldn't save your application right now. Please try again in a few minutes, or email contact@hutchrok.com.",
+      503
     );
   }
 
@@ -234,8 +241,8 @@ async function handleLegacyIntake(
     );
     return apiError(
       ErrorCode.INTERNAL_ERROR,
-      "Failed to save submission. Please try again.",
-      500
+      "We couldn't save your submission right now. Please try again in a few minutes, or email contact@hutchrok.com.",
+      503
     );
   }
 
