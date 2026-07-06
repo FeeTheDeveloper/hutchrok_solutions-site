@@ -68,7 +68,7 @@ export function buildCompanyTracker(
   poolSize: number,
   allRecords: AuditRecord[],
   year: number,
-  currentCycle: Cycle = "Q" + (currentQuarterIndex() + 1) as Cycle,
+  cycle: Cycle = currentCycle(),
 ): CompanyTrackerRow {
   const records = allRecords.filter(
     (r) => r.result.company === company && r.year === year,
@@ -76,8 +76,8 @@ export function buildCompanyTracker(
   return {
     company,
     poolSize,
-    drug: progressFor(company, "drug", poolSize, records, currentCycle),
-    alcohol: progressFor(company, "alcohol", poolSize, records, currentCycle),
+    drug: progressFor(company, "drug", poolSize, records, cycle),
+    alcohol: progressFor(company, "alcohol", poolSize, records, cycle),
   };
 }
 
