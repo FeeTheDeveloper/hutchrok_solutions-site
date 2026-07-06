@@ -275,7 +275,9 @@ export default function VeteranIntakeForm() {
         }
       }
     } catch {
-      setErrors({ form: "Something went wrong. Please try again." });
+      setErrors({
+        form: "We couldn't reach our servers. Please check your connection and try again, or email contact@hutchrok.com and we'll help you finish.",
+      });
     } finally {
       setSubmitting(false);
     }
