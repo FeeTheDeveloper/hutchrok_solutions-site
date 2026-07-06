@@ -1,0 +1,137 @@
+/*
+ * Scoped design tokens for the Vet Gang DOT tool — matches the
+ * "Know Before U Go" logo palette exactly. Scoped under .dot-root so it never
+ * bleeds into the rest of the hutchrok site.
+ */
+.dot-root {
+  --dot-navy: #0a1a3f; /* primary background */
+  --dot-navy-panel: #122a54; /* panel background */
+  --dot-navy-line: #21396b;
+  --dot-gold-1: #b8860b;
+  --dot-gold-2: #d4af37;
+  --dot-gold-3: #f5d67e;
+  --dot-white: #ffffff;
+  --dot-muted: #c9d2e3;
+  --dot-green: #3ec98a;
+  --dot-red: #ff6b6b;
+
+  --dot-serif: "Playfair Display", "Iowan Old Style", "Palatino Linotype",
+    Georgia, "Times New Roman", serif;
+  --dot-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  background-color: var(--dot-navy);
+  color: var(--dot-white);
+  font-family: var(--dot-sans);
+  min-height: 100vh;
+}
+
+.dot-root h1,
+.dot-root h2,
+.dot-root h3,
+.dot-root .dot-serif {
+  font-family: var(--dot-serif);
+  letter-spacing: 0.01em;
+}
+
+/* Metallic gold gradient — text */
+.dot-gold-text {
+  background: linear-gradient(
+    100deg,
+    var(--dot-gold-1) 0%,
+    var(--dot-gold-2) 45%,
+    var(--dot-gold-3) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Metallic gold gradient — fills (buttons, active states) */
+.dot-gold-fill {
+  background: linear-gradient(
+    100deg,
+    var(--dot-gold-1) 0%,
+    var(--dot-gold-2) 50%,
+    var(--dot-gold-3) 100%
+  );
+  color: var(--dot-navy);
+}
+
+.dot-gold-border {
+  border-color: var(--dot-gold-2);
+}
+
+.dot-panel {
+  background-color: var(--dot-navy-panel);
+  border: 1px solid var(--dot-navy-line);
+  border-radius: 0.75rem;
+}
+
+.dot-btn-gold {
+  background: linear-gradient(
+    100deg,
+    var(--dot-gold-1) 0%,
+    var(--dot-gold-2) 50%,
+    var(--dot-gold-3) 100%
+  );
+  color: var(--dot-navy);
+  font-weight: 700;
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.dot-btn-gold:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.dot-btn-gold:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.dot-btn-gold:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dot-btn-outline {
+  background: transparent;
+  color: var(--dot-gold-3);
+  border: 1px solid var(--dot-gold-2);
+  transition: background 0.15s ease;
+}
+.dot-btn-outline:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.12);
+}
+
+/* Checkmark pop animation on a successful draw */
+@keyframes dot-check-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.dot-check-pop {
+  animation: dot-check-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.dot-progress-track {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.dot-progress-fill {
+  background: linear-gradient(
+    90deg,
+    var(--dot-gold-1),
+    var(--dot-gold-2),
+    var(--dot-gold-3)
+  );
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
