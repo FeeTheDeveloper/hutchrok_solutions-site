@@ -80,11 +80,14 @@ export async function POST(request: NextRequest) {
     }
     return handleLegacyIntake(body, supabase);
   } catch (error) {
-    if (isProd) {
-      console.error("[api/intake] Unhandled error");
-    } else {
-      console.error("[api/intake] Error:", error);
-    }
+    // Log the message (not the full object/stack) even in prod — this is
+    // almost always our own config error (e.g. "Missing required environment
+    // variable: SUPABASE_ANON_KEY"), which is safe to surface and essential
+    // for diagnosing a broken deployment.
+    console.error(
+      "[api/intake] Unhandled error:",
+      error instanceof Error ? error.message : String(error),
+    );
     // A thrown error here is almost always infrastructure (database
     // unreachable / missing config), not bad user input — so don't tell the
     // applicant their submission is "invalid". Give them a real path forward.
