@@ -130,6 +130,82 @@ export function validatePaidServiceRequest(data: unknown): {
   return { success: false, fieldErrors };
 }
 
+// ── Gov-Housing Consulting Intake Schema ──
+
+export const govHousingIntakeSchema = z.object({
+  formType: z.literal("gov-housing-consulting"),
+  // A. Contact & Entity
+  name: z.string().trim().min(1, "Name or entity is required.").max(300),
+  email: z.string().trim().min(1, "Email is required.").email("Enter a valid email."),
+  phone: z.string().trim().min(1, "Phone number is required.").max(30),
+  titleHolding: z.enum(["personal", "llc_trust"], { message: "Select how title is held." }),
+  veteranStatus: z.boolean(),
+  // B. Property Profile
+  propertyAddress: z.string().trim().min(1, "Property address is required.").max(300),
+  propertyCity: z.string().trim().min(1, "City is required.").max(120),
+  propertyZip: z.string().trim().min(3, "ZIP is required.").max(12),
+  propertyType: z.enum(["sfr", "duplex", "multifamily", "land"], {
+    message: "Select a property type.",
+  }),
+  unitsAvailable: z.number().int().min(0).max(1000).optional(),
+  bedrooms: z.string().trim().max(60).optional().default(""),
+  bathrooms: z.string().trim().max(60).optional().default(""),
+  yearBuilt: z.number().int().min(1700).max(2100).optional(),
+  condition: z.enum(["turn_key", "minor_repairs", "major_rehab"], {
+    message: "Select the current condition.",
+  }),
+  occupancy: z.enum(["vacant", "occupied"], { message: "Select occupancy." }),
+  targetRent: z.number().min(0).max(1_000_000).optional(),
+  // C. Program Readiness
+  section8Before: z.boolean().optional().default(false),
+  registeredWithPHA: z.enum(["yes", "no", "unsure"], {
+    message: "Select your registration status.",
+  }),
+  knowsPHA: z.boolean().optional().default(false),
+  phaName: z.string().trim().max(200).optional().default(""),
+  placementTimeline: z.enum(["30", "60", "90plus"], {
+    message: "Select a placement timeline.",
+  }),
+  interestScope: z
+    .array(z.enum([
+      "single_placement",
+      "portfolio_conversion",
+      "project_based_vouchers",
+      "federal_development",
+    ]))
+    .min(1, "Select at least one area of interest.")
+    .max(4),
+  // D. Federal Contracting (conditional)
+  samStatus: z.enum(["active", "expired", "none"]).optional(),
+  uei: z.string().trim().max(40).optional().default(""),
+  govContractExperience: z.string().trim().max(2000).optional().default(""),
+  // E. Engagement Fit
+  successOutcome: z.string().trim().min(1, "Please describe what success looks like.").max(2000),
+  budgetAuthorityConfirmed: z.boolean().optional().default(false),
+  preferredChannel: z.enum(["email", "phone", "text"], {
+    message: "Select a preferred channel.",
+  }),
+});
+
+export type GovHousingIntakeInput = z.infer<typeof govHousingIntakeSchema>;
+
+export function validateGovHousingIntake(data: unknown): {
+  success: boolean;
+  data?: GovHousingIntakeInput;
+  fieldErrors?: Record<string, string>;
+} {
+  const result = govHousingIntakeSchema.safeParse(data);
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of result.error.issues) {
+    const key = issue.path.join(".");
+    if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+  }
+  return { success: false, fieldErrors };
+}
+
 // ── Veteran Filing Intake Schema (Phase 2) ──
 
 const ownerDetailSchema = z.object({

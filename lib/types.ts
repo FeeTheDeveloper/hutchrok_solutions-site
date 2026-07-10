@@ -146,6 +146,8 @@ export interface IntakeSubmissionJoin {
   branch_of_service: string | null;
   years_of_service: number | null;
   eligibility_answers: Record<string, boolean | null> | null;
+  /** Structured, form-specific answers (e.g. gov-housing consulting) */
+  intake_detail: Record<string, unknown> | null;
 }
 
 export interface FilingCase {
@@ -205,6 +207,7 @@ export type ServiceType =
   | "advisory"
   | "managed"
   | "credit-enablement"
+  | "gov-housing-consulting"
   | "other";
 
 export const BUSINESS_STAGES: { value: BusinessStage; label: string }[] = [
@@ -221,6 +224,7 @@ export const SERVICE_TYPES: { value: ServiceType; label: string }[] = [
   { value: "advisory", label: "Strategic Advisory" },
   { value: "managed", label: "Managed Business Services" },
   { value: "credit-enablement", label: "Credit Enablement" },
+  { value: "gov-housing-consulting", label: "Gov-Housing Consulting" },
   { value: "other", label: "Other / Not Sure" },
 ];
 

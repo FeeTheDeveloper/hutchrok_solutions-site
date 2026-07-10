@@ -19,6 +19,7 @@ const quickLinks = [
   { href: "/how-it-works", label: "How It Works" },
   { href: "/verification-help", label: "Verification Help" },
   { href: "/services", label: "Services" },
+  { href: "/gov-housing-consulting", label: "Gov-Housing Consulting" },
   { href: "/guides", label: "Guides" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },

@@ -59,6 +59,7 @@ import {
   CalendarDays,
   Zap,
   Rocket,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -750,6 +751,26 @@ function CaseDetailContent() {
             </CardContent>
           </Card>
 
+          {/* ── Consulting Detail (gov-housing etc.) ── */}
+          {intake?.intake_detail && (
+            <Card className="lg:col-span-2 border-gold/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-gold" />
+                  Consulting Detail
+                  {intake.service_needed && (
+                    <Badge variant="outline" className="text-[10px] ml-1">
+                      {intake.service_needed}
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ConsultingDetail detail={intake.intake_detail as Record<string, unknown>} />
+              </CardContent>
+            </Card>
+          )}
+
           {/* ── 2. Eligibility Summary ── */}
           {isVeteran && (
             <Card>
@@ -1309,6 +1330,58 @@ function Field({ label, value }: { label: string; value?: string | null }) {
     <div>
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className="text-sm font-medium">{value ?? "—"}</p>
+    </div>
+  );
+}
+
+function titleize(key: string): string {
+  return key
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatDetailValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) return value.map((v) => titleize(String(v))).join(", ") || "—";
+  return titleize(String(value));
+}
+
+/** Renders the structured intake_detail blob for operators. */
+function ConsultingDetail({ detail }: { detail: Record<string, unknown> }) {
+  const routing = detail.routing as
+    | { label?: string; tier?: string; nextStep?: string }
+    | undefined;
+  const entries = Object.entries(detail).filter(([k]) => k !== "routing");
+
+  return (
+    <div className="space-y-4">
+      {routing && (
+        <div className="rounded-lg border border-gold/30 bg-gold/5 p-4">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <Badge className="bg-navy text-gold text-[10px]">{routing.label ?? "Routing"}</Badge>
+            {routing.tier && (
+              <Badge variant="outline" className="text-[10px]">{routing.tier} tier</Badge>
+            )}
+          </div>
+          {routing.nextStep && (
+            <p className="text-sm text-navy">{routing.nextStep}</p>
+          )}
+        </div>
+      )}
+      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+        {entries.map(([key, value]) => (
+          <div key={key} className="flex flex-col">
+            <dt className="text-xs text-muted-foreground">{titleize(key)}</dt>
+            <dd className="text-sm text-navy break-words">
+              {typeof value === "object" && value !== null && !Array.isArray(value)
+                ? JSON.stringify(value)
+                : formatDetailValue(value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }
