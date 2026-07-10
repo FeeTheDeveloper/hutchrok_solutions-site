@@ -1,3 +1,5 @@
+import { emailFrom, TEAM_INBOX } from "@/lib/email/config";
+
 interface PaidServiceEmailPayload {
   name: string;
   email: string;
@@ -13,7 +15,7 @@ export async function sendPaidServiceRequestEmail(payload: PaidServiceEmailPaylo
     throw new Error("Email delivery is not configured. Missing RESEND_API_KEY.");
   }
 
-  const from = process.env.RESEND_FROM_EMAIL || "Hutchrok Intake <onboarding@resend.dev>";
+  const from = emailFrom();
 
   const text = [
     "New paid service request",
@@ -36,7 +38,7 @@ export async function sendPaidServiceRequestEmail(payload: PaidServiceEmailPaylo
     },
     body: JSON.stringify({
       from,
-      to: ["contact@hutchrok.com"],
+      to: [TEAM_INBOX],
       reply_to: payload.email,
       subject: `Paid Service Request: ${payload.selectedService}`,
       text,
