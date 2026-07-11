@@ -21,6 +21,8 @@ import {
 interface ServiceRequestFormProps {
   initialServiceSlug?: string;
   initialDiscountCode?: string;
+  /** Interest-capture mode — no purchase implied (e.g. Registered Agent pre-launch). */
+  waitlist?: boolean;
 }
 
 interface ServiceRequestState {
@@ -44,6 +46,7 @@ const INITIAL_STATE: ServiceRequestState = {
 export default function ServiceRequestForm({
   initialServiceSlug,
   initialDiscountCode,
+  waitlist = false,
 }: ServiceRequestFormProps) {
   const [form, setForm] = useState<ServiceRequestState>({
     ...INITIAL_STATE,
@@ -70,7 +73,8 @@ export default function ServiceRequestForm({
     if (!form.phone.trim()) next.phone = "Phone is required.";
     if (!form.businessName.trim()) next.businessName = "Business name is required.";
     if (!form.serviceSlug) next.serviceSlug = "Please select a service.";
-    if (!form.projectDetails.trim()) {
+    // Details are optional when joining a waitlist.
+    if (!waitlist && !form.projectDetails.trim()) {
       next.projectDetails = "Project details are required.";
     }
 
@@ -85,6 +89,18 @@ export default function ServiceRequestForm({
 
     setSubmitting(true);
     try {
+      const prefixes = [
+        waitlist ? "[WAITLIST SIGN-UP — interest only, not a purchase]" : "",
+        discountCode ? `[Discount code: ${discountCode}]` : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      // The API requires a non-empty projectDetails; keep a fallback for
+      // waitlist sign-ups where the free-text field is optional.
+      const projectDetails =
+        [prefixes, form.projectDetails.trim()].filter(Boolean).join("\n\n") ||
+        "[Waitlist sign-up]";
+
       const res = await fetch("/api/service-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -94,9 +110,7 @@ export default function ServiceRequestForm({
           phone: form.phone,
           businessName: form.businessName,
           selectedService: selectedService?.title ?? form.serviceSlug,
-          projectDetails: discountCode
-            ? `[Discount code: ${discountCode}]\n\n${form.projectDetails}`
-            : form.projectDetails,
+          projectDetails,
         }),
       });
 
@@ -119,11 +133,13 @@ export default function ServiceRequestForm({
     return (
       <div className="bg-white border border-border/50 rounded-2xl p-8 text-center">
         <CheckCircle className="h-12 w-12 text-gold mx-auto mb-3" />
-        <h3 className="text-2xl font-bold text-navy mb-2">Request Submitted</h3>
+        <h3 className="text-2xl font-bold text-navy mb-2">
+          {waitlist ? "You're on the Waitlist" : "Request Submitted"}
+        </h3>
         <p className="text-muted-foreground text-sm sm:text-base">
-          Thanks for your request. Your intake was sent to contact@hutchrok.com.
-          A Hutchrok operator will follow up in 1–2 business days to confirm scope,
-          timeline, and next steps.
+          {waitlist
+            ? "Thanks for your interest. We'll email you the moment our Registered Agent service opens for enrollment — no payment and no obligation in the meantime."
+            : "Thanks for your request. Your intake was sent to contact@hutchrok.com. A Hutchrok operator will follow up in 1–2 business days to confirm scope, timeline, and next steps."}
         </p>
       </div>
     );
@@ -225,11 +241,17 @@ export default function ServiceRequestForm({
       </div>
 
       <div>
-        <Label htmlFor="projectDetails">Project Details *</Label>
+        <Label htmlFor="projectDetails">
+          {waitlist ? "Anything we should know? (optional)" : "Project Details *"}
+        </Label>
         <Textarea
           id="projectDetails"
           rows={5}
-          placeholder="Tell us what you need, your timeline, and any goals for this service."
+          placeholder={
+            waitlist
+              ? "Optional — tell us about your LLC or any questions about registered agent service."
+              : "Tell us what you need, your timeline, and any goals for this service."
+          }
           value={form.projectDetails}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, projectDetails: e.target.value }))
@@ -250,10 +272,10 @@ export default function ServiceRequestForm({
         {submitting ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Submitting Request...
+            {waitlist ? "Joining..." : "Submitting Request..."}
           </>
         ) : (
-          "Submit Service Request"
+          waitlist ? "Join the Waitlist" : "Submit Service Request"
         )}
       </Button>
     </form>

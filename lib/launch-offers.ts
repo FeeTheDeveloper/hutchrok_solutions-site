@@ -76,7 +76,7 @@ export const LAUNCH_OFFERS: LaunchOffer[] = [
       "Keeps your home address off public record",
       "Compliance calendar for your first year",
     ],
-    ctaLabel: "Add Registered Agent",
-    ctaHref: "/service-request?service=registered-agent",
+    ctaLabel: "Join the Waitlist",
+    ctaHref: "/service-request?service=registered-agent&waitlist=1",
   },
 ];
