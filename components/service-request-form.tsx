@@ -14,9 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  PAID_SERVICES,
-  PAID_SERVICE_BY_SLUG,
-  type PaidServiceSlug,
+  SERVICE_REQUEST_OPTIONS,
+  SERVICE_REQUEST_BY_SLUG,
 } from "@/lib/paid-services";
 
 interface ServiceRequestFormProps {
@@ -57,7 +56,7 @@ export default function ServiceRequestForm({
 
   const selectedService = useMemo(() => {
     if (!form.serviceSlug) return null;
-    return PAID_SERVICE_BY_SLUG[form.serviceSlug as PaidServiceSlug] ?? null;
+    return SERVICE_REQUEST_BY_SLUG[form.serviceSlug] ?? null;
   }, [form.serviceSlug]);
 
   function validate(): Record<string, string> {
@@ -213,7 +212,7 @@ export default function ServiceRequestForm({
             <SelectValue placeholder="Choose a service" />
           </SelectTrigger>
           <SelectContent>
-            {PAID_SERVICES.map((service) => (
+            {SERVICE_REQUEST_OPTIONS.map((service) => (
               <SelectItem key={service.slug} value={service.slug}>
                 {service.title}
               </SelectItem>

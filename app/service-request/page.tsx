@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import ServiceRequestForm from "@/components/service-request-form";
 import {
   formatStartingPrice,
-  PAID_SERVICE_BY_SLUG,
-  type PaidServiceSlug,
+  SERVICE_REQUEST_BY_SLUG,
 } from "@/lib/paid-services";
 
 export const metadata: Metadata = {
@@ -23,8 +22,8 @@ export default async function ServiceRequestPage({
   searchParams,
 }: ServiceRequestPageProps) {
   const params = await searchParams;
-  const serviceSlug = (params.service ?? "") as PaidServiceSlug;
-  const selectedService = PAID_SERVICE_BY_SLUG[serviceSlug] ?? null;
+  const serviceSlug = params.service ?? "";
+  const selectedService = SERVICE_REQUEST_BY_SLUG[serviceSlug] ?? null;
   const discountCode = params.discount ?? "";
 
   return (
