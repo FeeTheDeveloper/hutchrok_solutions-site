@@ -490,6 +490,19 @@ function StepContact({
             ))}
           </SelectContent>
         </Select>
+        {(form.vvlStatus === "not_started" || form.vvlStatus === "applied") && (
+          <p className="text-xs text-muted-foreground mt-1.5">
+            Need your VVL?{" "}
+            <a
+              href="https://tvc.my.salesforce-sites.com/businessConsultant"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold font-medium hover:underline"
+            >
+              Request it from the Texas Veterans Commission ↗
+            </a>
+          </p>
+        )}
       </Field>
 
       {form.veteranStatus && (
