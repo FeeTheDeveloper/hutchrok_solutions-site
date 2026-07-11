@@ -10,15 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
-  { href: "/", label: "Home" },
   { href: "/free-filing", label: "Free Filing" },
   { href: "/how-it-works", label: "How It Works" },
+  { href: "/launch-services", label: "Launch Services" },
   { href: "/track", label: "Track Filing" },
-  { href: "/verification-help", label: "Verification Help" },
-  { href: "/services", label: "Services" },
-  { href: "/get-started", label: "10% Off" },
   { href: "/guides", label: "Guides" },
-  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];
 

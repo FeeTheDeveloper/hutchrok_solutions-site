@@ -236,11 +236,12 @@ export default function VerificationHelpPage() {
                   Connect with a TVC Business Consultant
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                  TVC has business consultants who specialize in helping veterans
-                  navigate the verification and fee waiver process.
+                  TVC business consultants specialize in helping veterans navigate
+                  verification and the fee waiver. Start your request through the
+                  official TVC Business Consultant portal.
                 </p>
                 <a
-                  href="https://www.tvc.texas.gov"
+                  href="https://tvc.my.salesforce-sites.com/businessConsultant"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block"
@@ -249,7 +250,7 @@ export default function VerificationHelpPage() {
                     variant="outline"
                     className="border-navy/80 text-navy hover:bg-navy hover:text-white font-medium"
                   >
-                    Find Your Regional Office
+                    Connect with a TVC Consultant
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>
                 </a>

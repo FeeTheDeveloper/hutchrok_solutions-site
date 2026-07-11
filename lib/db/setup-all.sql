@@ -37,7 +37,9 @@ create table if not exists intake_submissions (
   dba_name                    text,
   nonprofit_purpose           text,
   branch_of_service           text,
-  years_of_service            integer
+  years_of_service            integer,
+  -- migration 008 (structured detail for form-specific intakes)
+  intake_detail               jsonb
 );
 
 -- 2) filing_cases ---------------------------------------------

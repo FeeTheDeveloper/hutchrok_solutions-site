@@ -1,11 +1,26 @@
 import Link from "next/link";
-import { Mail, MapPin } from "lucide-react";
+import { Mail, MapPin, Facebook, Instagram } from "lucide-react";
+
+const socialLinks = [
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/share/1Bp9b18mad/",
+    icon: Facebook,
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/hutchrok_solutions",
+    icon: Instagram,
+  },
+];
 
 const quickLinks = [
   { href: "/free-filing", label: "Free Filing" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/verification-help", label: "Verification Help" },
   { href: "/services", label: "Services" },
+  { href: "/gov-housing-consulting", label: "Gov-Housing Consulting" },
+  { href: "/get-started", label: "10% Off Offer" },
   { href: "/guides", label: "Guides" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
@@ -102,6 +117,24 @@ export default function Footer() {
                 <span>990 S State Hwy 5 (TX-5), Fairview, TX 75069</span>
               </li>
             </ul>
+
+            <h4 className="text-sm font-semibold text-gold mt-6 mb-3 uppercase tracking-wider">
+              Follow Us
+            </h4>
+            <div className="flex items-center gap-3">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/70 hover:text-navy hover:bg-gold hover:border-gold transition-colors"
+                >
+                  <social.icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 

@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import ServiceRequestForm from "@/components/service-request-form";
 import {
   formatStartingPrice,
-  PAID_SERVICE_BY_SLUG,
-  type PaidServiceSlug,
+  SERVICE_REQUEST_BY_SLUG,
 } from "@/lib/paid-services";
 
 export const metadata: Metadata = {
@@ -16,16 +15,19 @@ export const metadata: Metadata = {
 };
 
 interface ServiceRequestPageProps {
-  searchParams: Promise<{ service?: string; discount?: string }>;
+  searchParams: Promise<{ service?: string; discount?: string; waitlist?: string }>;
 }
 
 export default async function ServiceRequestPage({
   searchParams,
 }: ServiceRequestPageProps) {
   const params = await searchParams;
-  const serviceSlug = (params.service ?? "") as PaidServiceSlug;
-  const selectedService = PAID_SERVICE_BY_SLUG[serviceSlug] ?? null;
+  const serviceSlug = params.service ?? "";
+  const selectedService = SERVICE_REQUEST_BY_SLUG[serviceSlug] ?? null;
   const discountCode = params.discount ?? "";
+  // Registered Agent is pre-launch (Form 401-A consent + staffed TX address
+  // required before enrollment), so it's interest-capture only for now.
+  const waitlist = params.waitlist === "1" || serviceSlug === "registered-agent";
 
   return (
     <>
@@ -49,19 +51,34 @@ export default async function ServiceRequestPage({
           {selectedService && (
             <div className="bg-white border border-gold/30 rounded-2xl p-6 sm:p-8">
               <p className="text-xs uppercase tracking-wider text-gold font-semibold mb-2">
-                Selected Service
+                {waitlist ? "Waitlist" : "Selected Service"}
               </p>
               <h2 className="text-2xl font-bold text-navy mb-1">{selectedService.title}</h2>
               <p className="text-muted-foreground mb-2">{selectedService.description}</p>
-              <p className="text-sm font-semibold text-navy">
-                {formatStartingPrice(selectedService.startingPrice)}
-              </p>
+              {waitlist ? (
+                <p className="text-sm font-semibold text-gold-dark">
+                  Launching soon · {formatStartingPrice(selectedService.startingPrice)} at launch
+                </p>
+              ) : (
+                <p className="text-sm font-semibold text-navy">
+                  {formatStartingPrice(selectedService.startingPrice)}
+                </p>
+              )}
+            </div>
+          )}
+
+          {waitlist && (
+            <div className="bg-navy/5 border border-navy/15 rounded-xl p-5 text-sm text-navy leading-relaxed">
+              <span className="font-semibold">Registered Agent service is launching soon.</span>{" "}
+              Join the waitlist and we&apos;ll notify you the moment enrollment opens —
+              no payment and no obligation now.
             </div>
           )}
 
           <ServiceRequestForm
             initialServiceSlug={selectedService?.slug}
             initialDiscountCode={discountCode}
+            waitlist={waitlist}
           />
 
           <div className="bg-white border border-border/50 rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">

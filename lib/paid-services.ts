@@ -150,3 +150,78 @@ export const PAID_SERVICE_ICON = {
 export function formatStartingPrice(amount: number): string {
   return `Starting at $${amount.toLocaleString("en-US")}`;
 }
+
+// ── Service-request-only offers (bundles / recurring) ──
+// Selectable in the service-request form, but intentionally kept OUT of
+// PAID_SERVICES so they don't appear in the à-la-carte / services / launch
+// grids (which map PAID_SERVICES and index 6-key icon maps by slug).
+
+export type ServiceRequestSlug =
+  | PaidServiceSlug
+  | "launch-package"
+  | "registered-agent";
+
+export interface ServiceRequestOption {
+  slug: ServiceRequestSlug;
+  title: string;
+  tag: string;
+  startingPrice: number;
+  description: string;
+  features: string[];
+}
+
+/** The bundle + recurring offers surfaced by the homepage Launch Path. */
+export const EXTRA_SERVICE_OPTIONS: ServiceRequestOption[] = [
+  {
+    slug: "launch-package",
+    title: "Veteran Launch Package",
+    tag: "Bundle",
+    startingPrice: 750,
+    description:
+      "Everything your new LLC needs to look open for business on day one — bundled, built by the same team that filed your formation.",
+    features: [
+      "Professional logo set (web, social, print)",
+      "One-page business website, mobile-first and SEO-ready",
+      "Business email with proper security records",
+      "Domain and hosting, set up clean",
+      "Launch-day checklist reviewed with you 1-on-1",
+    ],
+  },
+  {
+    slug: "registered-agent",
+    title: "Registered Agent Service",
+    tag: "Compliance",
+    startingPrice: 119,
+    description:
+      "Every Texas LLC is required to maintain a registered agent. Let Hutchrok stand post — we receive your legal and state mail and alert you same-day.",
+    features: [
+      "Texas street address for your LLC's registered office",
+      "Same-day scan and alert on legal documents",
+      "Annual franchise tax and report reminders",
+      "Keeps your home address off public record",
+      "Compliance calendar for your first year",
+    ],
+  },
+];
+
+/** Everything selectable in the service-request form (individual + bundles). */
+export const SERVICE_REQUEST_OPTIONS: ServiceRequestOption[] = [
+  ...PAID_SERVICES.map((s) => ({
+    slug: s.slug,
+    title: s.title,
+    tag: s.tag,
+    startingPrice: s.startingPrice,
+    description: s.description,
+    features: s.features,
+  })),
+  ...EXTRA_SERVICE_OPTIONS,
+];
+
+export const SERVICE_REQUEST_BY_SLUG: Record<string, ServiceRequestOption> =
+  SERVICE_REQUEST_OPTIONS.reduce(
+    (acc, option) => {
+      acc[option.slug] = option;
+      return acc;
+    },
+    {} as Record<string, ServiceRequestOption>
+  );

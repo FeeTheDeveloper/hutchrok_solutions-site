@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { validateLeadSignup } from "@/lib/validation";
 import { SIGNUP_DISCOUNT_CODE, SIGNUP_DISCOUNT_LABEL } from "@/lib/promotions";
+import { emailFrom, TEAM_INBOX } from "@/lib/email/config";
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -24,9 +25,7 @@ async function notifyTeam(lead: {
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return;
-  const from =
-    process.env.RESEND_FROM_EMAIL ||
-    "Hutchrok Leads <onboarding@resend.dev>";
+  const from = emailFrom();
   const text = [
     "New marketing lead sign-up (10% off promo)",
     "",
@@ -48,7 +47,7 @@ async function notifyTeam(lead: {
       },
       body: JSON.stringify({
         from,
-        to: ["contact@hutchrok.com"],
+        to: [TEAM_INBOX],
         reply_to: lead.email,
         subject: `New marketing lead: ${lead.name}`,
         text,

@@ -8,6 +8,7 @@
  */
 
 import { getCaseStatusMeta, shouldNotifyClient } from "@/lib/case-status";
+import { emailFrom, TEAM_INBOX } from "@/lib/email/config";
 import { CASE_EVENTS, type CaseEvent } from "./events";
 import type { NotificationChannel } from "./dispatcher";
 
@@ -52,9 +53,7 @@ export const clientEmailChannel: NotificationChannel = {
 
     const { contact, meta, firstName, trackUrl } = target;
     const apiKey = process.env.RESEND_API_KEY!;
-    const from =
-      process.env.RESEND_FROM_EMAIL ||
-      "Hutchrok Solutions Group <onboarding@resend.dev>";
+    const from = emailFrom();
     const business = contact.businessName ? ` for ${contact.businessName}` : "";
 
     const text = [
@@ -82,6 +81,7 @@ export const clientEmailChannel: NotificationChannel = {
         body: JSON.stringify({
           from,
           to: [contact.email],
+          reply_to: TEAM_INBOX,
           subject: `Your filing update — ${meta.label} (${event.caseNumber})`,
           text,
         }),
