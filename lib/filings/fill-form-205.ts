@@ -11,12 +11,15 @@
  * left for operator review and flagged in the Supplemental Provisions box.
  */
 
-import fs from "node:fs/promises";
-import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 import type { Form205Payload } from "@/lib/documents";
 
-const TEMPLATE_PATH = path.join(process.cwd(), "docs", "filings", "205_boc.pdf");
+/**
+ * Path of the fillable template as a public static asset. Served identically
+ * on Vercel, Cloudflare Workers, and local dev — no filesystem access, so this
+ * is host-agnostic. The caller fetches the bytes and passes them in.
+ */
+export const FORM_205_ASSET_PATH = "/filings/205_boc.pdf";
 
 /** Exact AcroForm field names in the official Form 205 (order/spacing matters). */
 const F = {
@@ -108,12 +111,14 @@ export function splitName(full: string): SplitName {
 
 /**
  * Fill the official Form 205 with payload data.
- * Returns the saved PDF bytes (editable, not flattened).
+ * `templateBytes` are the raw bytes of the fillable Form 205 template
+ * (fetched by the caller from FORM_205_ASSET_PATH). Returns the saved PDF
+ * bytes (editable, not flattened).
  */
 export async function fillForm205(
   payload: Form205Payload,
+  templateBytes: Uint8Array,
 ): Promise<Uint8Array> {
-  const templateBytes = await fs.readFile(TEMPLATE_PATH);
   const doc = await PDFDocument.load(templateBytes);
   const form = doc.getForm();
 

@@ -1,28 +1,9 @@
-import type { OpenNextConfig } from "@opennextjs/aws/types/open-next.js";
+import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 
-const config: OpenNextConfig = {
-  default: {
-    override: {
-      wrapper: "cloudflare-node",
-      converter: "edge",
-      proxyExternalRequest: "fetch",
-      incrementalCache: "dummy",
-      tagCache: "dummy",
-      queue: "direct",
-    },
-  },
-  edgeExternals: ["node:crypto"],
-  middleware: {
-    external: true,
-    override: {
-      wrapper: "cloudflare-edge",
-      converter: "edge",
-      proxyExternalRequest: "fetch",
-      incrementalCache: "dummy",
-      tagCache: "dummy",
-      queue: "direct",
-    },
-  },
-};
-
-export default config;
+/**
+ * OpenNext → Cloudflare Workers adapter config.
+ *
+ * Defaults are correct for this app (no ISR / data-cache reliance). If you
+ * later add incremental cache, wire an R2/KV cache here per the OpenNext docs.
+ */
+export default defineCloudflareConfig();

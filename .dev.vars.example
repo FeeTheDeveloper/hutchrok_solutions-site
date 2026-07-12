@@ -1,0 +1,22 @@
+# Local Cloudflare Workers dev secrets — copy to `.dev.vars` (gitignored) for
+# `npm run cf:preview`. In production, set these with `wrangler secret put NAME`
+# or in the Cloudflare dashboard. Mirrors .env.example.
+
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJI...your-anon-key
+ADMIN_TOKEN=replace-with-a-strong-random-secret
+
+# Optional
+# RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
+# RESEND_FROM_EMAIL=Hutchrok Solutions Group <notifications@hutchrok.com>
+# RESEND_TO_EMAIL=contact@hutchrok.com
+# OPS_TOKEN=
+# OPS_WEBHOOK_URL=
+# TWILIO_ACCOUNT_SID=
+# TWILIO_AUTH_TOKEN=
+# TWILIO_FROM_NUMBER=
+# CLERK_SECRET_KEY=sk_test_...
+
+# NEXT_PUBLIC_* are build-time (inlined). For local preview parity you can set:
+# NEXT_PUBLIC_SITE_URL=http://localhost:8788
+# NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...

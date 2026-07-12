@@ -1,13 +1,29 @@
-# Cloudflare Pages configuration for Hutchrok Solutions Group
-# Used by @opennextjs/cloudflare to configure the Workers runtime.
+# Cloudflare Workers configuration for Hutchrok Solutions Group.
+# Used by @opennextjs/cloudflare to deploy the Next.js app to Workers.
 
 name = "hutchrok-solutions"
 compatibility_date = "2026-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# The OpenNext adapter outputs to .worker.js — this is the main entrypoint.
+# The OpenNext adapter builds the Worker entrypoint here.
 main = ".open-next/worker.js"
 
-# Static assets are served from the .open-next/assets directory.
+# Static assets (public/ + Next build output). The ASSETS binding lets the
+# Worker serve — and self-fetch — files like /filings/205_boc.pdf.
 [assets]
 directory = ".open-next/assets"
+binding = "ASSETS"
+
+[observability]
+enabled = true
+
+# ── Runtime env vars / secrets ──
+# Do NOT put secrets here. Set them with `wrangler secret put NAME` or in the
+# Cloudflare dashboard (Workers → Settings → Variables & Secrets):
+#   SUPABASE_URL, SUPABASE_ANON_KEY, ADMIN_TOKEN, RESEND_API_KEY,
+#   RESEND_FROM_EMAIL, RESEND_TO_EMAIL, OPS_TOKEN, OPS_WEBHOOK_URL,
+#   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER,
+#   CLERK_SECRET_KEY
+# NEXT_PUBLIC_* values are inlined at build time — provide them to the build
+# (e.g. Workers Build environment variables), not as runtime secrets:
+#   NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY

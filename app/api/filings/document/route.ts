@@ -4,10 +4,10 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 import { requireAdmin, isValidUUID } from "@/lib/auth";
 import { apiError, ErrorCode } from "@/lib/api-response";
 import { form205Builder } from "@/lib/documents";
-import { fillForm205 } from "@/lib/filings/fill-form-205";
+import { fillForm205, FORM_205_ASSET_PATH } from "@/lib/filings/fill-form-205";
 import type { FilingCase, IntakeSubmissionJoin } from "@/lib/types";
 
-// pdf-lib + fs require the Node.js runtime.
+// pdf-lib runs on the Node.js runtime (also supported by OpenNext on Cloudflare).
 export const runtime = "nodejs";
 
 const schema = z.object({
@@ -82,11 +82,20 @@ export async function POST(request: NextRequest) {
 
   let pdfBytes: Uint8Array;
   try {
+    // Load the fillable template as a static asset from our own origin — works
+    // identically on Vercel, Cloudflare Workers, and local dev (no filesystem).
+    const templateUrl = new URL(FORM_205_ASSET_PATH, new URL(request.url).origin);
+    const templateRes = await fetch(templateUrl);
+    if (!templateRes.ok) {
+      throw new Error(`Template fetch failed: ${templateRes.status}`);
+    }
+    const templateBytes = new Uint8Array(await templateRes.arrayBuffer());
+
     const payload = form205Builder.buildPayload(
       row as unknown as FilingCase,
       intake,
     );
-    pdfBytes = await fillForm205(payload);
+    pdfBytes = await fillForm205(payload, templateBytes);
   } catch (e) {
     console.error("[api/filings/document] fill error:", e);
     return apiError(
