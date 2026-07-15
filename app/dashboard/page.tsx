@@ -6,20 +6,26 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HutchrokConcierge } from "@/components/concierge/hutchrok-concierge";
 import { Button } from "@/components/ui/button";
-import { getRoleFromClaims } from "@/lib/auth/roles";
 import { getDashboardWorkspaceSnapshot } from "@/lib/dashboard/workspace";
+import { getClientCases } from "@/lib/services/client-cases";
 import FilingTracker from "@/components/filing-tracker";
+import ClientCaseCard from "@/components/client-case-card";
 
 export default async function DashboardPage() {
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in?redirect_url=/dashboard");
   }
 
   const user = await currentUser();
-  const role = getRoleFromClaims(sessionClaims);
   const workspace = getDashboardWorkspaceSnapshot(user?.fullName);
+
+  // Claim + list this user's filing cases by verified email match.
+  const verifiedEmails = (user?.emailAddresses ?? [])
+    .filter((e) => e.verification?.status === "verified")
+    .map((e) => e.emailAddress);
+  const cases = await getClientCases(userId, verifiedEmails);
 
   return (
     <div className="min-h-screen bg-cream">
@@ -29,47 +35,37 @@ export default async function DashboardPage() {
           {workspace.greeting} This workspace is built for your active case and next actions.
         </p>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        {/* ── Your filings (auto-linked by verified email) ── */}
+        {cases.length > 0 ? (
+          <div className="grid gap-4">
+            {cases.map((c) => (
+              <ClientCaseCard key={c.id} clientCase={c} />
+            ))}
+          </div>
+        ) : (
           <Card>
             <CardHeader>
-              <CardTitle>Account</CardTitle>
-              <CardDescription>Authenticated Clerk user details.</CardDescription>
+              <CardTitle>No filings linked yet</CardTitle>
+              <CardDescription>
+                Filings submitted with{" "}
+                {user?.primaryEmailAddress?.emailAddress ?? "your verified email"}{" "}
+                appear here automatically. Started one under a different email?
+                Look it up below, or begin a new filing.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>
-                <span className="font-semibold">User ID:</span> {user?.id}
-              </p>
-              <p>
-                <span className="font-semibold">Name:</span> {user?.fullName ?? "Not set"}
-              </p>
-              <p>
-                <span className="font-semibold">Email:</span>{" "}
-                {user?.primaryEmailAddress?.emailAddress ?? "Not set"}
-              </p>
+            <CardContent>
+              <Button asChild className="bg-gold hover:bg-gold-dark text-navy font-bold">
+                <Link href="/contact">Start a Free Texas Filing</Link>
+              </Button>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Authorization</CardTitle>
-              <CardDescription>Role scaffolding for future RBAC.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>
-                <span className="font-semibold">Resolved role:</span> {role ?? "unassigned"}
-              </p>
-              <p className="text-muted-foreground">
-                TODO(auth-rbac): enforce route and data authorization by Clerk role (`admin` / `client`).
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        )}
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Track Your Filing</CardTitle>
+            <CardTitle>Track Another Filing</CardTitle>
             <CardDescription>
-              Enter your case number to see your live filing status, timeline, and documents.
+              Enter a case number to see its live filing status, timeline, and documents.
             </CardDescription>
           </CardHeader>
           <CardContent>

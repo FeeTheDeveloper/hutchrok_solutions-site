@@ -312,10 +312,14 @@ function CaseDetailContent() {
     }
   };
 
-  const [generating, setGenerating] = useState(false);
+  const [generating, setGenerating] = useState<string | null>(null);
 
-  const handleGenerateForm205 = async () => {
-    setGenerating(true);
+  const handleGenerateDocument = async (
+    documentType: "form_205" | "form_05_904",
+  ) => {
+    const formName = documentType === "form_05_904" ? "Form 05-904" : "Form 205";
+    const filePrefix = documentType === "form_05_904" ? "Form-05-904" : "Form-205";
+    setGenerating(documentType);
     setMessage(null);
     try {
       const res = await fetch(
@@ -323,11 +327,11 @@ function CaseDetailContent() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ caseId }),
+          body: JSON.stringify({ caseId, documentType }),
         }
       );
       if (!res.ok) {
-        let text = "Failed to generate Form 205.";
+        let text = `Failed to generate ${formName}.`;
         try {
           const json = await res.json();
           text = json.error?.message ?? text;
@@ -341,19 +345,22 @@ function CaseDetailContent() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Form-205-${filing?.case_number ?? "draft"}.pdf`;
+      a.download = `${filePrefix}-${filing?.case_number ?? "draft"}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
       setMessage({
         type: "success",
-        text: "Form 205 generated. Review the management option and registered-agent address before filing.",
+        text:
+          documentType === "form_05_904"
+            ? "Form 05-904 generated. The veteran completes the ID column and signs before filing."
+            : "Form 205 generated. Review the management option and registered-agent address before filing.",
       });
     } catch {
-      setMessage({ type: "error", text: "Network error generating Form 205." });
+      setMessage({ type: "error", text: `Network error generating ${formName}.` });
     } finally {
-      setGenerating(false);
+      setGenerating(null);
     }
   };
 
@@ -636,11 +643,11 @@ function CaseDetailContent() {
                   <Button
                     size="sm"
                     className="bg-indigo-700 text-white hover:bg-indigo-800"
-                    disabled={generating}
-                    onClick={handleGenerateForm205}
+                    disabled={generating !== null}
+                    onClick={() => handleGenerateDocument("form_205")}
                     title="Auto-fill the official Texas Form 205 from this case's intake data"
                   >
-                    {generating ? (
+                    {generating === "form_205" ? (
                       <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
                     ) : (
                       <Download className="h-3 w-3 mr-1.5" />
@@ -648,12 +655,29 @@ function CaseDetailContent() {
                     Generate Form 205
                   </Button>
                 )}
+              {intake && intake.veteran_status === true && (
+                <Button
+                  size="sm"
+                  className="bg-indigo-700 text-white hover:bg-indigo-800"
+                  disabled={generating !== null}
+                  onClick={() => handleGenerateDocument("form_05_904")}
+                  title="Auto-fill the official Form 05-904 (Certification of New Veteran-Owned Business) from this case's owner data"
+                >
+                  {generating === "form_05_904" ? (
+                    <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3 w-3 mr-1.5" />
+                  )}
+                  Generate Form 05-904
+                </Button>
+              )}
             </div>
             <p className="mt-3 text-xs text-indigo-700/80">
               Auto-fills the official Texas Certificate of Formation (Form 205)
-              from intake data. The PDF stays editable — set the Article 3
-              management option and confirm the registered-agent address before
-              filing.
+              and the veteran certification (Form 05-904) from intake data. The
+              PDFs stay editable — set the Article 3 management option, confirm
+              the registered-agent address, and have the veteran complete the
+              05-904 ID column and signature before filing.
             </p>
           </CardContent>
         </Card>

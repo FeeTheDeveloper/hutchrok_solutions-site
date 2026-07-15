@@ -57,11 +57,16 @@ create table if not exists filing_cases (
   sharepoint_folder_url text,
   ms_list_item_id       text,
   ops_synced_at         timestamptz,
-  handoff_data          jsonb
+  handoff_data          jsonb,
+  -- migration 009 (client account linkage)
+  clerk_user_id         text,
+  claimed_at            timestamptz
 );
 
 create index if not exists idx_filing_cases_status on filing_cases(status);
 create index if not exists idx_filing_cases_intake on filing_cases(intake_id);
+create index if not exists idx_filing_cases_clerk_user
+  on filing_cases(clerk_user_id) where clerk_user_id is not null;
 
 create or replace function update_updated_at_column()
 returns trigger as $$
