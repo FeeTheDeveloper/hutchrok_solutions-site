@@ -5,13 +5,15 @@ import { requireAdmin, isValidUUID } from "@/lib/auth";
 import { apiError, ErrorCode } from "@/lib/api-response";
 import { form205Builder } from "@/lib/documents";
 import { fillForm205 } from "@/lib/filings/fill-form-205";
-import type { FilingCase, IntakeSubmissionJoin } from "@/lib/types";
+import { fillForm05904 } from "@/lib/filings/fill-form-05-904";
+import type { FilingCase, IntakeSubmissionJoin, OwnerDetail } from "@/lib/types";
 
 // pdf-lib + fs require the Node.js runtime.
 export const runtime = "nodejs";
 
 const schema = z.object({
   caseId: z.string().min(1, "Case ID is required."),
+  documentType: z.enum(["form_205", "form_05_904"]).default("form_205"),
 });
 
 const SELECT = `
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return apiError(ErrorCode.VALIDATION_ERROR, "Case ID is required.", 400);
   }
-  const { caseId } = parsed.data;
+  const { caseId, documentType } = parsed.data;
   if (!isValidUUID(caseId)) {
     return apiError(ErrorCode.BAD_REQUEST, "Invalid case ID format.", 400);
   }
@@ -71,22 +73,42 @@ export async function POST(request: NextRequest) {
     return apiError(ErrorCode.BAD_REQUEST, "No intake data linked to this case.", 400);
   }
 
-  const entityType = intake.entity_type ?? "llc";
-  if (entityType !== "llc") {
-    return apiError(
-      ErrorCode.BAD_REQUEST,
-      `Auto-fill currently supports Texas LLC formations (Form 205). This case is "${entityType}".`,
-      400,
-    );
-  }
-
   let pdfBytes: Uint8Array;
+  let formLabel: string;
+
   try {
-    const payload = form205Builder.buildPayload(
-      row as unknown as FilingCase,
-      intake,
-    );
-    pdfBytes = await fillForm205(payload);
+    if (documentType === "form_05_904") {
+      // Veteran certification — valid for any entity type, but requires
+      // veteran ownership context from intake.
+      if (intake.veteran_status !== true) {
+        return apiError(
+          ErrorCode.BAD_REQUEST,
+          "Form 05-904 requires a veteran-owned case.",
+          400,
+        );
+      }
+      const owners = (intake.owner_details ?? []) as OwnerDetail[];
+      pdfBytes = await fillForm05904({
+        entityName: intake.business_name ?? "",
+        owners: owners.length > 0 ? owners : [{ name: intake.name, role: "Member" }],
+      });
+      formLabel = "Form-05-904";
+    } else {
+      const entityType = intake.entity_type ?? "llc";
+      if (entityType !== "llc") {
+        return apiError(
+          ErrorCode.BAD_REQUEST,
+          `Auto-fill currently supports Texas LLC formations (Form 205). This case is "${entityType}".`,
+          400,
+        );
+      }
+      const payload = form205Builder.buildPayload(
+        row as unknown as FilingCase,
+        intake,
+      );
+      pdfBytes = await fillForm205(payload);
+      formLabel = "Form-205";
+    }
   } catch (e) {
     console.error("[api/filings/document] fill error:", e);
     return apiError(
@@ -96,7 +118,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const filename = `Form-205-${row.case_number}.pdf`;
+  const filename = `${formLabel}-${row.case_number}.pdf`;
   return new Response(pdfBytes as BodyInit, {
     status: 200,
     headers: {

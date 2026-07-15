@@ -62,7 +62,10 @@ create table if not exists filing_cases (
   ms_list_item_id       text,
   ops_synced_at         timestamptz,
   -- Launch services handoff (added by migration-005-handoff.sql)
-  handoff_data          jsonb
+  handoff_data          jsonb,
+  -- Client account linkage (added by migration-009-client-accounts.sql)
+  clerk_user_id         text,
+  claimed_at            timestamptz
 );
 
 -- Index for common queries

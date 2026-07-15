@@ -28,6 +28,7 @@ import type {
 import { validateVeteranIntakeStep } from "@/lib/validation";
 import { loadAnswers } from "@/lib/eligibility";
 import { cn } from "@/lib/utils";
+import { CLERK_ENABLED } from "@/app/providers";
 import {
   CheckCircle,
   Loader2,
@@ -1151,9 +1152,35 @@ function SuccessState({
         </p>
       </div>
 
+      {CLERK_ENABLED && (
+        <div className="bg-navy rounded-xl p-6 text-left max-w-md mx-auto mb-8">
+          <h4 className="text-sm font-bold text-white mb-1.5">
+            Create your account
+          </h4>
+          <p className="text-xs text-white/70 mb-4">
+            Sign up with <span className="font-semibold text-white">{email || "the email you used above"}</span>{" "}
+            and this filing links to your dashboard automatically — live status,
+            documents, and next steps in one place.
+          </p>
+          <Link href="/sign-up?redirect_url=/dashboard">
+            <Button className="w-full bg-gold hover:bg-gold-dark text-navy font-bold gap-2">
+              Create My Account
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link href={trackHref}>
-          <Button className="bg-gold hover:bg-gold-dark text-navy font-bold gap-2">
+          <Button
+            variant={CLERK_ENABLED ? "outline" : "default"}
+            className={
+              CLERK_ENABLED
+                ? "border-navy/30 text-navy hover:bg-navy hover:text-white font-medium gap-2"
+                : "bg-gold hover:bg-gold-dark text-navy font-bold gap-2"
+            }
+          >
             Track My Filing
             <ArrowRight className="h-4 w-4" />
           </Button>
