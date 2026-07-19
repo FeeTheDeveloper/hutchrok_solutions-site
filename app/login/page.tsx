@@ -2,8 +2,7 @@ import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
 
 export const dynamic = "force-dynamic";
-const CLERK_READY =
-  !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && !!process.env.CLERK_SECRET_KEY;
+const CLERK_READY = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function LoginPage() {
   return (
@@ -40,8 +39,7 @@ export default function LoginPage() {
           ) : (
             <div className="w-full max-w-md rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
               Login is currently unavailable because authentication is not configured.
-              Add <code className="font-mono">NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> and{" "}
-              <code className="font-mono">CLERK_SECRET_KEY</code> to your environment settings.
+              Add <code className="font-mono">NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> to your environment settings and restart/redeploy.
             </div>
           )}
         </section>

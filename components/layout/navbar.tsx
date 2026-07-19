@@ -87,7 +87,7 @@ export default function Navbar() {
           )}
 
           {!isSignedIn && (
-            <Link href="/login" className="hidden sm:block">
+            <Link href="/login">
               <Button variant="outline" className="border-navy/20 text-navy hover:bg-cream">
                 Sign In
               </Button>
