@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createContextClient } from "@supabase/server/core";
 import { getConfig } from "@/lib/config";
 
 /**
@@ -8,5 +8,24 @@ import { getConfig } from "@/lib/config";
  */
 export function getSupabaseServer() {
   const config = getConfig();
-  return createClient(config.supabaseUrl, config.supabaseAnonKey);
+  return createContextClient({
+    env: {
+      url: config.supabaseUrl,
+      publishableKeys: {
+        default: config.supabasePublishableKey,
+      },
+      ...(config.supabaseSecretKey
+        ? {
+            secretKeys: {
+              default: config.supabaseSecretKey,
+            },
+          }
+        : {}),
+      ...(config.supabaseJwksUrl
+        ? {
+            jwks: new URL(config.supabaseJwksUrl),
+          }
+        : {}),
+    },
+  });
 }

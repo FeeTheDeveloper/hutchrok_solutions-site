@@ -33,11 +33,19 @@ function optional(name: string, fallback = ""): string {
  * only available at runtime.
  */
 function buildConfig() {
+  const supabaseAnonKey = required("SUPABASE_ANON_KEY");
+
   return {
     /** Supabase connection URL (required) */
     supabaseUrl: required("SUPABASE_URL"),
     /** Supabase anon/public key (required) */
-    supabaseAnonKey: required("SUPABASE_ANON_KEY"),
+    supabaseAnonKey,
+    /** Supabase publishable key used by @supabase/server (falls back to anon key) */
+    supabasePublishableKey: optional("SUPABASE_PUBLISHABLE_KEY", supabaseAnonKey),
+    /** Supabase secret/service key used by @supabase/server admin helpers */
+    supabaseSecretKey: optional("SUPABASE_SECRET_KEY"),
+    /** Optional JWKS URL for validating Supabase JWTs in @supabase/server flows */
+    supabaseJwksUrl: optional("SUPABASE_JWKS_URL"),
     /** Shared admin token for admin API + dashboard access (required) */
     adminToken: required("ADMIN_TOKEN"),
     /** Ops integration token for inbound webhooks */
@@ -77,6 +85,9 @@ export function getConfig(): AppConfig {
 export const ENV_VARS = {
   required: ["SUPABASE_URL", "SUPABASE_ANON_KEY", "ADMIN_TOKEN"] as const,
   optional: [
+    "SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_JWKS_URL",
     "OPS_TOKEN",
     "OPS_WEBHOOK_URL",
     "NEXT_PUBLIC_SUPABASE_URL",

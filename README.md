@@ -56,6 +56,11 @@ SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_ANON_KEY=eyJhbGciOiJI...your-anon-key
 ADMIN_TOKEN=some-strong-random-secret
 
+# Optional (recommended with @supabase/server)
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+SUPABASE_SECRET_KEY=sb_secret_...
+SUPABASE_JWKS_URL=https://YOUR_PROJECT.supabase.co/auth/v1/.well-known/jwks.json
+
 # Optional — omit both to run without Clerk auth
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
@@ -65,6 +70,9 @@ CLERK_SECRET_KEY=sk_test_...
 | --- | --- | --- |
 | `SUPABASE_URL` | Yes | Your Supabase project URL (Settings → API) |
 | `SUPABASE_ANON_KEY` | Yes | Supabase anon/public key (Settings → API) |
+| `SUPABASE_PUBLISHABLE_KEY` | No | Explicit publishable key for `@supabase/server` (falls back to `SUPABASE_ANON_KEY`) |
+| `SUPABASE_SECRET_KEY` | No | Supabase secret/service key for server-only admin Supabase operations |
+| `SUPABASE_JWKS_URL` | No | JWKS endpoint used for JWT validation in `@supabase/server` auth flows |
 | `ADMIN_TOKEN` | Yes | Shared secret used to protect the admin console via `?token=...` query param |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | No | Clerk publishable key. When absent, auth UI is hidden and `/dashboard` redirects to `/` |
 | `CLERK_SECRET_KEY` | No | Clerk secret key. Must be set alongside the publishable key for auth to activate |
@@ -504,6 +512,9 @@ npm run build
 | --- | --- | --- |
 | `SUPABASE_URL` | Yes | |
 | `SUPABASE_ANON_KEY` | Yes | |
+| `SUPABASE_PUBLISHABLE_KEY` | No | Optional; defaults to `SUPABASE_ANON_KEY` when omitted |
+| `SUPABASE_SECRET_KEY` | No | Optional server-only secret key for admin Supabase flows |
+| `SUPABASE_JWKS_URL` | No | Optional JWKS endpoint for server JWT verification |
 | `ADMIN_TOKEN` | Yes | |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | No | Omit to run without auth — app degrades gracefully |
 | `CLERK_SECRET_KEY` | No | Must be set alongside the publishable key |
