@@ -278,7 +278,7 @@ export default function VeteranEntrepreneurGuide() {
           available to them
         </li>
         <li>
-          <strong>Waiting for the "perfect" time</strong> — there&apos;s never a
+          <strong>Waiting for the &ldquo;perfect&rdquo; time</strong> — there&apos;s never a
           perfect time. Start with what you have and iterate.
         </li>
       </ul>

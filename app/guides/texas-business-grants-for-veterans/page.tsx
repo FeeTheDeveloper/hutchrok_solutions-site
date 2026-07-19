@@ -227,7 +227,7 @@ export default function VeteranBusinessGrantsGuide() {
       <h2>Common Mistakes Veterans Make With Funding</h2>
       <ul>
         <li>
-          <strong>Searching only for "free money"</strong> — true business grants
+          <strong>Searching only for &ldquo;free money&rdquo;</strong> — true business grants
           for veterans are rare and competitive. Don&apos;t overlook low-interest
           loans and fee waivers that provide real value.
         </li>
@@ -249,7 +249,7 @@ export default function VeteranBusinessGrantsGuide() {
         </li>
         <li>
           <strong>Falling for scams</strong> — be wary of any organization that
-          charges upfront fees for "guaranteed" veteran grants. Legitimate
+          charges upfront fees for &ldquo;guaranteed&rdquo; veteran grants. Legitimate
           programs don&apos;t charge application fees.
         </li>
       </ul>

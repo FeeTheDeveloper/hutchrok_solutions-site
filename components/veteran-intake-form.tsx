@@ -571,7 +571,7 @@ function StepBusiness({
       <div>
         <h3 className="text-lg font-bold text-navy mb-1">Business Details</h3>
         <p className="text-sm text-muted-foreground">
-          Tell us about the Texas entity you'd like to form.
+          Tell us about the Texas entity you&apos;d like to form.
         </p>
       </div>
 
@@ -603,7 +603,7 @@ function StepBusiness({
           className={errors.businessName ? "border-destructive" : ""}
         />
         <p className="text-xs text-muted-foreground mt-1">
-          We'll check name availability with the Texas SOS before filing.
+          We&apos;ll check name availability with the Texas SOS before filing.
         </p>
       </Field>
 
@@ -762,7 +762,7 @@ function StepOwnership({
           Ownership & Filing
         </h3>
         <p className="text-sm text-muted-foreground">
-          Tell us about the owners and how you'd like the filing handled.
+          Tell us about the owners and how you&apos;d like the filing handled.
         </p>
       </div>
 
@@ -1137,7 +1137,7 @@ function SuccessState({
         <h4 className="text-sm font-bold text-navy mb-3">What happens next</h4>
         <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
           <li>Our team reviews your submission within 24–48 hours.</li>
-          <li>We'll reach out if we need additional information.</li>
+          <li>We&apos;ll reach out if we need additional information.</li>
           <li>
             Once your VVL is confirmed, we prepare your Certificate of
             Formation.
