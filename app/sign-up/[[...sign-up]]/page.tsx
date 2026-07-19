@@ -1,6 +1,8 @@
 import { SignUp } from "@clerk/nextjs";
 
 export const dynamic = "force-dynamic";
+const CLERK_READY =
+  !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && !!process.env.CLERK_SECRET_KEY;
 
 export default function SignUpPage() {
   return (
@@ -39,7 +41,15 @@ export default function SignUpPage() {
         </section>
 
         <section className="flex items-center justify-center rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-6">
-          <SignUp forceRedirectUrl="/dashboard" signInUrl="/login" />
+          {CLERK_READY ? (
+            <SignUp forceRedirectUrl="/dashboard" signInUrl="/login" />
+          ) : (
+            <div className="w-full max-w-md rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+              Sign up is currently unavailable because authentication is not configured.
+              Add <code className="font-mono">NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> and{" "}
+              <code className="font-mono">CLERK_SECRET_KEY</code> to your environment settings.
+            </div>
+          )}
         </section>
       </div>
     </div>

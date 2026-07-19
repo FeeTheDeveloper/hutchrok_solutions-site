@@ -86,7 +86,7 @@ export default function Navbar() {
             </>
           )}
 
-          {!isSignedIn && CLERK_ENABLED && (
+          {!isSignedIn && (
             <Link href="/login" className="hidden sm:block">
               <Button variant="outline" className="border-navy/20 text-navy hover:bg-cream">
                 Sign In
@@ -141,7 +141,7 @@ export default function Navbar() {
               </Button>
             </Link>
           )}
-          {!isSignedIn && CLERK_ENABLED && (
+          {!isSignedIn && (
             <div className="pt-2">
               <Link href="/login" onClick={() => setMobileOpen(false)}>
                 <Button variant="outline" className="w-full border-navy/20 text-navy h-11">
