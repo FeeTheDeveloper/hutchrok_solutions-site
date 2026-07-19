@@ -116,6 +116,37 @@ alter table case_documents enable row level security;
 create policy "Allow all for anon" on case_documents
   for all using (true) with check (true);
 
+-- 4) client_profiles
+create table if not exists client_profiles (
+  id                      uuid primary key default gen_random_uuid(),
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now(),
+  clerk_user_id           text not null unique,
+  email                   text not null,
+  personal_info           jsonb not null default '{}'::jsonb,
+  business_info           jsonb not null default '{}'::jsonb,
+  stripe_customer_id      text,
+  stripe_last_checkout_at timestamptz
+);
+
+create index if not exists idx_client_profiles_email
+  on client_profiles(email);
+
+create index if not exists idx_client_profiles_stripe_customer
+  on client_profiles(stripe_customer_id)
+  where stripe_customer_id is not null;
+
+drop trigger if exists set_client_profiles_updated_at on client_profiles;
+create trigger set_client_profiles_updated_at
+  before update on client_profiles
+  for each row
+  execute function update_updated_at_column();
+
+alter table client_profiles enable row level security;
+
+create policy "Allow all for anon" on client_profiles
+  for all using (true) with check (true);
+
 -- Storage bucket (run via Supabase Dashboard or SQL):
 -- insert into storage.buckets (id, name, public)
 --   values ('case-documents', 'case-documents', false)

@@ -61,6 +61,18 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 SUPABASE_SECRET_KEY=sb_secret_...
 SUPABASE_JWKS_URL=https://YOUR_PROJECT.supabase.co/auth/v1/.well-known/jwks.json
 
+# Optional (required for Stripe checkout/webhooks)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_BUSINESS_WEBSITE=price_...
+STRIPE_PRICE_BRAND_IDENTITY_PACKAGE=price_...
+STRIPE_PRICE_LOGO_DESIGN=price_...
+STRIPE_PRICE_BUSINESS_EMAIL_SETUP=price_...
+STRIPE_PRICE_DOMAIN_HOSTING=price_...
+STRIPE_PRICE_COMPLIANCE_OPS_SETUP=price_...
+STRIPE_PRICE_LAUNCH_PACKAGE=price_...
+
 # Optional — omit both to run without Clerk auth
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
@@ -80,6 +92,16 @@ CLERK_SECRET_KEY=sk_test_...
 | `OPS_WEBHOOK_URL` | No | Power Automate HTTP-trigger URL. When set, the app emits outbound webhook events |
 | `RESEND_API_KEY` | No* | Enables paid-service request email delivery to `contact@hutchrok.com` via `/api/service-request` |
 | `RESEND_FROM_EMAIL` | No | Optional sender identity for paid-service request emails |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | No | Stripe publishable key for browser-side Stripe integration |
+| `STRIPE_SECRET_KEY` | No | Stripe secret key for server-side Stripe API usage |
+| `STRIPE_WEBHOOK_SECRET` | No | Stripe webhook signing secret used by `POST /api/stripe/webhook` |
+| `STRIPE_PRICE_BUSINESS_WEBSITE` | No | Price ID for secure checkout (`business-website`) |
+| `STRIPE_PRICE_BRAND_IDENTITY_PACKAGE` | No | Price ID for secure checkout (`brand-identity-package`) |
+| `STRIPE_PRICE_LOGO_DESIGN` | No | Price ID for secure checkout (`logo-design`) |
+| `STRIPE_PRICE_BUSINESS_EMAIL_SETUP` | No | Price ID for secure checkout (`business-email-setup`) |
+| `STRIPE_PRICE_DOMAIN_HOSTING` | No | Price ID for secure checkout (`domain-hosting`) |
+| `STRIPE_PRICE_COMPLIANCE_OPS_SETUP` | No | Price ID for secure checkout (`compliance-ops-setup`) |
+| `STRIPE_PRICE_LAUNCH_PACKAGE` | No | Price ID for secure checkout (`launch-package`) |
 
 > **Never commit `.env.local` to the repository.** The `.gitignore` already excludes it.
 
@@ -89,7 +111,7 @@ CLERK_SECRET_KEY=sk_test_...
 
 1. Create a [Supabase](https://supabase.com) project (free tier works).
 2. Open the **SQL Editor** in the Supabase dashboard.
-3. Paste and run the contents of [`lib/db/schema.sql`](lib/db/schema.sql) — this creates all three tables, indexes, triggers, and RLS policies.
+3. Paste and run the contents of [`lib/db/schema.sql`](lib/db/schema.sql) — this creates the core tables, indexes, triggers, and RLS policies.
 4. Go to **Storage** in the dashboard.
 5. Create a new bucket named **`case-documents`** and set it to **Private**.
 6. Copy your **Project URL** and **anon/public key** from **Settings → API** and add them to `.env.local`.
@@ -147,7 +169,8 @@ A step-by-step walkthrough to demonstrate the full intake-to-filing workflow. Fo
 | `/faq` | GET | Frequently asked questions |
 | `/guides` | GET | SEO content hub — 10 veteran-focused guides |
 | `/guides/[slug]` | GET | Individual guide pages (10 routes) |
-| `/sign-in` | GET | Clerk sign-in page (redirects to dashboard) |
+| `/login` | GET | Account holder/subscriber login page |
+| `/sign-in` | GET | Legacy Clerk sign-in route (redirects to `/login`) |
 | `/sign-up` | GET | Clerk sign-up page (redirects to dashboard) |
 | `/dashboard` | GET | Authenticated client dashboard — case status, quick actions, concierge |
 | `/admin?token=...` | GET | Admin console — case list with status filter |
@@ -158,6 +181,9 @@ A step-by-step walkthrough to demonstrate the full intake-to-filing workflow. Fo
 | `/api/admin/cases/[id]?token=...` | GET/PATCH | Read or update a single case |
 | `/api/cases/[id]/upload?token=...` | POST | Upload a document (multipart, 10 MB max) |
 | `/api/cases/[id]/documents?token=...` | GET/DELETE | List documents / delete a document |
+| `/api/account/profile` | GET/POST | Authenticated client profile (personal + business sections) |
+| `/api/stripe/checkout` | POST | Authenticated secure checkout session creation |
+| `/api/stripe/webhook` | POST | Stripe webhook signature verification + profile payment linkage |
 | `/api/ops/case-linked` | POST | Power Automate → link SharePoint folder to a case |
 | `/api/ops/status-sync` | POST | Power Automate → sync case status from M365 |
 | `/api/ops/doc-published` | POST | Power Automate → mark a document as published to SharePoint |
@@ -166,7 +192,7 @@ A step-by-step walkthrough to demonstrate the full intake-to-filing workflow. Fo
 
 ## Data Model
 
-Three tables in Supabase Postgres (see [`lib/db/schema.sql`](lib/db/schema.sql) for full DDL):
+Core tables in Supabase Postgres (see [`lib/db/schema.sql`](lib/db/schema.sql) for full DDL):
 
 ### `intake_submissions`
 
@@ -210,6 +236,20 @@ Three tables in Supabase Postgres (see [`lib/db/schema.sql`](lib/db/schema.sql) 
 | `storage_path` | text | Path in Supabase Storage bucket |
 | `sharepoint_item_id` | text | SharePoint item ID (set by ops integration) |
 | `uploaded_at` | timestamptz | Upload timestamp |
+
+### `client_profiles`
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `id` | uuid (PK) | Auto-generated |
+| `clerk_user_id` | text (unique) | Links profile to authenticated Clerk account |
+| `email` | text | Account email (username) |
+| `personal_info` | jsonb | Personal credential/profile section |
+| `business_info` | jsonb | Business credential/profile section |
+| `stripe_customer_id` | text | Linked Stripe customer ID |
+| `stripe_last_checkout_at` | timestamptz | Last successful checkout timestamp |
+| `created_at` | timestamptz | Profile creation time |
+| `updated_at` | timestamptz | Auto-updated on change |
 
 ---
 
@@ -520,6 +560,16 @@ npm run build
 | `CLERK_SECRET_KEY` | No | Must be set alongside the publishable key |
 | `OPS_TOKEN` | No | Only needed if using ops endpoints |
 | `OPS_WEBHOOK_URL` | No | Only needed for outbound Power Automate events |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | No | Only needed for Stripe client-side flows |
+| `STRIPE_SECRET_KEY` | No | Required for server-side Stripe API/webhook handling |
+| `STRIPE_WEBHOOK_SECRET` | No | Required for `POST /api/stripe/webhook` signature validation |
+| `STRIPE_PRICE_BUSINESS_WEBSITE` | No | Required to sell `business-website` via secure checkout |
+| `STRIPE_PRICE_BRAND_IDENTITY_PACKAGE` | No | Required to sell `brand-identity-package` via secure checkout |
+| `STRIPE_PRICE_LOGO_DESIGN` | No | Required to sell `logo-design` via secure checkout |
+| `STRIPE_PRICE_BUSINESS_EMAIL_SETUP` | No | Required to sell `business-email-setup` via secure checkout |
+| `STRIPE_PRICE_DOMAIN_HOSTING` | No | Required to sell `domain-hosting` via secure checkout |
+| `STRIPE_PRICE_COMPLIANCE_OPS_SETUP` | No | Required to sell `compliance-ops-setup` via secure checkout |
+| `STRIPE_PRICE_LAUNCH_PACKAGE` | No | Required to sell `launch-package` via secure checkout |
 
 Vercel automatically handles serverless functions for API routes and edge middleware.
 

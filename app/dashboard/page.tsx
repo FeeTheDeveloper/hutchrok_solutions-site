@@ -10,13 +10,23 @@ import { getDashboardWorkspaceSnapshot } from "@/lib/dashboard/workspace";
 import { getClientCases } from "@/lib/services/client-cases";
 import FilingTracker from "@/components/filing-tracker";
 import ClientCaseCard from "@/components/client-case-card";
+import AccountProfileCard from "@/components/dashboard/account-profile-card";
+import SecureCheckoutCard from "@/components/dashboard/secure-checkout-card";
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams: Promise<{ checkout?: string }>;
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const { userId } = await auth();
 
   if (!userId) {
-    redirect("/sign-in?redirect_url=/dashboard");
+    redirect("/login?redirect_url=/dashboard");
   }
+
+  const params = await searchParams;
+  const checkoutState =
+    params.checkout === "success" || params.checkout === "cancel" ? params.checkout : "";
 
   const user = await currentUser();
   const workspace = getDashboardWorkspaceSnapshot(user?.fullName);
@@ -93,6 +103,9 @@ export default async function DashboardPage() {
             ))}
           </CardContent>
         </Card>
+
+        <AccountProfileCard />
+        <SecureCheckoutCard initialStatus={checkoutState} />
 
         <Card className="mt-6">
           <CardHeader>

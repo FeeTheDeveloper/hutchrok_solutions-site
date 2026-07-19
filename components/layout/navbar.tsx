@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { SignInButton, UserButton } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
 import { useAppAuth, CLERK_ENABLED } from "@/app/providers";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -87,11 +87,11 @@ export default function Navbar() {
           )}
 
           {!isSignedIn && CLERK_ENABLED && (
-            <SignInButton mode="modal">
-              <Button variant="outline" className="hidden sm:inline-flex border-navy/20 text-navy hover:bg-cream">
+            <Link href="/login" className="hidden sm:block">
+              <Button variant="outline" className="border-navy/20 text-navy hover:bg-cream">
                 Sign In
               </Button>
-            </SignInButton>
+            </Link>
           )}
 
           <Link href="/free-filing" className="hidden sm:block">
@@ -143,11 +143,11 @@ export default function Navbar() {
           )}
           {!isSignedIn && CLERK_ENABLED && (
             <div className="pt-2">
-              <SignInButton mode="modal">
+              <Link href="/login" onClick={() => setMobileOpen(false)}>
                 <Button variant="outline" className="w-full border-navy/20 text-navy h-11">
                   Sign In
                 </Button>
-              </SignInButton>
+              </Link>
             </div>
           )}
           <div className="pt-2 pb-1">

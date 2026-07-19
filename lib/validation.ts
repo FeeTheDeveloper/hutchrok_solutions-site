@@ -50,6 +50,31 @@ export const paidServiceRequestSchema = z.object({
 
 export type PaidServiceRequestInput = z.infer<typeof paidServiceRequestSchema>;
 
+export const clientProfileSchema = z.object({
+  personalFirstName: z.string().trim().max(120).optional().default(""),
+  personalLastName: z.string().trim().max(120).optional().default(""),
+  personalPhone: z.string().trim().max(30).optional().default(""),
+  businessName: z.string().trim().max(300).optional().default(""),
+  businessEntityType: z.string().trim().max(120).optional().default(""),
+  businessWebsite: z
+    .string()
+    .trim()
+    .max(300)
+    .optional()
+    .default("")
+    .refine((value) => !value || /^https?:\/\/\S+$/i.test(value), {
+      message: "Website must start with http:// or https://",
+    }),
+});
+
+export type ClientProfileInput = z.infer<typeof clientProfileSchema>;
+
+export const checkoutCreateSchema = z.object({
+  serviceSlug: z.string().trim().min(1, "Service is required.").max(100),
+});
+
+export type CheckoutCreateInput = z.infer<typeof checkoutCreateSchema>;
+
 /**
  * Marketing lead sign-up schema. Captures a new lead for the 10%-off
  * marketing services promotion. Business name and interests are optional so
@@ -116,6 +141,46 @@ export function validatePaidServiceRequest(data: unknown): {
   fieldErrors?: Record<string, string>;
 } {
   const result = paidServiceRequestSchema.safeParse(data);
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (key && !fieldErrors[String(key)]) {
+      fieldErrors[String(key)] = issue.message;
+    }
+  }
+  return { success: false, fieldErrors };
+}
+
+export function validateClientProfile(data: unknown): {
+  success: boolean;
+  data?: ClientProfileInput;
+  fieldErrors?: Record<string, string>;
+} {
+  const result = clientProfileSchema.safeParse(data);
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (key && !fieldErrors[String(key)]) {
+      fieldErrors[String(key)] = issue.message;
+    }
+  }
+  return { success: false, fieldErrors };
+}
+
+export function validateCheckoutCreate(data: unknown): {
+  success: boolean;
+  data?: CheckoutCreateInput;
+  fieldErrors?: Record<string, string>;
+} {
+  const result = checkoutCreateSchema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data };
   }
