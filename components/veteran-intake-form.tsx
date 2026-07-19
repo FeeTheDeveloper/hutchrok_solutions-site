@@ -111,6 +111,25 @@ const INITIAL_STATE: FormState = {
   operatorReviewConfirmed: false,
 };
 
+interface VeteranIntakeResponse {
+  ok: boolean;
+  caseNumber?: string;
+  caseId?: string;
+  error?: { message?: string; fields?: Record<string, string> };
+}
+
+interface UploadVvlResponse {
+  ok: boolean;
+}
+
+function isVeteranIntakeResponse(value: unknown): value is VeteranIntakeResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
+function isUploadVvlResponse(value: unknown): value is UploadVvlResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
 /* ──────────────────────────────────────────
    Main Component
    ────────────────────────────────────────── */
@@ -241,11 +260,11 @@ export default function VeteranIntakeForm() {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const data: unknown = await res.json();
 
-      if (data.ok) {
-        setCaseNumber(data.caseNumber);
-        setCaseId(data.caseId);
+      if (isVeteranIntakeResponse(data) && data.ok) {
+        setCaseNumber(data.caseNumber ?? null);
+        setCaseId(data.caseId ?? null);
         setSubmitted(true);
 
         // Upload VVL if provided
@@ -259,8 +278,8 @@ export default function VeteranIntakeForm() {
               method: "POST",
               body: fd,
             });
-            const uploadData = await uploadRes.json();
-            if (uploadData.ok) setUploadDone(true);
+            const uploadData: unknown = await uploadRes.json();
+            if (isUploadVvlResponse(uploadData) && uploadData.ok) setUploadDone(true);
           } catch {
             // Non-blocking — operator can request the document later
           } finally {
@@ -268,7 +287,7 @@ export default function VeteranIntakeForm() {
           }
         }
       } else {
-        const errPayload = data.error ?? {};
+        const errPayload = isVeteranIntakeResponse(data) ? data.error ?? {} : {};
         if (errPayload.fields) {
           setErrors(errPayload.fields);
         } else {

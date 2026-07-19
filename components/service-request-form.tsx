@@ -34,6 +34,15 @@ interface ServiceRequestState {
   projectDetails: string;
 }
 
+interface ServiceRequestResponse {
+  ok: boolean;
+  error?: { message?: string; fields?: Record<string, string> };
+}
+
+function isServiceRequestResponse(value: unknown): value is ServiceRequestResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
 const INITIAL_STATE: ServiceRequestState = {
   name: "",
   email: "",
@@ -114,10 +123,10 @@ export default function ServiceRequestForm({
         }),
       });
 
-      const data = await res.json();
-      if (!data.ok) {
-        const apiErrors = data.error?.fields as Record<string, string> | undefined;
-        setErrors(apiErrors ?? { form: data.error?.message ?? "Submission failed." });
+      const data: unknown = await res.json();
+      if (!isServiceRequestResponse(data) || !data.ok) {
+        const apiErrors = isServiceRequestResponse(data) ? data.error?.fields : undefined;
+        setErrors(apiErrors ?? { form: isServiceRequestResponse(data) ? data.error?.message ?? "Submission failed." : "Submission failed." });
         return;
       }
 

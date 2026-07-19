@@ -8,6 +8,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle, FileUp, Loader2 } from "lucide-react";
 
+interface UploadResponse {
+  ok: boolean;
+  error?: { message?: string };
+}
+
+function isUploadResponse(value: unknown): value is UploadResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
 /**
  * Dashboard card for one filing case: milestone stepper, current-status
  * narrative, and a TVC letter upload prompt when none is attached yet.
@@ -29,12 +38,17 @@ export default function ClientCaseCard({ clientCase }: { clientCase: ClientCase 
         method: "POST",
         body,
       });
-      const json = await res.json();
-      if (json.ok) {
+      const json: unknown = await res.json();
+      if (isUploadResponse(json) && json.ok) {
         setUploadMsg({ ok: true, text: "Verification letter received. Our team will confirm it shortly." });
         router.refresh();
       } else {
-        setUploadMsg({ ok: false, text: json.error?.message ?? "Upload failed. Please try again." });
+        setUploadMsg({
+          ok: false,
+          text:
+            (isUploadResponse(json) ? json.error?.message : null) ??
+            "Upload failed. Please try again.",
+        });
       }
     } catch {
       setUploadMsg({ ok: false, text: "Network error. Please try again." });

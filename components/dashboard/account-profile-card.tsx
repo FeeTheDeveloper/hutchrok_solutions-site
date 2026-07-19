@@ -25,6 +25,19 @@ const INITIAL_STATE: ProfileFormState = {
   businessWebsite: "",
 };
 
+interface ProfileApiResponse {
+  ok: boolean;
+  profile?: {
+    personalInfo?: { firstName?: string; lastName?: string; phone?: string };
+    businessInfo?: { businessName?: string; entityType?: string; website?: string };
+  };
+  error?: { message?: string; fields?: Record<string, string> };
+}
+
+function isProfileApiResponse(value: unknown): value is ProfileApiResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
 export default function AccountProfileCard() {
   const [form, setForm] = useState<ProfileFormState>(INITIAL_STATE);
   const [loading, setLoading] = useState(true);
@@ -38,12 +51,14 @@ export default function AccountProfileCard() {
     async function loadProfile() {
       try {
         const res = await fetch("/api/account/profile");
-        const json = await res.json();
-        if (!res.ok || !json.ok) {
-          throw new Error(json?.error?.message || "Failed to load profile.");
+        const json: unknown = await res.json();
+        if (!isProfileApiResponse(json) || !res.ok || !json.ok) {
+          throw new Error(
+            isProfileApiResponse(json) ? json.error?.message || "Failed to load profile." : "Failed to load profile.",
+          );
         }
 
-        const profile = json.profile;
+        const profile = json.profile ?? {};
         if (!mounted) return;
         setForm({
           personalFirstName: profile.personalInfo?.firstName ?? "",
@@ -79,9 +94,13 @@ export default function AccountProfileCard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        setErrors(json?.error?.fields ?? { form: json?.error?.message || "Save failed." });
+      const json: unknown = await res.json();
+      if (!isProfileApiResponse(json) || !res.ok || !json.ok) {
+        setErrors(
+          isProfileApiResponse(json)
+            ? json.error?.fields ?? { form: json.error?.message || "Save failed." }
+            : { form: "Save failed." },
+        );
         return;
       }
 

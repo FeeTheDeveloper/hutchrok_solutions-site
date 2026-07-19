@@ -67,6 +67,19 @@ const STATUS_LABELS: Record<CaseStatus, string> = {
   COMPLETED: "Completed",
 };
 
+interface AdminCasesResponse {
+  cases: FilingCase[];
+}
+
+function isAdminCasesResponse(value: unknown): value is AdminCasesResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "cases" in value &&
+    Array.isArray((value as { cases?: unknown }).cases)
+  );
+}
+
 function AdminContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
@@ -89,8 +102,12 @@ function AdminContent() {
           return;
         }
         setAuthorized(true);
-        const json = await res.json();
-        setCases(json.cases ?? []);
+        const json: unknown = await res.json();
+        if (isAdminCasesResponse(json)) {
+          setCases(json.cases);
+        } else {
+          setCases([]);
+        }
       } catch {
         console.error("Failed to fetch cases");
       } finally {

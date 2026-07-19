@@ -17,6 +17,15 @@ import type { IntakeFormData } from "@/lib/types";
 import { validateIntake } from "@/lib/validation";
 import { CheckCircle, Loader2 } from "lucide-react";
 
+interface IntakeApiResponse {
+  ok: boolean;
+  error?: { message?: string; fields?: Record<string, string> };
+}
+
+function isIntakeApiResponse(value: unknown): value is IntakeApiResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
 export default function IntakeForm() {
   const [formData, setFormData] = useState<IntakeFormData>({
     name: "",
@@ -48,11 +57,11 @@ export default function IntakeForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      const data = await res.json();
-      if (data.ok) {
+      const data: unknown = await res.json();
+      if (isIntakeApiResponse(data) && data.ok) {
         setSubmitted(true);
       } else {
-        const errPayload = data.error ?? {};
+        const errPayload = isIntakeApiResponse(data) ? data.error ?? {} : {};
         if (errPayload.fields) {
           setErrors(errPayload.fields);
         } else {

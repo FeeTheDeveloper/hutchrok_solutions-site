@@ -19,6 +19,24 @@ function getClientIp(request: NextRequest): string {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+interface FilingUploadWindowCase {
+  id: string;
+  case_number: string;
+  status: string;
+  created_at: string;
+}
+
+function isFilingUploadWindowCase(value: unknown): value is FilingUploadWindowCase {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { id?: unknown }).id === "string" &&
+    typeof (value as { case_number?: unknown }).case_number === "string" &&
+    typeof (value as { status?: unknown }).status === "string" &&
+    typeof (value as { created_at?: unknown }).created_at === "string"
+  );
+}
+
 /**
  * POST /api/intake/upload-vvl
  *
@@ -88,7 +106,7 @@ export async function POST(request: NextRequest) {
     .eq("id", caseId)
     .single();
 
-  if (caseErr || !filing) {
+  if (caseErr || !filing || !isFilingUploadWindowCase(filing)) {
     return apiError(ErrorCode.NOT_FOUND, "Case not found.", 404);
   }
 

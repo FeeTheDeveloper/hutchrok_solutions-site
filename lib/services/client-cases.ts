@@ -45,6 +45,25 @@ interface CaseRow {
   case_documents: { filename: string; uploaded_at: string }[] | null;
 }
 
+interface ClaimCaseRow {
+  id: string;
+  clerk_user_id: string | null;
+}
+
+interface ClaimCandidateRow {
+  filing_cases: ClaimCaseRow[] | null;
+}
+
+function isClaimCandidateRow(value: unknown): value is ClaimCandidateRow {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "filing_cases" in value &&
+    (Array.isArray((value as { filing_cases?: unknown }).filing_cases) ||
+      (value as { filing_cases?: unknown }).filing_cases === null)
+  );
+}
+
 const CASE_SELECT = `
   id, case_number, status, created_at, updated_at, clerk_user_id,
   intake_submissions ( email, business_name, entity_type ),
@@ -100,8 +119,8 @@ export async function getClientCases(
     if (candErr) {
       console.error("[client-cases] claim lookup error:", candErr.message);
     } else {
-      const unclaimedIds = (candidates ?? [])
-        .flatMap((i) => (i.filing_cases as { id: string; clerk_user_id: string | null }[]) ?? [])
+      const unclaimedIds = ((candidates ?? []) as unknown[])
+        .flatMap((item) => (isClaimCandidateRow(item) ? item.filing_cases ?? [] : []))
         .filter((c) => !c.clerk_user_id)
         .map((c) => c.id);
 

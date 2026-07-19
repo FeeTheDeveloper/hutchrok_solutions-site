@@ -83,6 +83,17 @@ const INITIAL: FormState = {
   preferredChannel: "",
 };
 
+interface GovHousingIntakeResponse {
+  ok: boolean;
+  caseNumber?: string | null;
+  pathway?: "veteran-verified" | "standard";
+  error?: { message?: string; fields?: Record<string, string> };
+}
+
+function isGovHousingIntakeResponse(value: unknown): value is GovHousingIntakeResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
 const REQUIRED_LABELS: Record<string, string> = {
   name: "Name or entity",
   email: "Email",
@@ -199,12 +210,12 @@ export default function GovHousingIntakeForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (data.ok) {
+      const data: unknown = await res.json();
+      if (isGovHousingIntakeResponse(data) && data.ok) {
         setResult({ caseNumber: data.caseNumber ?? null, pathway: data.pathway ?? "standard" });
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        const err = data.error ?? {};
+        const err = isGovHousingIntakeResponse(data) ? data.error ?? {} : {};
         setErrors(err.fields ?? { form: err.message ?? "Submission failed." });
       }
     } catch {

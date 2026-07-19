@@ -61,6 +61,15 @@ const INITIAL: FormState = {
 const DISCLAIMER =
   "Operational business consulting only — not legal or tax advice. No contract awards are guaranteed. Verify requirements at SAM.gov and SBA.gov.";
 
+interface FederalIntakeResponse {
+  ok: boolean;
+  error?: { message?: string; fields?: Record<string, string> };
+}
+
+function isFederalIntakeResponse(value: unknown): value is FederalIntakeResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
 export default function FederalIntakeForm() {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -95,12 +104,12 @@ export default function FederalIntakeForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
-      if (data.ok) {
+      const data: unknown = await res.json();
+      if (isFederalIntakeResponse(data) && data.ok) {
         setSubmitted(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        const err = data.error ?? {};
+        const err = isFederalIntakeResponse(data) ? data.error ?? {} : {};
         setErrors(err.fields ?? { form: err.message ?? "Submission failed." });
       }
     } catch {

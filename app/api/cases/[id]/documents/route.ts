@@ -4,6 +4,21 @@ import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { requireAdmin, isValidUUID } from "@/lib/auth";
 import { recordAudit, AUDIT_ACTIONS } from "@/lib/audit";
 
+interface CaseDocumentRow {
+  id: string;
+  storage_path: string;
+  [key: string]: unknown;
+}
+
+function hasStoragePath(value: unknown): value is { storage_path: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "storage_path" in value &&
+    typeof (value as { storage_path?: unknown }).storage_path === "string"
+  );
+}
+
 /**
  * GET /api/cases/[id]/documents?token=...
  * Returns all documents for a case with signed download URLs.
@@ -34,8 +49,9 @@ export async function GET(
   }
 
   // Generate signed download URLs (valid for 1 hour)
+  const rows = (docs ?? []) as CaseDocumentRow[];
   const documents = await Promise.all(
-    (docs ?? []).map(async (doc) => {
+    rows.map(async (doc) => {
       const { data } = await supabase.storage
         .from("case-documents")
         .createSignedUrl(doc.storage_path, 3600);
@@ -81,7 +97,7 @@ export async function DELETE(
     .eq("case_id", caseId)
     .single();
 
-  if (fetchErr || !doc) {
+  if (fetchErr || !doc || !hasStoragePath(doc)) {
     return apiError(ErrorCode.NOT_FOUND, "Document not found.", 404);
   }
 

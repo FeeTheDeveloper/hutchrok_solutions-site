@@ -28,6 +28,16 @@ const INITIAL: LeadState = {
   marketingOptIn: true,
 };
 
+interface LeadSignupResponse {
+  ok: boolean;
+  discountCode?: string;
+  error?: { message?: string; fields?: Record<string, string> };
+}
+
+function isLeadSignupResponse(value: unknown): value is LeadSignupResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
 export default function LeadSignupForm() {
   const [form, setForm] = useState<LeadState>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -61,14 +71,16 @@ export default function LeadSignupForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
-      if (!data.ok) {
+      const data: unknown = await res.json();
+      if (!isLeadSignupResponse(data) || !data.ok) {
         setErrors(
-          data.error?.fields ?? { form: data.error?.message ?? "Sign-up failed." },
+          isLeadSignupResponse(data)
+            ? data.error?.fields ?? { form: data.error?.message ?? "Sign-up failed." }
+            : { form: "Sign-up failed." },
         );
         return;
       }
-      setCode(data.discountCode);
+      setCode(data.discountCode ?? null);
     } catch {
       setErrors({ form: "Something went wrong. Please try again." });
     } finally {

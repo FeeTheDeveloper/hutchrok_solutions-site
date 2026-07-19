@@ -92,22 +92,32 @@ export async function PATCH(
     .select(INTAKE_JOIN)
     .single();
 
-  if (error) {
-    console.error("[api/admin/cases] Update error:", error.code, error.message);
+  if (error || !data) {
+    if (error) {
+      console.error("[api/admin/cases] Update error:", error.code, error.message);
+    } else {
+      console.error("[api/admin/cases] Update error: empty response payload");
+    }
     return apiError(ErrorCode.INTERNAL_ERROR, "Failed to update case.", 500);
   }
 
-  // Emit lifecycle events when status changes
-  if (updates.status) {
-    const intake = (data as { intake_submissions?: {
+  const updatedCase = data as {
+    case_number: string;
+    status: string;
+    intake_submissions?: {
       name?: string | null;
       email?: string | null;
       phone?: string | null;
       business_name?: string | null;
-    } | null }).intake_submissions;
+    } | null;
+  };
+
+  // Emit lifecycle events when status changes
+  if (updates.status) {
+    const intake = updatedCase.intake_submissions;
     emitStatusChangeEvents(
       id,
-      data.case_number,
+      updatedCase.case_number,
       (body._old_status as string) ?? "",
       updates.status as string,
       {
@@ -121,11 +131,11 @@ export async function PATCH(
 
   // Record audit trail (fire-and-forget)
   recordCaseUpdate(id, "operator", {
-    status: body._old_status ?? data.status,
+    status: body._old_status ?? updatedCase.status,
     assigned_to: body._old_assigned_to ?? null,
     due_date: body._old_due_date ?? null,
     notes: body._old_notes ?? null,
   }, updates);
 
-  return apiSuccess({ case: data });
+  return apiSuccess({ case: updatedCase });
 }

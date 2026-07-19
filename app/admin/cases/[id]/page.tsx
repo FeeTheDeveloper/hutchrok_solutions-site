@@ -123,6 +123,34 @@ const BRANCH_LABELS: Record<string, string> = Object.fromEntries(
   BRANCHES_OF_SERVICE.map((b) => [b.value, b.label])
 );
 
+interface CaseDetailResponse {
+  case: FilingCase;
+}
+
+interface CaseDocumentsResponse {
+  documents: CaseDocument[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isCaseDetailResponse(value: unknown): value is CaseDetailResponse {
+  return isRecord(value) && isRecord(value.case);
+}
+
+function isCaseDocumentsResponse(value: unknown): value is CaseDocumentsResponse {
+  return isRecord(value) && Array.isArray(value.documents);
+}
+
+function getApiErrorMessage(value: unknown): string | null {
+  if (!isRecord(value)) return null;
+  const direct = value.error;
+  if (typeof direct === "string") return direct;
+  if (isRecord(direct) && typeof direct.message === "string") return direct.message;
+  return null;
+}
+
 function CaseDetailContent() {
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
@@ -170,8 +198,11 @@ function CaseDetailContent() {
         return;
       }
       setAuthorized(true);
-      const json = await res.json();
-      const c: FilingCase = json.case;
+      const json: unknown = await res.json();
+      if (!isCaseDetailResponse(json)) {
+        throw new Error("Unexpected case response payload.");
+      }
+      const c = json.case;
       setFiling(c);
       setStatus(c.status);
       setAssignedTo(c.assigned_to ?? "");
@@ -205,8 +236,12 @@ function CaseDetailContent() {
         `/api/cases/${caseId}/documents?token=${encodeURIComponent(token)}`
       );
       if (res.ok) {
-        const json = await res.json();
-        setDocuments(json.documents ?? []);
+        const json: unknown = await res.json();
+        if (isCaseDocumentsResponse(json)) {
+          setDocuments(json.documents);
+        } else {
+          setDocuments([]);
+        }
       }
     } catch {
       console.error("Failed to fetch documents");
@@ -251,8 +286,11 @@ function CaseDetailContent() {
         { method: "POST", body: fd }
       );
       if (!res.ok) {
-        const json = await res.json();
-        setUploadMsg({ type: "error", text: json.error || "Upload failed." });
+        const json: unknown = await res.json();
+        setUploadMsg({
+          type: "error",
+          text: getApiErrorMessage(json) ?? "Upload failed.",
+        });
         return;
       }
       setUploadMsg({ type: "success", text: `"${file.name}" uploaded.` });
@@ -302,7 +340,10 @@ function CaseDetailContent() {
         setMessage({ type: "error", text: "Failed to save changes." });
         return;
       }
-      const json = await res.json();
+      const json: unknown = await res.json();
+      if (!isCaseDetailResponse(json)) {
+        throw new Error("Unexpected save response payload.");
+      }
       setFiling(json.case);
       setMessage({ type: "success", text: "Case updated successfully." });
     } catch {
@@ -333,8 +374,8 @@ function CaseDetailContent() {
       if (!res.ok) {
         let text = `Failed to generate ${formName}.`;
         try {
-          const json = await res.json();
-          text = json.error?.message ?? text;
+          const json: unknown = await res.json();
+          text = getApiErrorMessage(json) ?? text;
         } catch {
           /* non-JSON response */
         }
@@ -384,7 +425,10 @@ function CaseDetailContent() {
         setMessage({ type: "error", text: "Quick action failed." });
         return;
       }
-      const json = await res.json();
+      const json: unknown = await res.json();
+      if (!isCaseDetailResponse(json)) {
+        throw new Error("Unexpected quick-action response payload.");
+      }
       setFiling(json.case);
       setStatus(json.case.status);
       setMessage({ type: "success", text: `Moved to ${targetStatus.replace(/_/g, " ").toLowerCase()}.` });

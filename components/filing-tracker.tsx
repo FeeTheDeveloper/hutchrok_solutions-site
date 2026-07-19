@@ -10,6 +10,16 @@ import {
   type TrackedCase,
 } from "@/components/filing-status-tracker";
 
+interface TrackResponse {
+  ok: boolean;
+  case?: TrackedCase;
+  error?: { message?: string; fields?: Record<string, string> };
+}
+
+function isTrackResponse(value: unknown): value is TrackResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
 /**
  * Self-service filing status lookup. Renders a case-number + email form,
  * calls /api/track, and shows the live status tracker on success.
@@ -41,11 +51,11 @@ export default function FilingTracker({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ caseNumber: cn, email: em }),
         });
-        const data = await res.json();
-        if (data.ok) {
-          setResult(data.case as TrackedCase);
+        const data: unknown = await res.json();
+        if (isTrackResponse(data) && data.ok && data.case) {
+          setResult(data.case);
         } else {
-          const err = data.error ?? {};
+          const err = isTrackResponse(data) ? data.error ?? {} : {};
           if (err.fields) {
             setErrors(err.fields);
           } else {

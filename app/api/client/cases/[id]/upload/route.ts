@@ -15,6 +15,22 @@ const UPLOADABLE_STATUSES = new Set([
   "IN_REVIEW",
 ]);
 
+interface FilingUploadCase {
+  id: string;
+  case_number: string;
+  status: string;
+}
+
+function isFilingUploadCase(value: unknown): value is FilingUploadCase {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { id?: unknown }).id === "string" &&
+    typeof (value as { case_number?: unknown }).case_number === "string" &&
+    typeof (value as { status?: unknown }).status === "string"
+  );
+}
+
 /**
  * POST /api/client/cases/[id]/upload
  *
@@ -49,7 +65,7 @@ export async function POST(
     .eq("clerk_user_id", userId)
     .maybeSingle();
 
-  if (caseErr || !filing) {
+  if (caseErr || !filing || !isFilingUploadCase(filing)) {
     return apiError(ErrorCode.NOT_FOUND, "Case not found.", 404);
   }
 

@@ -14,13 +14,28 @@ import {
 const CHECKOUT_OPTIONS = SERVICE_REQUEST_OPTIONS.filter(
   (option) => option.slug !== "registered-agent",
 );
+type CheckoutSlug = (typeof CHECKOUT_OPTIONS)[number]["slug"];
 
 interface SecureCheckoutCardProps {
   initialStatus?: "success" | "cancel" | "";
 }
 
+interface CheckoutApiResponse {
+  ok: boolean;
+  checkoutUrl?: string;
+  error?: { message?: string };
+}
+
+function isCheckoutApiResponse(value: unknown): value is CheckoutApiResponse {
+  return typeof value === "object" && value !== null && "ok" in value;
+}
+
+function isCheckoutSlug(value: string): value is CheckoutSlug {
+  return CHECKOUT_OPTIONS.some((option) => option.slug === value);
+}
+
 export default function SecureCheckoutCard({ initialStatus = "" }: SecureCheckoutCardProps) {
-  const [serviceSlug, setServiceSlug] = useState(CHECKOUT_OPTIONS[0]?.slug ?? "");
+  const [serviceSlug, setServiceSlug] = useState<CheckoutSlug>(CHECKOUT_OPTIONS[0].slug);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,10 +54,14 @@ export default function SecureCheckoutCard({ initialStatus = "" }: SecureCheckou
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ serviceSlug }),
       });
-      const json = await res.json();
+      const json: unknown = await res.json();
 
-      if (!res.ok || !json.ok || !json.checkoutUrl) {
-        setError(json?.error?.message || "Unable to start checkout.");
+      if (!isCheckoutApiResponse(json) || !res.ok || !json.ok || !json.checkoutUrl) {
+        setError(
+          isCheckoutApiResponse(json)
+            ? json.error?.message || "Unable to start checkout."
+            : "Unable to start checkout.",
+        );
         return;
       }
 
@@ -81,7 +100,11 @@ export default function SecureCheckoutCard({ initialStatus = "" }: SecureCheckou
             <select
               id="serviceSlug"
               value={serviceSlug}
-              onChange={(e) => setServiceSlug(e.target.value)}
+              onChange={(e) => {
+                if (isCheckoutSlug(e.target.value)) {
+                  setServiceSlug(e.target.value);
+                }
+              }}
               className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
             >
               {CHECKOUT_OPTIONS.map((option) => (
