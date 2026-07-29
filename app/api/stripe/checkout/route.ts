@@ -4,11 +4,8 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { validateCheckoutCreate } from "@/lib/validation";
 import { SERVICE_REQUEST_BY_SLUG } from "@/lib/paid-services";
+import { getStripePriceCatalogEntry } from "@/lib/stripe-price-catalog";
 import { getSupabaseServer } from "@/lib/supabase/server";
-
-function toPriceEnvName(serviceSlug: string): string {
-  return `STRIPE_PRICE_${serviceSlug.toUpperCase().replace(/-/g, "_")}`;
-}
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
@@ -28,6 +25,8 @@ export async function POST(request: NextRequest) {
     return apiError(ErrorCode.BAD_REQUEST, "Invalid JSON body.", 400);
   }
 
+  // The browser submits only a service slug — the Stripe Price ID and
+  // Checkout mode are always resolved server-side from the price catalog.
   const validation = validateCheckoutCreate(body);
   if (!validation.success) {
     return apiError(
@@ -44,13 +43,12 @@ export async function POST(request: NextRequest) {
     return apiError(ErrorCode.BAD_REQUEST, "Invalid service selected.", 400);
   }
 
-  const priceEnv = toPriceEnvName(serviceSlug);
-  const priceId = process.env[priceEnv];
-  if (!priceId) {
+  const priceEntry = getStripePriceCatalogEntry(serviceSlug);
+  if (!priceEntry || !priceEntry.checkoutEnabled) {
     return apiError(
-      ErrorCode.INTERNAL_ERROR,
-      `Missing price configuration for ${service.title}. Set ${priceEnv}.`,
-      500,
+      ErrorCode.BAD_REQUEST,
+      `${service.title} is not currently available for purchase.`,
+      400,
     );
   }
 
@@ -63,22 +61,32 @@ export async function POST(request: NextRequest) {
 
   const stripe = new Stripe(stripeSecret);
 
+  const sharedMetadata = {
+    clerk_user_id: userId,
+    service_slug: serviceSlug,
+    account_email: email,
+  };
+
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
+    mode: priceEntry.mode,
+    line_items: [{ price: priceEntry.priceId, quantity: 1 }],
+    allow_promotion_codes: true,
+    client_reference_id: userId,
+    customer_email: email || undefined,
+    success_url: `${request.nextUrl.origin}/dashboard?checkout=success`,
+    cancel_url: `${request.nextUrl.origin}/dashboard?checkout=cancel`,
+    metadata: sharedMetadata,
+  };
+
+  if (priceEntry.mode === "payment") {
+    sessionParams.customer_creation = "always";
+    sessionParams.payment_intent_data = { metadata: sharedMetadata };
+  } else {
+    sessionParams.subscription_data = { metadata: sharedMetadata };
+  }
+
   try {
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: [{ price: priceId, quantity: 1 }],
-      allow_promotion_codes: true,
-      client_reference_id: userId,
-      customer_email: email || undefined,
-      customer_creation: "always",
-      success_url: `${request.nextUrl.origin}/dashboard?checkout=success`,
-      cancel_url: `${request.nextUrl.origin}/dashboard?checkout=cancel`,
-      metadata: {
-        clerk_user_id: userId,
-        service_slug: serviceSlug,
-        account_email: email,
-      },
-    });
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     if (!session.url) {
       return apiError(ErrorCode.INTERNAL_ERROR, "Failed to create checkout URL.", 500);

@@ -65,13 +65,8 @@ SUPABASE_JWKS_URL=https://YOUR_PROJECT.supabase.co/auth/v1/.well-known/jwks.json
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRICE_BUSINESS_WEBSITE=price_...
-STRIPE_PRICE_BRAND_IDENTITY_PACKAGE=price_...
-STRIPE_PRICE_LOGO_DESIGN=price_...
-STRIPE_PRICE_BUSINESS_EMAIL_SETUP=price_...
-STRIPE_PRICE_DOMAIN_HOSTING=price_...
-STRIPE_PRICE_COMPLIANCE_OPS_SETUP=price_...
-STRIPE_PRICE_LAUNCH_PACKAGE=price_...
+# Stripe Price IDs are NOT environment variables — they're centralized in
+# lib/stripe-price-catalog.ts and resolved server-side from the service slug.
 
 # Optional — omit both to run without Clerk auth
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
@@ -95,13 +90,11 @@ CLERK_SECRET_KEY=sk_test_...
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | No | Stripe publishable key for browser-side Stripe integration |
 | `STRIPE_SECRET_KEY` | No | Stripe secret key for server-side Stripe API usage |
 | `STRIPE_WEBHOOK_SECRET` | No | Stripe webhook signing secret used by `POST /api/stripe/webhook` |
-| `STRIPE_PRICE_BUSINESS_WEBSITE` | No | Price ID for secure checkout (`business-website`) |
-| `STRIPE_PRICE_BRAND_IDENTITY_PACKAGE` | No | Price ID for secure checkout (`brand-identity-package`) |
-| `STRIPE_PRICE_LOGO_DESIGN` | No | Price ID for secure checkout (`logo-design`) |
-| `STRIPE_PRICE_BUSINESS_EMAIL_SETUP` | No | Price ID for secure checkout (`business-email-setup`) |
-| `STRIPE_PRICE_DOMAIN_HOSTING` | No | Price ID for secure checkout (`domain-hosting`) |
-| `STRIPE_PRICE_COMPLIANCE_OPS_SETUP` | No | Price ID for secure checkout (`compliance-ops-setup`) |
-| `STRIPE_PRICE_LAUNCH_PACKAGE` | No | Price ID for secure checkout (`launch-package`) |
+
+> Stripe Price IDs are **not** environment variables. `POST /api/stripe/checkout`
+> resolves the Price ID and Checkout mode server-side from the service slug via
+> the catalog in `lib/stripe-price-catalog.ts` — the browser only ever submits
+> a `serviceSlug`, never a price or amount.
 
 > **Never commit `.env.local` to the repository.** The `.gitignore` already excludes it.
 
@@ -563,13 +556,9 @@ npm run build
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | No | Only needed for Stripe client-side flows |
 | `STRIPE_SECRET_KEY` | No | Required for server-side Stripe API/webhook handling |
 | `STRIPE_WEBHOOK_SECRET` | No | Required for `POST /api/stripe/webhook` signature validation |
-| `STRIPE_PRICE_BUSINESS_WEBSITE` | No | Required to sell `business-website` via secure checkout |
-| `STRIPE_PRICE_BRAND_IDENTITY_PACKAGE` | No | Required to sell `brand-identity-package` via secure checkout |
-| `STRIPE_PRICE_LOGO_DESIGN` | No | Required to sell `logo-design` via secure checkout |
-| `STRIPE_PRICE_BUSINESS_EMAIL_SETUP` | No | Required to sell `business-email-setup` via secure checkout |
-| `STRIPE_PRICE_DOMAIN_HOSTING` | No | Required to sell `domain-hosting` via secure checkout |
-| `STRIPE_PRICE_COMPLIANCE_OPS_SETUP` | No | Required to sell `compliance-ops-setup` via secure checkout |
-| `STRIPE_PRICE_LAUNCH_PACKAGE` | No | Required to sell `launch-package` via secure checkout |
+
+> Stripe Price IDs live in `lib/stripe-price-catalog.ts`, not environment
+> variables — update that file to change a service's Price ID.
 
 Vercel automatically handles serverless functions for API routes and edge middleware.
 

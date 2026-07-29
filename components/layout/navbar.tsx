@@ -87,11 +87,18 @@ export default function Navbar() {
           )}
 
           {!isSignedIn && (
-            <Link href="/login">
-              <Button variant="outline" className="border-navy/20 text-navy hover:bg-cream">
-                Sign In
-              </Button>
-            </Link>
+            <>
+              <Link href="/login" className="hidden sm:block">
+                <Button variant="ghost" className="text-navy hover:bg-cream hover:text-gold">
+                  Log In
+                </Button>
+              </Link>
+              <Link href="/sign-up" className="hidden sm:block">
+                <Button variant="outline" className="border-navy/20 text-navy hover:bg-cream">
+                  Sign Up
+                </Button>
+              </Link>
+            </>
           )}
 
           <Link href="/free-filing" className="hidden sm:block">
@@ -142,10 +149,15 @@ export default function Navbar() {
             </Link>
           )}
           {!isSignedIn && (
-            <div className="pt-2">
+            <div className="pt-2 space-y-2">
               <Link href="/login" onClick={() => setMobileOpen(false)}>
                 <Button variant="outline" className="w-full border-navy/20 text-navy h-11">
-                  Sign In
+                  Log In
+                </Button>
+              </Link>
+              <Link href="/sign-up" onClick={() => setMobileOpen(false)}>
+                <Button variant="outline" className="w-full border-navy/20 text-navy h-11">
+                  Sign Up
                 </Button>
               </Link>
             </div>
