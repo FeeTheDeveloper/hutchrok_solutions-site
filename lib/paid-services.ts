@@ -1,3 +1,5 @@
+import { formatMoney } from "@/lib/utils";
+
 export type PaidServiceSlug =
   | "business-website"
   | "brand-identity-package"
@@ -25,7 +27,7 @@ export const PAID_SERVICES: PaidService[] = [
     description:
       "Launch with a conversion-ready website that makes your new business look established from day one.",
     tag: "Web Development",
-    startingPrice: 500,
+    startingPrice: 300,
     features: [
       "Custom responsive design",
       "Mobile-first build",
@@ -43,7 +45,7 @@ export const PAID_SERVICES: PaidService[] = [
     description:
       "Build a complete brand system so your LLC looks polished, credible, and consistent everywhere customers find you.",
     tag: "Branding",
-    startingPrice: 300,
+    startingPrice: 180,
     features: [
       "Color palette and typography system",
       "Brand guidelines document",
@@ -61,7 +63,7 @@ export const PAID_SERVICES: PaidService[] = [
     description:
       "Get a professional logo set built for websites, social, print, and every launch asset you need.",
     tag: "Design",
-    startingPrice: 150,
+    startingPrice: 90,
     features: [
       "Custom logo concepts",
       "Multiple revision rounds",
@@ -79,7 +81,7 @@ export const PAID_SERVICES: PaidService[] = [
     description:
       "Set up professional email with the right security records so you can communicate like a real company immediately.",
     tag: "Email",
-    startingPrice: 100,
+    startingPrice: 60,
     features: [
       "Custom domain email",
       "Google Workspace or Microsoft 365",
@@ -97,7 +99,7 @@ export const PAID_SERVICES: PaidService[] = [
     description:
       "Secure your domain and hosting stack with a clean setup that keeps your business online and reliable.",
     tag: "Infrastructure",
-    startingPrice: 125,
+    startingPrice: 75,
     features: [
       "Domain name registration",
       "SSL certificate setup",
@@ -115,7 +117,7 @@ export const PAID_SERVICES: PaidService[] = [
     description:
       "Put legal and operational guardrails in place early so you can grow without cleanup later.",
     tag: "Operations",
-    startingPrice: 225,
+    startingPrice: 135,
     features: [
       "EIN application coordination",
       "Operating agreement drafting assistance",
@@ -148,7 +150,7 @@ export const PAID_SERVICE_ICON = {
 } as const;
 
 export function formatStartingPrice(amount: number): string {
-  return `Starting at $${amount.toLocaleString("en-US")}`;
+  return `Starting at ${formatMoney(amount)}`;
 }
 
 // ── Service-request-only offers (bundles / recurring) ──
@@ -176,7 +178,7 @@ export const EXTRA_SERVICE_OPTIONS: ServiceRequestOption[] = [
     slug: "launch-package",
     title: "Veteran Launch Package",
     tag: "Bundle",
-    startingPrice: 750,
+    startingPrice: 450,
     description:
       "Everything your new LLC needs to look open for business on day one — bundled, built by the same team that filed your formation.",
     features: [
@@ -191,7 +193,7 @@ export const EXTRA_SERVICE_OPTIONS: ServiceRequestOption[] = [
     slug: "registered-agent",
     title: "Registered Agent Service",
     tag: "Compliance",
-    startingPrice: 119,
+    startingPrice: 71.4,
     description:
       "Every Texas LLC is required to maintain a registered agent. Let Hutchrok stand post — we receive your legal and state mail and alert you same-day.",
     features: [

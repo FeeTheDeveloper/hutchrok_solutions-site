@@ -46,8 +46,8 @@ export const LAUNCH_OFFERS: LaunchOffer[] = [
     slug: "launch-package",
     fieldLabel: "THE LAUNCH",
     title: "Veteran Launch Package",
-    price: "$750",
-    priceNote: "one-time · $875 value",
+    price: "$450",
+    priceNote: "one-time · $525 value",
     description:
       "Everything your new LLC needs to look open for business on day one — bundled, built by the same team that filed your formation.",
     features: [
@@ -65,7 +65,7 @@ export const LAUNCH_OFFERS: LaunchOffer[] = [
     slug: "registered-agent",
     fieldLabel: "THE GUARD",
     title: "Registered Agent Service",
-    price: "$119/yr",
+    price: "$71.40/yr",
     priceNote: "cancel anytime",
     description:
       "Every Texas LLC is required to maintain a registered agent. Let Hutchrok stand post — we receive your legal and state mail and alert you same-day.",

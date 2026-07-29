@@ -1,4 +1,5 @@
 import { PAID_SERVICES, type PaidService, type PaidServiceSlug } from "@/lib/paid-services";
+import { formatMoney } from "@/lib/utils";
 
 /**
  * Sign-up promotion: new leads who sign up get 10% off marketing services.
@@ -34,5 +35,5 @@ export function applySignupDiscount(amount: number): number {
 }
 
 export function formatPrice(amount: number): string {
-  return `$${amount.toLocaleString("en-US")}`;
+  return formatMoney(amount);
 }
