@@ -10,6 +10,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { emitCaseEvent, CASE_EVENTS } from "@/lib/notifications";
 import { notifyTeamNewFiling } from "@/lib/email/send-new-filing-notification";
+import { runIntakeTriage, persistIntakeTriage } from "@/lib/agents/intake-triage";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -213,9 +214,28 @@ async function handleVeteranIntake(
 
   // Fire-and-forget confirmation email (client) + notification email (team).
   // Never blocks or fails the applicant's response.
+  const createdCaseId = String(filingCase.id);
   const createdCaseNumber = String(filingCase.case_number);
+
+  const triagePromise = runIntakeTriage({
+    caseNumber: createdCaseNumber,
+    name: data.name,
+    businessName: data.businessName,
+    entityType: data.entityType,
+    veteranStatus: data.veteranStatus,
+    vvlStatus: data.vvlStatus,
+    allOwnersVeterans: data.allOwnersVeterans,
+    fullyVeteranOwned: data.fullyVeteranOwned,
+    ownerDetails: data.ownerDetails,
+    businessPurpose: data.businessPurpose,
+    principalAddress: data.principalAddress,
+    launchTimeline: data.launchTimeline,
+  }).then((result) => {
+    if (result) return persistIntakeTriage(supabase, createdCaseId, result);
+  });
+
   await Promise.allSettled([
-    emitCaseEvent(CASE_EVENTS.CASE_CREATED, String(filingCase.id), createdCaseNumber, {
+    emitCaseEvent(CASE_EVENTS.CASE_CREATED, createdCaseId, createdCaseNumber, {
       contact: {
         email: data.email,
         phone: data.phone,
@@ -233,6 +253,7 @@ async function handleVeteranIntake(
       veteranStatus: data.veteranStatus === true,
       vvlStatus: data.vvlStatus,
     }),
+    triagePromise,
   ]);
 
   return apiSuccess(
