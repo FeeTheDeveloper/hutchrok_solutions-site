@@ -7,7 +7,7 @@
  * disabled and nothing is sent (a log line is emitted instead).
  */
 
-import { getCaseStatusMeta, shouldNotifyClient } from "@/lib/case-status";
+import { CASE_STATUS_META, getCaseStatusMeta, shouldNotifyClient } from "@/lib/case-status";
 import { emailFrom, TEAM_INBOX } from "@/lib/email/config";
 import { CASE_EVENTS, type CaseEvent } from "./events";
 import type { NotificationChannel } from "./dispatcher";
@@ -42,18 +42,90 @@ function resolveTarget(event: CaseEvent) {
   return { contact, newStatus, meta, firstName, trackUrl };
 }
 
+/** Extract the contact info needed for the initial submission-received email, or null. */
+function resolveCreatedTarget(event: CaseEvent) {
+  if (event.event !== CASE_EVENTS.CASE_CREATED) return null;
+  const contact = (event.data.contact ?? {}) as NotifyContact;
+  const firstName = contact.clientName?.trim().split(/\s+/)[0] || "there";
+  const trackUrl = `${siteUrl()}/track?case=${encodeURIComponent(event.caseNumber)}${
+    contact.email ? `&email=${encodeURIComponent(contact.email)}` : ""
+  }`;
+  return { contact, firstName, trackUrl };
+}
+
 // ── Email channel (Resend) ──
+
+/** Shared send-to-Resend helper for the client email channel. */
+async function sendClientEmail(
+  to: string,
+  subject: string,
+  text: string,
+): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY!;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: emailFrom(),
+        to: [to],
+        reply_to: TEAM_INBOX,
+        subject,
+        text,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`[client-email] Resend error (${res.status}): ${body}`);
+    }
+  } catch (err) {
+    // Promise.allSettled in the dispatcher would otherwise swallow this.
+    console.error("[client-email] Network error sending email:", err);
+  }
+}
 
 export const clientEmailChannel: NotificationChannel = {
   name: "client-email",
   enabled: !!process.env.RESEND_API_KEY,
   async send(event) {
+    if (event.event === CASE_EVENTS.CASE_CREATED) {
+      const target = resolveCreatedTarget(event);
+      if (!target || !target.contact.email) return;
+
+      const { contact, firstName, trackUrl } = target;
+      const meta = CASE_STATUS_META.LEAD;
+      const business = contact.businessName ? ` for ${contact.businessName}` : "";
+
+      const text = [
+        `Hi ${firstName},`,
+        "",
+        `We've received your Texas filing request${business} — case ${event.caseNumber}.`,
+        "",
+        meta.happening,
+        "",
+        `What's next: ${meta.next}`,
+        "",
+        `Track your filing anytime: ${trackUrl}`,
+        "",
+        "— Hutchrok Solutions Group",
+        "Veteran-owned · Operator-reviewed",
+      ].join("\n");
+
+      await sendClientEmail(
+        contact.email!,
+        `We've received your filing request (${event.caseNumber})`,
+        text,
+      );
+      return;
+    }
+
     const target = resolveTarget(event);
     if (!target || !target.contact.email) return;
 
     const { contact, meta, firstName, trackUrl } = target;
-    const apiKey = process.env.RESEND_API_KEY!;
-    const from = emailFrom();
     const business = contact.businessName ? ` for ${contact.businessName}` : "";
 
     const text = [
@@ -71,29 +143,11 @@ export const clientEmailChannel: NotificationChannel = {
       "Veteran-owned · Operator-reviewed",
     ].join("\n");
 
-    try {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from,
-          to: [contact.email],
-          reply_to: TEAM_INBOX,
-          subject: `Your filing update — ${meta.label} (${event.caseNumber})`,
-          text,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.text();
-        console.error(`[client-email] Resend error (${res.status}): ${body}`);
-      }
-    } catch (err) {
-      // Promise.allSettled in the dispatcher would otherwise swallow this.
-      console.error("[client-email] Network error sending email:", err);
-    }
+    await sendClientEmail(
+      contact.email!,
+      `Your filing update — ${meta.label} (${event.caseNumber})`,
+      text,
+    );
   },
 };
 

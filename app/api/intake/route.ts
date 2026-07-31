@@ -8,6 +8,8 @@ import {
 import { routeGovHousingIntake } from "@/lib/consulting/gov-housing";
 import { rateLimit } from "@/lib/rate-limit";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
+import { emitCaseEvent, CASE_EVENTS } from "@/lib/notifications";
+import { notifyTeamNewFiling } from "@/lib/email/send-new-filing-notification";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -208,6 +210,30 @@ async function handleVeteranIntake(
   if (!isProd) {
     console.log("[api/intake] Created veteran case:", filingCase.case_number);
   }
+
+  // Fire-and-forget confirmation email (client) + notification email (team).
+  // Never blocks or fails the applicant's response.
+  const createdCaseNumber = String(filingCase.case_number);
+  await Promise.allSettled([
+    emitCaseEvent(CASE_EVENTS.CASE_CREATED, String(filingCase.id), createdCaseNumber, {
+      contact: {
+        email: data.email,
+        phone: data.phone,
+        clientName: data.name,
+        businessName: data.businessName,
+      },
+    }),
+    notifyTeamNewFiling({
+      caseNumber: createdCaseNumber,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      businessName: data.businessName,
+      entityType: data.entityType,
+      veteranStatus: data.veteranStatus === true,
+      vvlStatus: data.vvlStatus,
+    }),
+  ]);
 
   return apiSuccess(
     {
