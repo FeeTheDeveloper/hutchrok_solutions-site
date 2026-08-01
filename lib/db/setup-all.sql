@@ -3,7 +3,8 @@
 -- =============================================================
 -- Run this ONCE in the Supabase SQL Editor on a fresh project.
 -- It is idempotent (safe to re-run) and consolidates schema.sql +
--- all migrations (003–007) + ops schema + the storage bucket.
+-- all migrations (003–010) + ops schema + the storage bucket and its
+-- access policies.
 -- =============================================================
 
 -- 1) intake_submissions ---------------------------------------
@@ -157,3 +158,18 @@ create policy "Allow all for anon" on client_profiles    for all using (true) wi
 insert into storage.buckets (id, name, public)
   values ('case-documents', 'case-documents', false)
   on conflict (id) do nothing;
+
+-- 8) Storage policies for case-documents (anon insert/select/delete) -----
+-- Without these, every upload/download/delete against the private bucket
+-- fails RLS even though API routes enforce their own auth on top. Same
+-- permissive-RLS-plus-app-level-auth pattern as the tables above.
+drop policy if exists "Allow anon insert on case-documents" on storage.objects;
+drop policy if exists "Allow anon select on case-documents" on storage.objects;
+drop policy if exists "Allow anon delete on case-documents" on storage.objects;
+
+create policy "Allow anon insert on case-documents" on storage.objects
+  for insert with check (bucket_id = 'case-documents');
+create policy "Allow anon select on case-documents" on storage.objects
+  for select using (bucket_id = 'case-documents');
+create policy "Allow anon delete on case-documents" on storage.objects
+  for delete using (bucket_id = 'case-documents');
