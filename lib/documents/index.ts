@@ -9,6 +9,7 @@ export type {
   DocumentPayload,
   DocumentBuilder,
   Form205Payload,
+  Form202Payload,
   FilingCoverSheetPayload,
   VvlTrackingPayload,
   ComplianceChecklistPayload,
@@ -18,6 +19,7 @@ export type {
 
 export {
   form205Builder,
+  form202Builder,
   coverSheetBuilder,
   vvlTrackingBuilder,
   complianceChecklistBuilder,

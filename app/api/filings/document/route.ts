@@ -3,8 +3,9 @@ import { z } from "zod";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { requireAdmin, isValidUUID } from "@/lib/auth";
 import { apiError, ErrorCode } from "@/lib/api-response";
-import { form205Builder } from "@/lib/documents";
+import { form205Builder, form202Builder } from "@/lib/documents";
 import { fillForm205 } from "@/lib/filings/fill-form-205";
+import { fillForm202 } from "@/lib/filings/fill-form-202";
 import { fillForm05904 } from "@/lib/filings/fill-form-05-904";
 import type { FilingCase, IntakeSubmissionJoin, OwnerDetail } from "@/lib/types";
 
@@ -13,7 +14,7 @@ export const runtime = "nodejs";
 
 const schema = z.object({
   caseId: z.string().min(1, "Case ID is required."),
-  documentType: z.enum(["form_205", "form_05_904"]).default("form_205"),
+  documentType: z.enum(["form_205", "form_202", "form_05_904"]).default("form_205"),
 });
 
 const SELECT = `
@@ -21,7 +22,8 @@ const SELECT = `
   intake_submissions (
     name, email, phone, business_name, entity_type, business_purpose,
     principal_address, mailing_address, owner_details, organizer_name,
-    organizer_title, veteran_status, vvl_status, fully_veteran_owned
+    organizer_title, veteran_status, vvl_status, fully_veteran_owned,
+    nonprofit_purpose
   )
 `
   .replace(/\s+/g, " ")
@@ -93,6 +95,21 @@ export async function POST(request: NextRequest) {
         owners: owners.length > 0 ? owners : [{ name: intake.name, role: "Member" }],
       });
       formLabel = "Form-05-904";
+    } else if (documentType === "form_202") {
+      const entityType = intake.entity_type ?? "llc";
+      if (entityType !== "nonprofit") {
+        return apiError(
+          ErrorCode.BAD_REQUEST,
+          `Form 202 auto-fill is for nonprofit corporation cases. This case is "${entityType}".`,
+          400,
+        );
+      }
+      const payload = form202Builder.buildPayload(
+        row as unknown as FilingCase,
+        intake,
+      );
+      pdfBytes = await fillForm202(payload);
+      formLabel = "Form-202";
     } else {
       const entityType = intake.entity_type ?? "llc";
       if (entityType !== "llc") {

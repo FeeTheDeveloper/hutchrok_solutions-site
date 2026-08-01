@@ -10,6 +10,7 @@ import type { FilingCase, IntakeSubmissionJoin, OwnerDetail } from "@/lib/types"
 import type {
   DocumentMeta,
   Form205Payload,
+  Form202Payload,
   FilingCoverSheetPayload,
   VvlTrackingPayload,
   ComplianceChecklistPayload,
@@ -62,6 +63,31 @@ export const form205Builder: DocumentBuilder<Form205Payload> = {
       mailingAddress: intake.mailing_address ?? null,
       owners,
       veteranFeeWaiver: intake.veteran_status === true && intake.vvl_status === "have_vvl",
+    };
+  },
+};
+
+// ── Form 202 Builder (Nonprofit Corporation) ──
+
+export const form202Builder: DocumentBuilder<Form202Payload> = {
+  kind: "form_202",
+  buildPayload(filing, intake) {
+    const directors = (intake.owner_details ?? []) as OwnerDetail[];
+    return {
+      meta: buildMeta("form_202", filing),
+      entityName: intake.business_name ?? "",
+      entityType: "nonprofit",
+      filingState: "TX",
+      registeredAgent: {
+        name: "Hutchrok Solutions Group LLC",
+      },
+      directors,
+      purpose: intake.nonprofit_purpose ?? intake.business_purpose ?? "",
+      principalAddress: intake.principal_address ?? "",
+      mailingAddress: intake.mailing_address ?? null,
+      organizer: {
+        name: intake.organizer_name ?? intake.name,
+      },
     };
   },
 };
@@ -173,6 +199,7 @@ export const handoffSummaryBuilder: DocumentBuilder<HandoffSummaryPayload> = {
 
 export const BUILDERS: Record<string, DocumentBuilder> = {
   form_205: form205Builder,
+  form_202: form202Builder,
   filing_cover_sheet: coverSheetBuilder,
   vvl_tracking: vvlTrackingBuilder,
   compliance_checklist: complianceChecklistBuilder,

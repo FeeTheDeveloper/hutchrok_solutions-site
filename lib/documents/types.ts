@@ -12,6 +12,7 @@ import type { FilingCase, IntakeSubmissionJoin, OwnerDetail } from "@/lib/types"
 
 export const DOCUMENT_KINDS = [
   "form_205",
+  "form_202",
   "filing_cover_sheet",
   "vvl_tracking",
   "compliance_checklist",
@@ -22,6 +23,7 @@ export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
 
 export const DOCUMENT_KIND_LABELS: Record<DocumentKind, string> = {
   form_205: "Certificate of Formation (Form 205)",
+  form_202: "Certificate of Formation — Nonprofit Corporation (Form 202)",
   filing_cover_sheet: "Filing Cover Sheet",
   vvl_tracking: "VVL Tracking Sheet",
   compliance_checklist: "Compliance Checklist",
@@ -68,6 +70,26 @@ export interface Form205Payload {
   owners: OwnerDetail[];
   /** Whether TVC VVL fee waiver applies */
   veteranFeeWaiver: boolean;
+}
+
+// ── Form 202 payload (Nonprofit Corporation) ──
+
+export interface Form202Payload {
+  meta: DocumentMeta;
+  entityName: string;
+  entityType: "nonprofit";
+  filingState: "TX";
+  registeredAgent: {
+    name: string;
+  };
+  /** Up to 3 directors (mapped from owner_details). */
+  directors: OwnerDetail[];
+  purpose: string;
+  principalAddress: string;
+  mailingAddress: string | null;
+  organizer: {
+    name: string;
+  };
 }
 
 // ── Filing cover sheet payload ──
@@ -127,6 +149,7 @@ export interface HandoffSummaryPayload {
 
 export type DocumentPayload =
   | Form205Payload
+  | Form202Payload
   | FilingCoverSheetPayload
   | VvlTrackingPayload
   | ComplianceChecklistPayload
