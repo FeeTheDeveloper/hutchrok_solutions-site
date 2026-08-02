@@ -1,9 +1,5 @@
 import type { getSupabaseServer } from "@/lib/supabase/server";
-import type {
-  AgentPriority,
-  CommandAgentType,
-  CommandOutput,
-} from "@/lib/agents/command-contracts";
+import type { AgentType, Priority } from "@/lib/agents/contracts";
 import { redactAgentError, redactAgentInput } from "@/lib/agents/redaction";
 
 type SupabaseServer = ReturnType<typeof getSupabaseServer>;
@@ -32,7 +28,7 @@ export interface AgentTaskRecord {
   subjectId: string | null;
   idempotencyKey: string | null;
   status: string;
-  priority: AgentPriority;
+  priority: Priority;
   input: unknown;
   output: unknown;
   requiresApproval: boolean;
@@ -71,7 +67,7 @@ function mapTask(row: Record<string, unknown>): AgentTaskRecord {
       ? String(row.idempotency_key)
       : null,
     status: String(row.status),
-    priority: String(row.priority) as AgentPriority,
+    priority: String(row.priority) as Priority,
     input: row.input,
     output: row.output,
     requiresApproval: Boolean(row.requires_approval),
@@ -152,11 +148,11 @@ export async function listAgentDefinitions(
 }
 
 export interface CreateTaskInput {
-  agentType: CommandAgentType;
+  agentType: AgentType;
   subjectType: string;
   subjectId?: string;
   idempotencyKey?: string;
-  priority: AgentPriority;
+  priority: Priority;
   input: unknown;
   requiresApproval: boolean;
   requestedBy: string;
@@ -260,9 +256,10 @@ export async function markAgentTaskRunning(
 export async function completeAgentTask(
   supabase: SupabaseServer,
   taskId: string,
-  output: CommandOutput,
+  output: unknown,
   durationMs: number,
   requiresApproval: boolean,
+  traceId?: string | null,
 ): Promise<AgentTaskRecord> {
   const { data, error } = await supabase
     .from("agent_tasks")
@@ -273,6 +270,7 @@ export async function completeAgentTask(
       requires_approval: requiresApproval,
       approval_status: requiresApproval ? "pending" : "not_required",
       completed_at: new Date().toISOString(),
+      trace_id: traceId ?? null,
     })
     .eq("id", taskId)
     .eq("status", "running")
