@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:agents": "node scripts/verify-agent-bundle.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.6",

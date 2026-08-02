@@ -40,6 +40,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local bundle overlays
+.hutchrok-agent-backup/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
