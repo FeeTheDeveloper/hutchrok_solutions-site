@@ -293,6 +293,7 @@ export async function failAgentTask(
   errorCode: string,
   errorValue: unknown,
   durationMs: number,
+  traceId?: string | null,
 ): Promise<void> {
   const { error } = await supabase
     .from("agent_tasks")
@@ -302,6 +303,7 @@ export async function failAgentTask(
       error_message: redactAgentError(errorValue),
       duration_ms: durationMs,
       completed_at: new Date().toISOString(),
+      trace_id: traceId ?? null,
     })
     .eq("id", taskId)
     .in("status", ["queued", "running"]);
@@ -414,7 +416,16 @@ export async function setAgentTaskApproval(
   }
   const row = asRowObject(data);
   if (!row) throw new Error("AGENT_TASK_APPROVAL_FAILED:INVALID_ROW");
-  return mapTask(row);
+  const task = mapTask(row);
+  console.info(action === "approve" ? "agent_task_approved" : action === "reject" ? "agent_task_rejected" : "agent_task_cancelled", {
+    taskId: task.id,
+    agentType: task.agentType,
+    subjectType: task.subjectType,
+    subjectId: task.subjectId,
+    status: task.status,
+    traceId: task.traceId,
+  });
+  return task;
 }
 
 

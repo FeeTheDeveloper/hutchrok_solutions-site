@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { run, setDefaultOpenAIKey } from "@openai/agents";
+import { Runner, setDefaultOpenAIKey } from "@openai/agents";
 import type { getSupabaseServer } from "@/lib/supabase/server";
 import type { AgentExecutionRequest } from "@/lib/agents/contracts";
 import { loadAgentContext, EXISTING_SERVICE_SLUGS } from "@/lib/agents/context";
@@ -64,12 +64,17 @@ export async function executeAgentTask(
     if (!apiKey) throw new Error("OPENAI_API_KEY_MISSING");
     setDefaultOpenAIKey(apiKey);
 
-    const result = await run(agent, JSON.stringify({
+    const runner = new Runner({
+      workflowName: `hutchrok_${request.agentType}`,
+      traceId,
+      traceIncludeSensitiveData: false,
+    });
+    const result = await runner.run(agent, JSON.stringify({
       subjectType: request.subjectType,
       subjectId: request.subjectId,
       priority: request.priority,
       context,
-    }), { traceId });
+    }));
     if (!result.finalOutput) throw new Error("AGENT_EMPTY_OUTPUT");
 
     if (request.agentType === "service_router") {
@@ -90,7 +95,7 @@ export async function executeAgentTask(
   } catch (error) {
     const durationMs = Date.now() - started;
     const code = errorCode(error);
-    await failAgentTask(supabase, created.task.id, code, redactAgentError(error), durationMs);
+    await failAgentTask(supabase, created.task.id, code, redactAgentError(error), durationMs, traceId);
     console.error("agent_run_failed", {
       taskId: created.task.id, agentType: request.agentType, subjectType: request.subjectType,
       subjectId: request.subjectId, status: "failed", durationMs, traceId, errorCode: code,

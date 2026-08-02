@@ -3,8 +3,8 @@ import { requireAgentAdmin } from "@/lib/agents/agent-auth";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { rateLimit } from "@/lib/rate-limit";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { commandTaskInputSchema } from "@/lib/agents/command-contracts";
-import { executeCommandTask } from "@/lib/agents/orchestrator";
+import { agentExecutionRequestSchema } from "@/lib/agents/contracts";
+import { executeAgentTask } from "@/lib/agents/runner";
 import { toAgentTaskResponse } from "@/lib/agents/task-store";
 
 export const runtime = "nodejs";
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     return apiError(ErrorCode.BAD_REQUEST, "Invalid JSON body.", 400);
   }
 
-  const parsed = commandTaskInputSchema.safeParse(body);
+  const parsed = agentExecutionRequestSchema.safeParse(body);
   if (!parsed.success) {
     const fields: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseServer();
     const requestedBy =
       request.headers.get("x-hutchrok-operator") || "admin-api";
-    const result = await executeCommandTask(
+    const result = await executeAgentTask(
       supabase,
       parsed.data,
       requestedBy.slice(0, 200),
@@ -85,8 +85,11 @@ export async function POST(request: NextRequest) {
     if (message === "AGENT_DISABLED") {
       return apiError(ErrorCode.BAD_REQUEST, "This agent is disabled.", 409);
     }
-    if (message === "AGENT_DEFINITION_NOT_FOUND") {
+    if (["AGENT_DEFINITION_NOT_FOUND", "AGENT_UNKNOWN"].includes(message)) {
       return apiError(ErrorCode.NOT_FOUND, "Agent definition not found.", 404);
+    }
+    if (message === "AGENT_NOT_IMPLEMENTED") {
+      return apiError(ErrorCode.BAD_REQUEST, "This agent is not available for operator execution.", 409);
     }
     if (message.startsWith("SUBJECT_")) {
       return apiError(

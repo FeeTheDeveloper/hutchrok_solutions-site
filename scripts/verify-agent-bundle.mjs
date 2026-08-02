@@ -98,16 +98,25 @@ const requiredFiles = [
   "app/api/admin/agents/tasks/route.ts",
   "app/api/admin/agents/tasks/[id]/route.ts",
   "lib/agents/hutchrok-command.ts",
+  "lib/agents/contracts.ts",
+  "lib/agents/registry.ts",
+  "lib/agents/runner.ts",
+  "lib/agents/case-action-planner.ts",
+  "lib/agents/service-router.ts",
+  "lib/agents/context.ts",
   "lib/agents/orchestrator.ts",
   "lib/agents/subject-context.ts",
   "lib/agents/task-store.ts",
   "lib/db/migration-011-agent-command-center.sql",
   "lib/db/migration-012-enable-pg-net-for-agent-jobs.sql",
+  "lib/db/migrations/20260801120000_harden_core_rls.sql",
   "lib/notifications/dispatcher.ts",
   "docs/agent-interactions.png",
   "docs/agent-sequence.png",
   "docs/PRODUCTION_VALIDATION.md",
   "docs/SECURITY_FINDINGS.md",
+  "docs/AGENT_COMMAND_CENTER_SECURITY_PLAN.md",
+  "docs/AGENT_COMMAND_CENTER_PR.md",
   "scripts/install-overlay.sh",
 ];
 
@@ -131,8 +140,74 @@ if (!dispatcher.includes("contactPresent")) {
   process.exit(1);
 }
 
+function assertSource(relativePath, patterns) {
+  const source = fs.readFileSync(path.join(root, relativePath), "utf8");
+  for (const [pattern, message] of patterns) {
+    if (!pattern.test(source)) {
+      console.error(`${relativePath}: ${message}`);
+      process.exit(1);
+    }
+  }
+}
+
+assertSource("lib/agents/contracts.ts", [
+  [/"intake_triage"/, "all six agent types must be contracted"],
+  [/subjectId:\s*z\.string\(\)\.uuid\(\)/, "subject IDs must be UUID validated"],
+  [/caseActionPlannerOutputSchema/, "planner output schema missing"],
+  [/serviceRouterOutputSchema/, "router output schema missing"],
+]);
+assertSource("lib/agents/registry.ts", [
+  [/AGENT_DISABLED/, "disabled-agent rejection missing"],
+  [/AGENT_UNKNOWN/, "unknown-agent rejection missing"],
+]);
+assertSource("lib/agents/runner.ts", [
+  [/OPENAI_API_KEY_MISSING/, "safe missing-key failure missing"],
+  [/createAgentTask[\s\S]*OPENAI_API_KEY_MISSING/, "task must be created before OpenAI credential validation"],
+  [/SERVICE_SLUG_NOT_IN_CATALOG/, "service slug allowlist missing"],
+  [/agent_run_failed/, "failed execution logging missing"],
+]);
+assertSource("lib/agents/task-store.ts", [
+  [/23505/, "idempotency race handling missing"],
+  [/agent_task_approved/, "approval audit event missing"],
+  [/agent_task_rejected/, "rejection audit event missing"],
+]);
+for (const route of [
+  "app/api/admin/agents/health/route.ts",
+  "app/api/admin/agents/run/route.ts",
+  "app/api/admin/agents/tasks/route.ts",
+  "app/api/admin/agents/tasks/[id]/route.ts",
+]) {
+  assertSource(route, [
+    [/requireAgentAdmin/, "bearer-only authorization guard missing"],
+    [/rateLimit/, "rate limiting missing"],
+  ]);
+}
+assertSource("lib/agents/agent-auth.ts", [
+  [/Authorization: Bearer/, "bearer requirement missing"],
+]);
+if (fs.readFileSync(path.join(root, "app/api/admin/agents/run/route.ts"), "utf8").includes("searchParams.get(\"token\")")) {
+  console.error("Agent run route accepts a query-string token.");
+  process.exit(1);
+}
+
+const rls = fs.readFileSync(path.join(root, "lib/db/migrations/20260801120000_harden_core_rls.sql"), "utf8");
+if (!rls.includes("REVIEW ONLY") || !rls.includes('drop policy if exists "Allow all for anon"')) {
+  console.error("Review-only RLS hardening migration is incomplete.");
+  process.exit(1);
+}
+
+const intakeDiff = require("node:child_process").execFileSync(
+  "git", ["diff", "--name-only", "main..HEAD", "--", "app/api/intake/route.ts"],
+  { cwd: root, encoding: "utf8" },
+).trim();
+if (intakeDiff) {
+  console.error("Existing /api/intake route changed unexpectedly.");
+  process.exit(1);
+}
+
 if (diagnostics > 0) process.exit(1);
 console.log(`Verified ${tsFiles.length} TypeScript files with 0 syntax diagnostics.`);
 console.log("Redaction smoke test passed.");
 console.log(`Required bundle manifest passed (${requiredFiles.length} files).`);
 console.log("Notification logging privacy check passed.");
+console.log("Agent contracts, auth, idempotency, approvals, failure ledger, and RLS review checks passed.");

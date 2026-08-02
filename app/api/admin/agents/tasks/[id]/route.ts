@@ -3,7 +3,8 @@ import { requireAgentAdmin } from "@/lib/agents/agent-auth";
 import { isValidUUID } from "@/lib/auth";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { taskApprovalSchema } from "@/lib/agents/command-contracts";
+import { taskDecisionSchema } from "@/lib/agents/contracts";
+import { rateLimit } from "@/lib/rate-limit";
 import {
   getAgentTask,
   setAgentTaskApproval,
@@ -19,6 +20,10 @@ export async function GET(
 ) {
   const denied = requireAgentAdmin(request);
   if (denied) return denied;
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!rateLimit(`agent-task-read:${ip}`, { limit: 60, windowMs: 60_000 }).allowed) {
+    return apiError(ErrorCode.RATE_LIMITED, "Too many requests.", 429);
+  }
 
   const { id } = await context.params;
   if (!isValidUUID(id)) {
@@ -35,11 +40,10 @@ export async function GET(
     const includeInput =
       request.nextUrl.searchParams.get("includeInput") === "true";
     return apiSuccess({ task: toAgentTaskResponse(task, includeInput) });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+  } catch {
     return apiError(
       ErrorCode.INTERNAL_ERROR,
-      `Unable to read task: ${message.slice(0, 500)}`,
+      "Unable to read task.",
       503,
     );
   }
@@ -51,6 +55,10 @@ export async function PATCH(
 ) {
   const denied = requireAgentAdmin(request);
   if (denied) return denied;
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!rateLimit(`agent-task-write:${ip}`, { limit: 30, windowMs: 60_000 }).allowed) {
+    return apiError(ErrorCode.RATE_LIMITED, "Too many requests.", 429);
+  }
 
   const { id } = await context.params;
   if (!isValidUUID(id)) {
@@ -64,7 +72,7 @@ export async function PATCH(
     return apiError(ErrorCode.BAD_REQUEST, "Invalid JSON body.", 400);
   }
 
-  const parsed = taskApprovalSchema.safeParse(body);
+  const parsed = taskDecisionSchema.safeParse(body);
   if (!parsed.success) {
     return apiError(
       ErrorCode.VALIDATION_ERROR,

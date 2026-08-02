@@ -9,7 +9,7 @@ import { apiError, ErrorCode } from "@/lib/api-response";
  */
 export function requireAgentAdmin(request: NextRequest) {
   const authorization = request.headers.get("authorization") || "";
-  if (!authorization.startsWith("Bearer ")) {
+  if (!/^Bearer [^\s]+$/.test(authorization)) {
     return apiError(
       ErrorCode.UNAUTHORIZED,
       "Agent administration requires an Authorization: Bearer header.",

@@ -4,8 +4,9 @@ import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import {
   listAgentDefinitions,
-  listAgentTasks,
 } from "@/lib/agents/task-store";
+import { REGISTERED_AGENT_COUNT } from "@/lib/agents/registry";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,50 +19,29 @@ export async function GET(request: NextRequest) {
   const denied = requireAgentAdmin(request);
   if (denied) return denied;
 
-  const openaiConfigured = Boolean(process.env.OPENAI_API_KEY);
-  const supabaseSecretConfigured = Boolean(process.env.SUPABASE_SECRET_KEY);
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!rateLimit(`agent-health:${ip}`, { limit: 30, windowMs: 60_000 }).allowed) {
+    return apiError(ErrorCode.RATE_LIMITED, "Too many requests.", 429);
+  }
 
+  const openaiConfigured = Boolean(process.env.OPENAI_API_KEY);
   try {
     const supabase = getSupabaseServer();
-    const [agents, recentTasks] = await Promise.all([
-      listAgentDefinitions(supabase),
-      listAgentTasks(supabase, { limit: 10 }),
-    ]);
+    const agents = await listAgentDefinitions(supabase);
 
     return apiSuccess({
-      status:
-        openaiConfigured && supabaseSecretConfigured
-          ? "ready"
-          : "configuration_required",
-      openaiConfigured,
-      supabaseSecretConfigured,
-      commandModel:
-        process.env.OPENAI_COMMAND_MODEL ||
-        agents.find((agent) => agent.agentType === "case_action_planner")
-          ?.defaultModel ||
-        "gpt-4.1-mini",
-      agents,
-      recentTasks: recentTasks.map((task) => ({
-        id: task.id,
-        agentType: task.agentType,
-        subjectType: task.subjectType,
-        subjectId: task.subjectId,
-        status: task.status,
-        priority: task.priority,
-        approvalStatus: task.approvalStatus,
-        model: task.model,
-        durationMs: task.durationMs,
-        errorCode: task.errorCode,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
-      })),
-      note: "Health confirms configuration and database access; run a synthetic task to validate the OpenAI credential.",
+      configured: openaiConfigured && Boolean(process.env.SUPABASE_SECRET_KEY),
+      registryCount: REGISTERED_AGENT_COUNT,
+      enabledAgents: agents.filter((agent) => agent.enabled).map((agent) => agent.agentType),
+      databaseConnectivity: true,
+      openaiKeyConfigured: openaiConfigured,
+      applicationVersion: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) || "development",
+      timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+  } catch {
     return apiError(
       ErrorCode.INTERNAL_ERROR,
-      `Agent ledger unavailable: ${message.slice(0, 500)}`,
+      "Agent database connectivity check failed.",
       503,
     );
   }
