@@ -65,5 +65,13 @@ const CLERK_AVAILABLE = !!process.env.CLERK_SECRET_KEY;
 export default CLERK_AVAILABLE ? clerkHandler : fallbackHandler;
 
 export const config = {
-  matcher: ["/dashboard", "/dashboard/:path*", "/admin", "/admin/:path*"],
+  // Must run on (almost) every request, including API routes — `auth()` and
+  // `currentUser()` in route handlers throw unless clerkMiddleware() has
+  // processed the request first. The isDashboardRoute/isAdminRoute checks
+  // above still gate which routes actually get protected/redirected; this
+  // matcher only controls where Clerk's auth context gets attached.
+  matcher: [
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+  ],
 };
