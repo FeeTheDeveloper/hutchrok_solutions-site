@@ -70,6 +70,10 @@ export async function POST(request: NextRequest) {
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: priceEntry.mode,
     line_items: [{ price: priceEntry.priceId, quantity: 1 }],
+    // Restrict Checkout to card rails. Eligible wallets such as Apple Pay and
+    // Google Pay remain available through Stripe-hosted card Checkout, while
+    // other dynamic payment methods are not introduced automatically.
+    payment_method_types: ["card"],
     allow_promotion_codes: true,
     client_reference_id: userId,
     customer_email: email || undefined,
