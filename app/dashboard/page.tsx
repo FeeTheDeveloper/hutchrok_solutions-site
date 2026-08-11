@@ -34,7 +34,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const user = await currentUser();
   const workspace = getDashboardWorkspaceSnapshot(user?.fullName);
   const memberAccess = getMemberAccess(user?.publicMetadata);
-  let premiumMember = null;
+  let premiumMember: Awaited<ReturnType<typeof getPremiumMemberWorkspace>> = null;
   if (memberAccess) {
     try {
       premiumMember = await getPremiumMemberWorkspace(userId, memberAccess.memberCode);
