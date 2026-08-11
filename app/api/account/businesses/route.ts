@@ -3,7 +3,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { getMemberByCode } from "@/lib/members/registry";
+import { getMemberAccess } from "@/lib/members/registry";
 
 const businessSchema = z.object({
   legalName: z.string().trim().min(2).max(300),
@@ -22,8 +22,7 @@ export async function POST(request: NextRequest) {
   if (!userId) return apiError(ErrorCode.UNAUTHORIZED, "Sign in to add a business.", 401);
 
   const user = await currentUser();
-  const memberCode = user?.publicMetadata?.memberCode;
-  const member = getMemberByCode(memberCode);
+  const member = getMemberAccess(user?.publicMetadata);
   if (!member?.vvlEnabled) {
     return apiError(ErrorCode.UNAUTHORIZED, "VVL-enabled membership is required.", 403);
   }
@@ -40,14 +39,6 @@ export async function POST(request: NextRequest) {
     return apiError(ErrorCode.VALIDATION_ERROR, "Complete all required business fields.", 400);
   }
 
-  const normalizedName = parsed.data.legalName.toLowerCase();
-  const rosterDuplicate = member.businesses.some(
-    (business) => business.legalName.toLowerCase() === normalizedName,
-  );
-  if (rosterDuplicate) {
-    return apiError(ErrorCode.BAD_REQUEST, "This business is already attached to your account.", 409);
-  }
-
   try {
     const supabase = getSupabaseServer();
     const { data: existing, error: lookupError } = await supabase
@@ -59,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     if (lookupError) throw new Error(lookupError.message);
     if (existing) {
-      return apiError(ErrorCode.BAD_REQUEST, "This business is already pending review.", 409);
+      return apiError(ErrorCode.BAD_REQUEST, "This business is already attached or pending review.", 409);
     }
 
     const { data, error } = await supabase
