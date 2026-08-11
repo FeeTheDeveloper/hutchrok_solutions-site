@@ -12,6 +12,9 @@ import FilingTracker from "@/components/filing-tracker";
 import ClientCaseCard from "@/components/client-case-card";
 import AccountProfileCard from "@/components/dashboard/account-profile-card";
 import SecureCheckoutCard from "@/components/dashboard/secure-checkout-card";
+import PremiumMemberWorkspace from "@/components/dashboard/premium-member-workspace";
+import { getMemberAccess } from "@/lib/members/registry";
+import { getPremiumMemberWorkspace } from "@/lib/services/member-workspace";
 
 interface DashboardPageProps {
   searchParams: Promise<{ checkout?: string }>;
@@ -30,6 +33,18 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const user = await currentUser();
   const workspace = getDashboardWorkspaceSnapshot(user?.fullName);
+  const memberAccess = getMemberAccess(user?.publicMetadata);
+  let premiumMember = null;
+  if (memberAccess) {
+    try {
+      premiumMember = await getPremiumMemberWorkspace(userId, memberAccess.memberCode);
+    } catch (error) {
+      console.error(
+        "[dashboard] premium member workspace unavailable:",
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
 
   // Claim + list this user's filing cases by verified email match.
   const verifiedEmails = (user?.emailAddresses ?? [])
@@ -44,6 +59,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <p className="text-muted-foreground mb-8">
           {workspace.greeting} This workspace is built for your active case and next actions.
         </p>
+
+        {premiumMember && <PremiumMemberWorkspace member={premiumMember} />}
 
         {/* ── Your filings (auto-linked by verified email) ── */}
         {cases.length > 0 ? (
