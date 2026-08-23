@@ -12,13 +12,10 @@
  * supplemental provisions box.
  */
 
-import fs from "node:fs/promises";
-import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 import type { Form202Payload } from "@/lib/documents";
 import { parseAddress, splitName } from "./fill-form-205";
-
-const TEMPLATE_PATH = path.join(process.cwd(), "docs", "filings", "202_boc.pdf");
+import { readFilingTemplate } from "./template-loader";
 
 /** Exact AcroForm field names in the official Form 202 (order/spacing matters). */
 const F = {
@@ -64,8 +61,9 @@ const F = {
  */
 export async function fillForm202(
   payload: Form202Payload,
+  origin: string,
 ): Promise<Uint8Array> {
-  const templateBytes = await fs.readFile(TEMPLATE_PATH);
+  const templateBytes = await readFilingTemplate("202_boc.pdf", origin);
   const doc = await PDFDocument.load(templateBytes);
   const form = doc.getForm();
 

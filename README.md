@@ -1,6 +1,6 @@
 # Hutchrok Solutions Group — Veteran Business Formation Platform
 
-Full-stack veteran business formation platform with compliance-first intake, filing case management, authenticated client dashboard, and Microsoft 365 operational wiring. Built on Next.js 16, Supabase, and deployed on Vercel. Clerk authentication is supported but fully optional — the app runs without Clerk keys via a graceful fallback.
+Full-stack veteran business formation platform with compliance-first intake, filing case management, authenticated client dashboard, and Microsoft 365 operational wiring. Built on Next.js 16, Supabase, and deployed on Cloudflare Workers. Clerk authentication is supported but fully optional — the app runs without Clerk keys via a graceful fallback.
 
 ---
 
@@ -12,7 +12,7 @@ Full-stack veteran business formation platform with compliance-first intake, fil
 - **Admin console** to manage cases, update statuses, add notes, and assign team members
 - **Document uploads** to a private Supabase Storage bucket with signed-URL downloads
 - **Zod validation** shared between client and server for consistent field-level errors
-- **Rate limiting** on public endpoints (in-memory, Vercel-safe)
+- **Rate limiting** on public endpoints (in-memory, isolate-safe)
 - **Veteran Claim Defense** — VA claim filing assistance, denial appeals, evidence coordination, and disability rating review
 - **Mode-based concierge** — public, client, and admin modes with intent mapping, context-aware nudges, and lead capture
 - **Backend-ready foundation** for Microsoft 365 operational workflows (SharePoint, Power Automate, Lists)
@@ -29,7 +29,7 @@ Full-stack veteran business formation platform with compliance-first intake, fil
 | Database | Supabase Postgres |
 | File Storage | Supabase Storage (private bucket + signed URLs) |
 | Validation | Zod (shared client/server schema) |
-| Deployment | Vercel |
+| Deployment | Cloudflare Workers (via `@opennextjs/cloudflare`) |
 
 ---
 
@@ -49,7 +49,7 @@ npm run dev
 
 ## Environment Variables
 
-Create a `.env.local` file in the project root (and set these in your Vercel project settings for production):
+Create a `.env.local` file in the project root (and set these as Cloudflare Worker variables/secrets for production — see [Build & Deploy](#build--deploy-cloudflare-workers)):
 
 ```env
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
@@ -391,7 +391,7 @@ Three inbound API routes allow Power Automate (or any webhook caller) to push M3
 
 ### 1. Environment Variables
 
-Add these to `.env.local` (and to your Vercel project settings):
+Add these to `.env.local` (and to your Cloudflare Worker variables/secrets):
 
 ```env
 # Shared secret – Power Automate sends this in the X-Ops-Token header
@@ -522,24 +522,29 @@ The case detail page (`/admin/cases/[id]`) now displays:
 
 ---
 
-## Build & Deploy (Vercel)
+## Build & Deploy (Cloudflare Workers)
 
-Vercel has first-class support for Next.js — no adapter needed. Push to `main` and Vercel builds + deploys automatically.
+The app deploys to Cloudflare Workers via the [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) adapter, which builds the Next.js output into a Worker (see `open-next.config.ts` and `wrangler.toml`).
 
 ```bash
-# Production build (local verification)
+# Local production build (verification only)
 npm run build
+
+# Build + run in the Workers runtime locally (wrangler dev)
+npm run preview
+
+# Build + deploy to Cloudflare
+npm run deploy
 ```
 
-> **Note:** The repo contains `open-next.config.ts` and `wrangler.toml` from an earlier Cloudflare evaluation. These files are **not used** by Vercel and can be safely ignored — they do not affect the build.
+Connect the repo in the Cloudflare dashboard (**Workers & Pages → Create → Connect to Git**) to get automatic builds/deploys on push to `main`, with preview deployments for other branches — set the **Build command** to `npm run deploy` (or `opennextjs-cloudflare build` if you want Workers Builds to handle the deploy step) and add the environment variables below under **Settings → Variables and Secrets**.
 
-### Vercel Project Settings
+### Cloudflare Project Settings
 
-- **Framework Preset:** Next.js (auto-detected)
-- **Build command:** `npm run build` (default)
-- **Output directory:** `.next` (default)
-- **Node.js version:** 20.x
-- **Environment variables:** set the following in **Settings → Environment Variables**:
+- **Build command:** `npx opennextjs-cloudflare build`
+- **Deploy command:** `npx wrangler deploy` (or `npm run deploy` to build + deploy in one step)
+- **Compatibility flags:** `nodejs_compat` (required — see `wrangler.toml`)
+- **Environment variables:** set the following as [Worker secrets/variables](https://developers.cloudflare.com/workers/configuration/secrets/) (`npx wrangler secret put <NAME>` for secrets, or via the dashboard):
 
 | Variable | Required | Notes |
 | --- | --- | --- |
@@ -560,7 +565,7 @@ npm run build
 > Stripe Price IDs live in `lib/stripe-price-catalog.ts`, not environment
 > variables — update that file to change a service's Price ID.
 
-Vercel automatically handles serverless functions for API routes and edge middleware.
+API routes and the Clerk proxy/middleware run as a single Cloudflare Worker; static assets (including `public/filings/*.pdf`) are served from the Worker's `ASSETS` binding.
 
 ### Deploy without Clerk (minimum viable deploy)
 

@@ -10,12 +10,9 @@
  * The PDF is returned editable (not flattened) for operator review.
  */
 
-import fs from "node:fs/promises";
-import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 import type { OwnerDetail } from "@/lib/types";
-
-const TEMPLATE_PATH = path.join(process.cwd(), "docs", "filings", "05-904.pdf");
+import { readFilingTemplate } from "./template-loader";
 
 /**
  * Exact AcroForm field names in the official Form 05-904. The form's own
@@ -67,8 +64,9 @@ export function evenOwnershipSplit(count: number): number[] {
  */
 export async function fillForm05904(
   payload: Form05904Payload,
+  origin: string,
 ): Promise<Uint8Array> {
-  const templateBytes = await fs.readFile(TEMPLATE_PATH);
+  const templateBytes = await readFilingTemplate("05-904.pdf", origin);
   const doc = await PDFDocument.load(templateBytes);
   const form = doc.getForm();
 

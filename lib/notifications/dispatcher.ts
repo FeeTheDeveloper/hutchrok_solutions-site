@@ -2,7 +2,7 @@
  * Notification dispatcher
  *
  * The log channel records operational metadata only. It never serializes
- * arbitrary event data or client contact information into Vercel logs.
+ * arbitrary event data or client contact information into platform logs.
  */
 
 import { emitOpsEvent } from "@/lib/services/ops-webhook";
