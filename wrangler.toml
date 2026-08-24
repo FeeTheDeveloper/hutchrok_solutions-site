@@ -19,3 +19,9 @@ routes = [
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
+
+# Agent tracing (see lib/agents/tracing.ts) — 5% sampling, metadata only
+# (no message/tool payloads are recorded).
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.05

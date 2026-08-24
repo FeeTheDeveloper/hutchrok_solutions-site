@@ -11,6 +11,7 @@ import { z } from "zod";
 import type { getSupabaseServer } from "@/lib/supabase/server";
 import { redactAgentInput } from "@/lib/agents/redaction";
 import { recordAutomaticAgentResult } from "@/lib/agents/task-store";
+import { traceAgentTurn } from "@/lib/agents/tracing";
 
 const TRIAGE_AGENT_VERSION = "2026.08.01";
 
@@ -114,11 +115,20 @@ export async function runIntakeTriage(
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
+  const model = process.env.OPENAI_TRIAGE_MODEL || "gpt-4.1-mini";
   try {
     setDefaultOpenAIKey(apiKey);
-    const result = await run(
-      buildAgent(),
-      `New intake facts:\n${JSON.stringify(minimizeTriageInput(input), null, 2)}`,
+    const result = await traceAgentTurn(
+      {
+        agentName: "hutchrok_intake_triage",
+        agentId: "hutchrok_intake_triage",
+        conversationId: input.caseNumber,
+      },
+      model,
+      () => run(
+        buildAgent(),
+        `New intake facts:\n${JSON.stringify(minimizeTriageInput(input), null, 2)}`,
+      ),
     );
     return result.finalOutput ?? null;
   } catch {

@@ -4,6 +4,7 @@ import {
   type CommandOutput,
   type CommandTaskInput,
 } from "@/lib/agents/command-contracts";
+import { traceAgentTurn } from "@/lib/agents/tracing";
 
 const BASE_INSTRUCTIONS = `
 You are the internal Hutchrok Command Agent for Hutchrok Solutions Group LLC.
@@ -94,26 +95,37 @@ export async function runHutchrokCommand(
 
   setDefaultOpenAIKey(apiKey);
   const agent = buildAgent(input.agentType, model);
-  const result = await run(
-    agent,
-    JSON.stringify(
-      {
-        task: {
-          agentType: input.agentType,
-          subjectType: input.subjectType,
-          subjectId: input.subjectId ?? null,
-          objective: input.objective,
-          priority: input.priority,
+  const conversationId = input.subjectId
+    ? `${input.subjectType}:${input.subjectId}`
+    : `adhoc:${crypto.randomUUID()}`;
+  const result = await traceAgentTurn(
+    {
+      agentName: `hutchrok_command_${input.agentType}`,
+      agentId: `hutchrok_command_${input.agentType}`,
+      conversationId,
+    },
+    model,
+    () => run(
+      agent,
+      JSON.stringify(
+        {
+          task: {
+            agentType: input.agentType,
+            subjectType: input.subjectType,
+            subjectId: input.subjectId ?? null,
+            objective: input.objective,
+            priority: input.priority,
+          },
+          context: safeContext,
+          requiredOutputRules: {
+            agentTypeMustMatch: input.agentType,
+            recommendationsOnly: true,
+            approvalForExternalOrIrreversibleActions: true,
+          },
         },
-        context: safeContext,
-        requiredOutputRules: {
-          agentTypeMustMatch: input.agentType,
-          recommendationsOnly: true,
-          approvalForExternalOrIrreversibleActions: true,
-        },
-      },
-      null,
-      2,
+        null,
+        2,
+      ),
     ),
   );
 

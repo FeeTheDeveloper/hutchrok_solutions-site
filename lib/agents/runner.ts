@@ -8,6 +8,7 @@ import { redactAgentError, redactAgentInput } from "@/lib/agents/redaction";
 import {
   completeAgentTask, createAgentTask, failAgentTask, markAgentTaskRunning,
 } from "@/lib/agents/task-store";
+import { traceAgentTurn } from "@/lib/agents/tracing";
 
 type SupabaseServer = ReturnType<typeof getSupabaseServer>;
 
@@ -69,12 +70,20 @@ export async function executeAgentTask(
       traceId,
       traceIncludeSensitiveData: false,
     });
-    const result = await runner.run(agent, JSON.stringify({
-      subjectType: request.subjectType,
-      subjectId: request.subjectId,
-      priority: request.priority,
-      context,
-    }));
+    const result = await traceAgentTurn(
+      {
+        agentName: `hutchrok_${request.agentType}`,
+        agentId: `hutchrok_${request.agentType}`,
+        conversationId: `${request.subjectType}:${request.subjectId}`,
+      },
+      model,
+      () => runner.run(agent, JSON.stringify({
+        subjectType: request.subjectType,
+        subjectId: request.subjectId,
+        priority: request.priority,
+        context,
+      })),
+    );
     if (!result.finalOutput) throw new Error("AGENT_EMPTY_OUTPUT");
 
     if (request.agentType === "service_router") {
