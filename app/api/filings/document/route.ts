@@ -9,7 +9,6 @@ import { fillForm202 } from "@/lib/filings/fill-form-202";
 import { fillForm05904 } from "@/lib/filings/fill-form-05-904";
 import type { FilingCase, IntakeSubmissionJoin, OwnerDetail } from "@/lib/types";
 
-// pdf-lib + fs require the Node.js runtime.
 export const runtime = "nodejs";
 
 const schema = z.object({
@@ -77,6 +76,7 @@ export async function POST(request: NextRequest) {
 
   let pdfBytes: Uint8Array;
   let formLabel: string;
+  const origin = new URL(request.url).origin;
 
   try {
     if (documentType === "form_05_904") {
@@ -90,10 +90,13 @@ export async function POST(request: NextRequest) {
         );
       }
       const owners = (intake.owner_details ?? []) as OwnerDetail[];
-      pdfBytes = await fillForm05904({
-        entityName: intake.business_name ?? "",
-        owners: owners.length > 0 ? owners : [{ name: intake.name, role: "Member" }],
-      });
+      pdfBytes = await fillForm05904(
+        {
+          entityName: intake.business_name ?? "",
+          owners: owners.length > 0 ? owners : [{ name: intake.name, role: "Member" }],
+        },
+        origin,
+      );
       formLabel = "Form-05-904";
     } else if (documentType === "form_202") {
       const entityType = intake.entity_type ?? "llc";
@@ -108,7 +111,7 @@ export async function POST(request: NextRequest) {
         row as unknown as FilingCase,
         intake,
       );
-      pdfBytes = await fillForm202(payload);
+      pdfBytes = await fillForm202(payload, origin);
       formLabel = "Form-202";
     } else {
       const entityType = intake.entity_type ?? "llc";
@@ -123,7 +126,7 @@ export async function POST(request: NextRequest) {
         row as unknown as FilingCase,
         intake,
       );
-      pdfBytes = await fillForm205(payload);
+      pdfBytes = await fillForm205(payload, origin);
       formLabel = "Form-205";
     }
   } catch (e) {

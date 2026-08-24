@@ -11,12 +11,9 @@
  * left for operator review and flagged in the Supplemental Provisions box.
  */
 
-import fs from "node:fs/promises";
-import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 import type { Form205Payload } from "@/lib/documents";
-
-const TEMPLATE_PATH = path.join(process.cwd(), "docs", "filings", "205_boc.pdf");
+import { readFilingTemplate } from "./template-loader";
 
 /** Exact AcroForm field names in the official Form 205 (order/spacing matters). */
 const F = {
@@ -112,8 +109,9 @@ export function splitName(full: string): SplitName {
  */
 export async function fillForm205(
   payload: Form205Payload,
+  origin: string,
 ): Promise<Uint8Array> {
-  const templateBytes = await fs.readFile(TEMPLATE_PATH);
+  const templateBytes = await readFilingTemplate("205_boc.pdf", origin);
   const doc = await PDFDocument.load(templateBytes);
   const form = doc.getForm();
 

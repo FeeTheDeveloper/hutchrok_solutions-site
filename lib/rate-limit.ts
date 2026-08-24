@@ -1,8 +1,9 @@
 /**
  * Simple in-memory IP-based rate limiter.
- * Vercel-safe: uses a Map that resets on cold start.
- * Good enough for basic abuse protection; upgrade to
- * Upstash Redis or similar for production at scale.
+ * Isolate-local: uses a Map that resets whenever the Worker isolate is
+ * recycled, and is not shared across Cloudflare's edge locations.
+ * Good enough for basic abuse protection; upgrade to a Durable Object,
+ * Cloudflare Rate Limiting binding, or Redis for production at scale.
  */
 
 interface RateLimitEntry {

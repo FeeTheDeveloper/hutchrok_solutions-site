@@ -1,13 +1,15 @@
-# Cloudflare Pages configuration for Hutchrok Solutions Group
+# Cloudflare Workers configuration for Hutchrok Solutions Group.
 # Used by @opennextjs/cloudflare to configure the Workers runtime.
 
 name = "hutchrok-solutions"
-compatibility_date = "2026-01-01"
+compatibility_date = "2026-08-23"
 compatibility_flags = ["nodejs_compat"]
 
-# The OpenNext adapter outputs to .worker.js — this is the main entrypoint.
+# The OpenNext adapter outputs to worker.js — this is the main entrypoint.
 main = ".open-next/worker.js"
 
-# Static assets are served from the .open-next/assets directory.
+# Static assets (including public/filings/*.pdf) are served from
+# .open-next/assets, and exposed to the Worker via the ASSETS binding.
 [assets]
 directory = ".open-next/assets"
+binding = "ASSETS"
