@@ -4,6 +4,7 @@ import { Providers } from "@/app/providers";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import { ConciergeFloating } from "@/components/concierge/hutchrok-concierge";
+import { SbaPromoBanner } from "@/components/SbaPromoBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,26 +19,31 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Hutchrok Solutions Group | Free Texas LLC Filing for Veterans",
+    default: "Hutchrok Solutions Group | SBA-Certified SDVOSB & VOSB | Free Texas Veteran LLC Filing",
     template: "%s | Hutchrok Solutions Group",
   },
   description:
-    "Free Texas LLC formation for qualified U.S. military veterans. Veteran-owned, veteran-operated. We handle your Certificate of Formation with the Texas Secretary of State at no cost.",
+    "SBA-certified SDVOSB and VOSB helping veterans launch and grow businesses. Free Texas LLC filing for qualified veterans, plus compliance, consulting, software, branding, and government contracting support.",
   keywords: [
+    "SBA certified SDVOSB",
+    "SBA certified VOSB",
+    "service disabled veteran owned small business",
+    "veteran owned small business",
     "free LLC filing",
     "veteran LLC",
     "Texas LLC formation",
     "veteran-owned",
     "TVC verification",
     "free business formation",
+    "government contracting",
     "Dallas TX",
     "Texas veterans",
   ],
   authors: [{ name: "Hutchrok Solutions Group LLC" }],
   openGraph: {
-    title: "Hutchrok Solutions Group | Free Texas LLC Filing for Veterans",
+    title: "Hutchrok Solutions Group | SBA-Certified SDVOSB & VOSB",
     description:
-      "Free Texas LLC formation for qualified veterans. No filing fees, no service fees.",
+      "Veteran-owned business infrastructure, free Texas LLC filing for qualified veterans, and government-ready consulting and technology services.",
     type: "website",
     locale: "en_US",
   },
@@ -54,6 +60,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <Providers>
+          <SbaPromoBanner />
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <Footer />
