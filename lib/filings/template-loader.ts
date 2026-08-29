@@ -2,8 +2,8 @@
  * Loads a filing template PDF from `public/filings/`.
  *
  * Templates are fetched same-origin (rather than read via node:fs) so this
- * works identically on Cloudflare Workers — which have no real filesystem —
- * and in local/Node environments.
+ * works identically across serverless/edge runtimes and local Node
+ * environments.
  */
 export async function readFilingTemplate(
   filename: string,

@@ -4,7 +4,7 @@ Use this checklist for quick demos and QA walkthroughs. Estimated time: **8 minu
 
 ## Prerequisites
 
-- [ ] App running locally (`npm run dev`) or deployed to Cloudflare Pages
+- [ ] App running locally (`npm run dev`) or deployed to Vercel
 - [ ] Supabase project configured (tables via `lib/db/schema.sql` + `schema-ops.sql`, storage bucket `case-documents`)
 - [ ] Environment variables set: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `ADMIN_TOKEN` (see `.env.example`)
 - [ ] Optional: `OPS_TOKEN` and `OPS_WEBHOOK_URL` for ops integration
@@ -96,5 +96,5 @@ Use this checklist for quick demos and QA walkthroughs. Estimated time: **8 minu
 | Intake 500 error | Verify `SUPABASE_URL` and `SUPABASE_ANON_KEY` are set correctly |
 | Upload fails | Ensure `case-documents` storage bucket exists and is set to **private** |
 | Signed URL returns 400 | Check that storage policies allow authenticated reads via signed URLs |
-| Middleware blocks admin | `ADMIN_TOKEN` must be set in both env and Cloudflare Pages settings |
+| Middleware blocks admin | `ADMIN_TOKEN` must be set in both env and Vercel project settings |
 | Upload claims invalid type | Magic bytes validation enforces PDF/JPG/PNG — file content must match extension |

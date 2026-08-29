@@ -6,7 +6,6 @@ import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import {
   getFilingTemplatesForCase,
   VETERAN_SUPPLEMENT,
-  ENTITY_TEMPLATE_MAP,
 } from "@/lib/filings/template-map";
 
 // ── Input validation ──

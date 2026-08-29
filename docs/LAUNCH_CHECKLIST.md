@@ -16,12 +16,11 @@ Complete every section before opening the platform to real clients.
 - [ ] Row-Level Security (RLS) enabled on all tables
 - [ ] Database backups configured (point-in-time recovery enabled)
 
-### Cloudflare Pages
+### Vercel
 
-- [ ] Project `hutchrok-solutions` deployed via `npx @opennextjs/cloudflare build`
-- [ ] Custom domain configured and DNS pointing to Cloudflare Pages
-- [ ] SSL/TLS set to Full (Strict) mode
-- [ ] Environment variables set in Cloudflare Pages dashboard:
+- [ ] Project `hutchrok-solutions` deployed on Vercel from the GitHub repo
+- [ ] Custom domain configured and DNS pointing to Vercel
+- [ ] Environment variables set in the Vercel project dashboard:
   - `SUPABASE_URL` — production Supabase URL
   - `SUPABASE_ANON_KEY` — production anon key
   - `ADMIN_TOKEN` — strong random secret (`openssl rand -base64 32`)
@@ -34,7 +33,7 @@ Complete every section before opening the platform to real clients.
 - [ ] `OPS_TOKEN` is distinct from `ADMIN_TOKEN`
 - [ ] No secrets or tokens are committed to the repository
 - [ ] `.env.local` is in `.gitignore`
-- [ ] HTTPS enforced on all routes (Cloudflare handles this)
+- [ ] HTTPS enforced on all routes (Vercel handles this)
 - [ ] Middleware blocks unauthenticated access to `/admin/*` pages
 
 ---
@@ -107,7 +106,7 @@ Complete every section before opening the platform to real clients.
 
 ### Monitoring
 
-- [ ] Cloudflare Analytics enabled for traffic monitoring
+- [ ] Vercel Analytics enabled for traffic monitoring (optional)
 - [ ] Supabase dashboard accessible for database monitoring
 - [ ] Error logging reviewed (no PII in console output)
 - [ ] Audit trail tables (`audit_logs`, `ops_event_log`) being populated
