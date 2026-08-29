@@ -1,19 +1,10 @@
 /**
- * Cloudflare Workers agent tracing for our `@openai/agents` custom harness.
+ * Optional app-level tracing harness for `@openai/agents`.
  *
- * Cloudflare's Agents dashboard doesn't auto-instrument third-party SDKs like
- * `@openai/agents`, so each turn is wrapped manually in an `invoke_agent`
- * span with a nested `chat` span, per:
- * https://developers.cloudflare.com/agents/runtime/operations/observability/tracing/#custom-harnesses
- *
- * Metadata only (no message/tool payloads) — this app handles veteran/
- * business PII, so we don't record `gen_ai.input.messages` etc.
- *
- * No-ops outside the Cloudflare Workers runtime (e.g. `next build` or
- * `next dev` without `initOpenNextCloudflareForDev()` wired up), so this is
- * safe to call from any environment.
+ * This remains runtime-agnostic for Vercel/Node. If a runtime-specific tracer
+ * is registered on `globalThis.__HUTCHROK_TRACING__`, agent turns are wrapped
+ * with spans; otherwise this is a no-op.
  */
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 interface TraceableSpan {
   setAttribute(key: string, value: unknown): void;
@@ -23,13 +14,12 @@ interface Tracing {
   enterSpan<T>(name: string, callback: (span: TraceableSpan) => T | Promise<T>): Promise<T>;
 }
 
+interface GlobalTracingContext {
+  __HUTCHROK_TRACING__?: Tracing;
+}
+
 function getTracing(): Tracing | null {
-  try {
-    const ctx = getCloudflareContext().ctx as { tracing?: Tracing } | undefined;
-    return ctx?.tracing ?? null;
-  } catch {
-    return null;
-  }
+  return (globalThis as GlobalTracingContext).__HUTCHROK_TRACING__ ?? null;
 }
 
 export interface AgentIdentity {
@@ -54,7 +44,7 @@ function setIdentityAttributes(
 
 /**
  * Wraps one agent turn in an `invoke_agent` span containing a nested `chat`
- * span, matching the standard Cloudflare agent trace structure.
+ * span when tracing is available.
  */
 export async function traceAgentTurn<T>(
   identity: AgentIdentity,

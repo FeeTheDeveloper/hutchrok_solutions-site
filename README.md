@@ -1,6 +1,6 @@
 # Hutchrok Solutions Group — Veteran Business Formation Platform
 
-Full-stack veteran business formation platform with compliance-first intake, filing case management, authenticated client dashboard, and Microsoft 365 operational wiring. Built on Next.js 16, Supabase, and deployed on Cloudflare Workers. Clerk authentication is supported but fully optional — the app runs without Clerk keys via a graceful fallback.
+Full-stack veteran business formation platform with compliance-first intake, filing case management, authenticated client dashboard, and Microsoft 365 operational wiring. Built on Next.js 16, Supabase, and deployed on Vercel. Clerk authentication is supported but fully optional — the app runs without Clerk keys via a graceful fallback.
 
 ---
 
@@ -29,7 +29,7 @@ Full-stack veteran business formation platform with compliance-first intake, fil
 | Database | Supabase Postgres |
 | File Storage | Supabase Storage (private bucket + signed URLs) |
 | Validation | Zod (shared client/server schema) |
-| Deployment | Cloudflare Workers (via `@opennextjs/cloudflare`) |
+| Deployment | Vercel |
 
 ---
 
@@ -49,7 +49,7 @@ npm run dev
 
 ## Environment Variables
 
-Create a `.env.local` file in the project root (and set these as Cloudflare Worker variables/secrets for production — see [Build & Deploy](#build--deploy-cloudflare-workers)):
+Create a `.env.local` file in the project root (and set these as Vercel project environment variables for production — see [Build & Deploy](#build--deploy-vercel)):
 
 ```env
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
@@ -391,7 +391,7 @@ Three inbound API routes allow Power Automate (or any webhook caller) to push M3
 
 ### 1. Environment Variables
 
-Add these to `.env.local` (and to your Cloudflare Worker variables/secrets):
+Add these to `.env.local` (and to your Vercel project environment variables):
 
 ```env
 # Shared secret – Power Automate sends this in the X-Ops-Token header
@@ -522,29 +522,24 @@ The case detail page (`/admin/cases/[id]`) now displays:
 
 ---
 
-## Build & Deploy (Cloudflare Workers)
+## Build & Deploy (Vercel)
 
-The app deploys to Cloudflare Workers via the [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) adapter, which builds the Next.js output into a Worker (see `open-next.config.ts` and `wrangler.toml`).
+This app now deploys as a standard Next.js project on Vercel.
 
 ```bash
 # Local production build (verification only)
 npm run build
-
-# Build + run in the Workers runtime locally (wrangler dev)
-npm run preview
-
-# Build + deploy to Cloudflare
-npm run deploy
 ```
 
-Connect the repo in the Cloudflare dashboard (**Workers & Pages → Create → Connect to Git**) to get automatic builds/deploys on push to `main`, with preview deployments for other branches — set the **Build command** to `npm run deploy` (or `opennextjs-cloudflare build` if you want Workers Builds to handle the deploy step) and add the environment variables below under **Settings → Variables and Secrets**.
+Connect the repository in Vercel (**Add New... → Project → Import Git Repository**) and configure project settings:
 
-### Cloudflare Project Settings
+### Vercel Project Settings
 
-- **Build command:** `npx opennextjs-cloudflare build`
-- **Deploy command:** `npx wrangler deploy` (or `npm run deploy` to build + deploy in one step)
-- **Compatibility flags:** `nodejs_compat` (required — see `wrangler.toml`)
-- **Environment variables:** set the following as [Worker secrets/variables](https://developers.cloudflare.com/workers/configuration/secrets/) (`npx wrangler secret put <NAME>` for secrets, or via the dashboard):
+- **Framework preset:** `Next.js`
+- **Build command:** `npm run build` (or leave default)
+- **Install command:** `npm install` (or leave default)
+- **Output directory:** `.next` (default)
+- **Environment variables:** set these under **Project Settings → Environment Variables**:
 
 | Variable | Required | Notes |
 | --- | --- | --- |
@@ -565,7 +560,7 @@ Connect the repo in the Cloudflare dashboard (**Workers & Pages → Create → C
 > Stripe Price IDs live in `lib/stripe-price-catalog.ts`, not environment
 > variables — update that file to change a service's Price ID.
 
-API routes and the Clerk proxy/middleware run as a single Cloudflare Worker; static assets (including `public/filings/*.pdf`) are served from the Worker's `ASSETS` binding.
+API routes run on Vercel Functions, and static assets (including `public/filings/*.pdf`) are served directly from the Next.js app.
 
 ### Deploy without Clerk (minimum viable deploy)
 

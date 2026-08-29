@@ -38,7 +38,6 @@
   ],
   "exclude": [
     "node_modules",
-    "open-next.config.ts",
     "falling-sun-bf43"
   ]
 }

@@ -1120,7 +1120,10 @@ function CaseDetailContent() {
                         {doc.mime === "application/pdf" ? (
                           <FileText className="h-5 w-5 text-red-500 shrink-0" />
                         ) : (
-                          <Image className="h-5 w-5 text-blue-500 shrink-0" />
+                          <Image
+                            aria-label="Document file"
+                            className="h-5 w-5 text-blue-500 shrink-0"
+                          />
                         )}
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">
