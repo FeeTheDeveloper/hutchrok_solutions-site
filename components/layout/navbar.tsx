@@ -11,6 +11,7 @@ import { Menu, X } from "lucide-react";
 
 const navLinks = [
   { href: "/free-filing", label: "Free Filing" },
+  { href: "/government", label: "Government" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/launch-services", label: "Launch Services" },
   { href: "/track", label: "Track Filing" },
@@ -29,7 +30,6 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
 
   return (
     <header
@@ -119,7 +119,7 @@ export default function Navbar() {
 
       <div
         className={`lg:hidden overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${
-          mobileOpen ? "max-h-[28rem] opacity-100" : "max-h-0 opacity-0"
+          mobileOpen ? "max-h-[32rem] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <nav className="border-t border-border/40 bg-white px-4 py-3 space-y-0.5">
