@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { GuideLayout, GuideCTA } from "@/components/guide-layout";
 
@@ -177,6 +178,69 @@ export default function VeteranCertificationGuide() {
         <strong>SBA VetCert portal</strong> (replacing the old VA verification
         system).
       </p>
+
+      <div className="my-8 rounded-2xl border border-border/60 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-gold-dark">
+              SBA VetCert
+            </p>
+            <h3 className="mt-1 text-xl font-bold text-navy">
+              Official SBA certification badges
+            </h3>
+          </div>
+          <a
+            href="https://www.sba.gov/federal-contracting/contracting-assistance-for-veterans/vetcert"
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm font-semibold text-navy underline-offset-4 hover:underline"
+          >
+            SBA official portal
+          </a>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <a
+            href="https://www.sba.gov/federal-contracting/contracting-assistance-for-veterans/vetcert"
+            target="_blank"
+            rel="noreferrer"
+            className="group rounded-xl border border-border/60 bg-cream p-4 transition-colors hover:border-gold/40 hover:bg-white"
+          >
+            <div className="mb-3 flex justify-center rounded-lg bg-white p-3 shadow-sm">
+              <Image
+                src="/Veteran-Owned%20Certified.png"
+                alt="Official SBA Veteran-Owned Small Business certification badge"
+                width={240}
+                height={120}
+                className="h-auto max-h-28 w-auto object-contain"
+              />
+            </div>
+            <p className="text-center text-sm font-semibold text-navy">
+              Veteran-Owned Small Business (VOSB)
+            </p>
+          </a>
+
+          <a
+            href="https://www.sba.gov/federal-contracting/contracting-assistance-for-veterans/vetcert"
+            target="_blank"
+            rel="noreferrer"
+            className="group rounded-xl border border-border/60 bg-cream p-4 transition-colors hover:border-gold/40 hover:bg-white"
+          >
+            <div className="mb-3 flex justify-center rounded-lg bg-white p-3 shadow-sm">
+              <Image
+                src="/Service-Disabled%20Veteran-Owned-Certified.png"
+                alt="Official SBA Service-Disabled Veteran-Owned Small Business certification badge"
+                width={240}
+                height={120}
+                className="h-auto max-h-28 w-auto object-contain"
+              />
+            </div>
+            <p className="text-center text-sm font-semibold text-navy">
+              Service-Disabled Veteran-Owned Small Business (SDVOSB)
+            </p>
+          </a>
+        </div>
+      </div>
 
       <h2>Texas vs. Federal Certification: Which Do You Need?</h2>
       <p>
