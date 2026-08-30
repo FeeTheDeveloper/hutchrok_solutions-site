@@ -1,17 +1,14 @@
 /**
- * Launch Path offers — the revenue architecture of the homepage.
+ * Launch Path offers — membership-first revenue architecture.
  *
- * Three tiers:
- *  1. Free Filing        — $0 acquisition front door (loss leader)
- *  2. Launch Package     — bundled one-time launch offer (primary revenue)
- *  3. Registered Agent   — annual recurring service (LTV engine)
+ * Filings are a subscriber benefit. Government filing fees remain separate
+ * unless waived by an applicable government program.
  */
 
-export type LaunchOfferSlug = "free-filing" | "launch-package" | "registered-agent";
+export type LaunchOfferSlug = "membership" | "launch-package" | "registered-agent";
 
 export interface LaunchOffer {
   slug: LaunchOfferSlug;
-  /** Mono field-label shown above the card title, e.g. "$0 — THE FILING" */
   fieldLabel: string;
   title: string;
   price: string;
@@ -25,58 +22,58 @@ export interface LaunchOffer {
 
 export const LAUNCH_OFFERS: LaunchOffer[] = [
   {
-    slug: "free-filing",
-    fieldLabel: "THE FILING",
-    title: "Free Texas LLC Filing",
-    price: "$0",
-    priceNote: "for qualified veterans",
+    slug: "membership",
+    fieldLabel: "THE ACCESS",
+    title: "Hutchrok Membership",
+    price: "$59+",
+    priceNote: "per month",
     description:
-      "Your Certificate of Formation, prepared and filed with the Texas SOS. TVC verification guidance included. No filing fees, no service fees, no obligations.",
+      "Membership unlocks Hutchrok filing services, member tracking, compliance support, veteran intelligence, and subscriber pricing. Filing limits and internal preparation priority scale with your tier.",
     features: [
-      "Eligibility check and TVC verification guidance",
-      "Certificate of Formation (Form 205) prepared for you",
-      "Human review on every filing — never auto-submitted",
-      "Filed with the Texas Secretary of State",
-      "$300 SOS fee waived through the veteran program",
+      "Active subscription required for Hutchrok filing services",
+      "Included filing preparation/submission benefits by tier",
+      "Tier-based internal preparation priority",
+      "Veteran business, benefits, funding and opportunity updates",
+      "Compliance reminders and member dashboard access",
     ],
-    ctaLabel: "Start My Free Filing",
-    ctaHref: "/free-filing",
+    ctaLabel: "Compare Memberships",
+    ctaHref: "/membership",
+    featured: true,
   },
   {
     slug: "launch-package",
     fieldLabel: "THE LAUNCH",
-    title: "Veteran Launch Package",
-    price: "$450",
-    priceNote: "one-time · $525 value",
+    title: "Business Launch Services",
+    price: "Member Pricing",
+    priceNote: "subscriber discounts apply",
     description:
-      "Everything your new LLC needs to look open for business on day one — bundled, built by the same team that filed your formation.",
+      "Move beyond formation with the infrastructure required to look, operate and sell like a real company — digital presence, business systems, branding, credit readiness and compliance support.",
     features: [
-      "Professional logo set (web, social, print)",
-      "One-page business website, mobile-first and SEO-ready",
-      "Business email with proper security records",
-      "Domain and hosting, set up clean",
-      "Launch-day checklist reviewed with you 1-on-1",
+      "Websites, domains and business email infrastructure",
+      "Brand identity, logos and launch assets",
+      "Business-credit readiness and vendor-stack guidance",
+      "Federal contracting and certification preparation",
+      "Automation, workflow and operational consulting",
     ],
-    ctaLabel: "Reserve My Launch Package",
-    ctaHref: "/service-request?service=launch-package",
-    featured: true,
+    ctaLabel: "Explore Services",
+    ctaHref: "/services",
   },
   {
     slug: "registered-agent",
     fieldLabel: "THE GUARD",
-    title: "Registered Agent Service",
-    price: "$71.40/yr",
-    priceNote: "cancel anytime",
+    title: "Registered Agent & Compliance",
+    price: "Available",
+    priceNote: "subject to service availability",
     description:
-      "Every Texas LLC is required to maintain a registered agent. Let Hutchrok stand post — we receive your legal and state mail and alert you same-day.",
+      "Registered-agent and compliance support fit inside the broader member operating system. Availability, eligibility and pricing are confirmed before activation.",
     features: [
-      "Texas street address for your LLC's registered office",
-      "Same-day scan and alert on legal documents",
-      "Annual franchise tax and report reminders",
-      "Keeps your home address off public record",
-      "Compliance calendar for your first year",
+      "Registered-agent service where operationally available",
+      "Legal/state mail routing and alerts",
+      "Compliance calendars and recurring reminders",
+      "Entity maintenance support",
+      "Member service discounts by tier",
     ],
-    ctaLabel: "Join the Waitlist",
-    ctaHref: "/service-request?service=registered-agent&waitlist=1",
+    ctaLabel: "Request Service",
+    ctaHref: "/service-request?service=registered-agent",
   },
 ];
