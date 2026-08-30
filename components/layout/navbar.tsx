@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
-  { href: "/free-filing", label: "Free Filing" },
+  { href: "/membership", label: "Membership" },
+  { href: "/free-filing", label: "Filing Benefit" },
   { href: "/government", label: "Government" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/launch-services", label: "Launch Services" },
@@ -101,9 +102,9 @@ export default function Navbar() {
             </>
           )}
 
-          <Link href="/free-filing" className="hidden sm:block">
+          <Link href="/membership" className="hidden sm:block">
             <Button className="bg-gold hover:bg-gold-dark text-navy font-semibold shadow-sm hover:shadow-md transition-shadow">
-              Start My Free Filing
+              Join & Start Filing
             </Button>
           </Link>
           <button
@@ -119,7 +120,7 @@ export default function Navbar() {
 
       <div
         className={`lg:hidden overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${
-          mobileOpen ? "max-h-[32rem] opacity-100" : "max-h-0 opacity-0"
+          mobileOpen ? "max-h-[36rem] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <nav className="border-t border-border/40 bg-white px-4 py-3 space-y-0.5">
@@ -163,9 +164,9 @@ export default function Navbar() {
             </div>
           )}
           <div className="pt-2 pb-1">
-            <Link href="/free-filing" onClick={() => setMobileOpen(false)}>
+            <Link href="/membership" onClick={() => setMobileOpen(false)}>
               <Button className="w-full bg-gold hover:bg-gold-dark text-navy font-semibold h-12 text-[15px]">
-                Start My Free Filing
+                Join & Start Filing
               </Button>
             </Link>
           </div>
