@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SignUp } from "@clerk/nextjs";
 
 export const dynamic = "force-dynamic";
@@ -43,9 +44,32 @@ export default function SignUpPage() {
           {CLERK_READY ? (
             <SignUp forceRedirectUrl="/dashboard" signInUrl="/login" />
           ) : (
-            <div className="w-full max-w-md rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-              Sign up is currently unavailable because authentication is not configured.
-              Add <code className="font-mono">NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> to your environment settings and restart/redeploy.
+            <div className="w-full max-w-md rounded-xl border border-border bg-cream p-6 text-center">
+              <p className="text-sm font-semibold uppercase tracking-wide text-gold">
+                Account Access
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-navy">
+                Let&apos;s get your business started
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                New online account registration is temporarily being upgraded.
+                Complete the secure Hutchrok intake and our team will set up your
+                account access.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <Link
+                  href="/get-started"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-navy px-5 py-3 text-sm font-semibold text-white transition hover:bg-navy/90"
+                >
+                  Start Your Intake
+                </Link>
+                <Link
+                  href="/contact"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-navy px-5 py-3 text-sm font-semibold text-navy transition hover:bg-white"
+                >
+                  Contact Support
+                </Link>
+              </div>
             </div>
           )}
         </section>
