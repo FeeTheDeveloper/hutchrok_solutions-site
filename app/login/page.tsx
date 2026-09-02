@@ -37,9 +37,32 @@ export default function LoginPage() {
           {CLERK_READY ? (
             <SignIn forceRedirectUrl="/dashboard" signUpUrl="/sign-up" />
           ) : (
-            <div className="w-full max-w-md rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-              Login is currently unavailable because authentication is not configured.
-              Add <code className="font-mono">NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> to your environment settings and restart/redeploy.
+            <div className="w-full max-w-md rounded-xl border border-border bg-cream p-6 text-center">
+              <p className="text-sm font-semibold uppercase tracking-wide text-gold">
+                Account Access
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-navy">
+                Portal maintenance in progress
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                Online account access is temporarily unavailable while we
+                complete a secure upgrade. Your case and documents remain
+                protected. Contact Hutchrok if you need immediate assistance.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <Link
+                  href="/contact"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg bg-navy px-5 py-3 text-sm font-semibold text-white transition hover:bg-navy/90"
+                >
+                  Contact Support
+                </Link>
+                <Link
+                  href="/"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-navy px-5 py-3 text-sm font-semibold text-navy transition hover:bg-white"
+                >
+                  Return Home
+                </Link>
+              </div>
             </div>
           )}
         </section>
