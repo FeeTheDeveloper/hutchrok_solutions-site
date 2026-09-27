@@ -5,6 +5,7 @@ import { ALLOWED_UPLOAD_TYPES, MAX_UPLOAD_SIZE } from "@/lib/types";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { rateLimit } from "@/lib/rate-limit";
 import { validateFileContent, sanitizeFilename } from "@/lib/upload-safety";
+import { emitSiteSignal } from "@/lib/os/bridge";
 
 /** Case statuses that still accept client document uploads. */
 const UPLOADABLE_STATUSES = new Set([
@@ -151,6 +152,12 @@ export async function POST(
   if (docError) {
     console.error("[api/client/upload] Doc record error:", docError.message);
   }
+
+  await emitSiteSignal({
+    type: "document.uploaded",
+    entity: { type: "filing_case", id: filing.id, ref: filing.case_number },
+    data: { uploaded_by: "client", mime: file.type },
+  });
 
   return apiSuccess({ uploaded: true, filename: finalName }, 201);
 }

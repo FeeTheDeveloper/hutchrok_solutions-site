@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import Stripe from "stripe";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { emitSiteSignal } from "@/lib/os/bridge";
 
 export async function POST(request: NextRequest) {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -61,6 +62,27 @@ export async function POST(request: NextRequest) {
         console.error("[api/stripe/webhook] Profile sync failed:", error.message);
       }
     }
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    await emitSiteSignal({
+      type: session.mode === "subscription" ? "membership.activated" : "payment.completed",
+      signalId: `stripe:${event.id}`,
+      contact: {
+        ...(session.customer_details?.email ? { email: session.customer_details.email } : {}),
+        ...(session.customer_details?.name ? { name: session.customer_details.name } : {}),
+      },
+      entity: { type: "stripe_checkout_session", id: session.id },
+      data: { mode: session.mode, service: session.metadata?.service_slug ?? null },
+    });
+  } else if (event.type === "invoice.payment_failed" || event.type === "checkout.session.async_payment_failed") {
+    await emitSiteSignal({
+      type: "payment.failed",
+      signalId: `stripe:${event.id}`,
+      entity: { type: "stripe_event", id: event.id },
+      data: { stripe_event_type: event.type },
+    });
   }
 
   return apiSuccess({ received: true }, 200);

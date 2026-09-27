@@ -19,6 +19,30 @@ Full-stack veteran business formation platform with compliance-first intake, fil
 
 ---
 
+## Hutchrok OS Integration
+
+hutchrok.com is operated by **Hutchrok OS** ([`FeeTheDeveloper/hutchrok_os`](https://github.com/FeeTheDeveloper/hutchrok_os), `packages/autopilot`).
+`lib/os/bridge.ts` sends a signed signal to the OS for every business action:
+
+| Site action | Signal |
+|---|---|
+| `/api/contact` (new "Send us a message" form on `/contact`) | `contact.submitted` |
+| `/api/lead` | `lead.created` |
+| `/api/intake` (via the notification dispatcher) | `intake.submitted`, `case.status_changed`, `case.event` |
+| `/api/service-request` | `service_request.submitted` |
+| `/api/federal-intake` | `federal_intake.submitted` |
+| Client + VVL uploads | `document.uploaded` |
+| Stripe webhook | `payment.completed`, `membership.activated`, `payment.failed` |
+
+The OS acknowledges customers from **repo_addy@hutchrok.com**, routes work to the right desk, drafts
+replies for operator approval, and follows up on a recurring beat. With `HUTCHROK_OS_MAILBOX` set,
+client status emails use the OS mailbox as Reply-To so customer replies thread into the OS.
+
+Env: `HUTCHROK_OS_API_URL`, `HUTCHROK_OS_SIGNING_SECRET` (= OS `WEBSITE_INGESTION_SECRET`),
+`HUTCHROK_OS_MAILBOX`. The bridge is a no-op when unset and never blocks a request (3 s timeout).
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |

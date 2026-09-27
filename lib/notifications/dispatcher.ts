@@ -6,6 +6,7 @@
  */
 
 import { emitOpsEvent } from "@/lib/services/ops-webhook";
+import { emitSiteSignal, isOsBridgeEnabled, type SiteSignalInput } from "@/lib/os/bridge";
 import {
   CASE_EVENTS,
   STATUS_EVENT_MAP,
@@ -52,9 +53,51 @@ const opsWebhookChannel: NotificationChannel = {
   },
 };
 
+/** Case lifecycle → Hutchrok OS site signal. Only the case-created signal carries contact details. */
+function toSiteSignal(event: CaseEvent): SiteSignalInput {
+  const entity = { type: "filing_case", id: event.caseId, ref: event.caseNumber };
+  const signalId = `${event.event}:${event.caseId}:${event.timestamp}`;
+
+  if (event.event === CASE_EVENTS.CASE_CREATED) {
+    const contact = (event.data.contact ?? {}) as NotifyContact;
+    return {
+      type: "intake.submitted",
+      signalId,
+      entity,
+      contact: {
+        ...(contact.clientName ? { name: contact.clientName } : {}),
+        ...(contact.email ? { email: contact.email } : {}),
+        ...(contact.phone ? { phone: contact.phone } : {}),
+        ...(contact.businessName ? { businessName: contact.businessName } : {}),
+      },
+    };
+  }
+  if (event.event === CASE_EVENTS.STATUS_CHANGED) {
+    return {
+      type: "case.status_changed",
+      signalId,
+      entity,
+      data: { old_status: event.data.old_status, new_status: event.data.new_status },
+    };
+  }
+  if (event.event === CASE_EVENTS.DOCUMENT_UPLOADED) {
+    return { type: "document.uploaded", signalId, entity, data: { document_type: event.data.document_type } };
+  }
+  return { type: "case.event", signalId, entity, data: { event: event.event } };
+}
+
+const hutchrokOsChannel: NotificationChannel = {
+  name: "hutchrok-os",
+  enabled: isOsBridgeEnabled(),
+  async send(event) {
+    await emitSiteSignal(toSiteSignal(event));
+  },
+};
+
 const channels: NotificationChannel[] = [
   logChannel,
   opsWebhookChannel,
+  hutchrokOsChannel,
   clientEmailChannel,
   clientSmsChannel,
 ];

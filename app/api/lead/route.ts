@@ -5,6 +5,7 @@ import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { validateLeadSignup } from "@/lib/validation";
 import { SIGNUP_DISCOUNT_CODE, SIGNUP_DISCOUNT_LABEL } from "@/lib/promotions";
 import { emailFrom, TEAM_INBOX } from "@/lib/email/config";
+import { emitSiteSignal } from "@/lib/os/bridge";
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -120,15 +121,27 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Fire-and-forget; do not block or fail the request on email errors.
-  await notifyTeam({
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    businessName: data.businessName,
-    interests: data.interests,
-    marketingOptIn: data.marketingOptIn,
-  });
+  // Best-effort; do not block or fail the request on email/OS errors.
+  await Promise.allSettled([
+    notifyTeam({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      businessName: data.businessName,
+      interests: data.interests,
+      marketingOptIn: data.marketingOptIn,
+    }),
+    emitSiteSignal({
+      type: "lead.created",
+      contact: {
+        name: data.name,
+        email: data.email,
+        ...(data.phone ? { phone: data.phone } : {}),
+        ...(data.businessName ? { businessName: data.businessName } : {}),
+      },
+      data: { interests: data.interests, marketingOptIn: data.marketingOptIn },
+    }),
+  ]);
 
   return apiSuccess(
     {

@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { sendPaidServiceRequestEmail } from "@/lib/email/send-paid-service-request";
 import { validatePaidServiceRequest } from "@/lib/validation";
+import { emitSiteSignal } from "@/lib/os/bridge";
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -71,6 +72,14 @@ export async function POST(request: NextRequest) {
       500
     );
   }
+
+  await emitSiteSignal({
+    type: "service_request.submitted",
+    contact: { name: data.name, email: data.email, phone: data.phone, businessName: data.businessName },
+    subject: `Service request: ${data.selectedService}`,
+    message: data.projectDetails,
+    data: { selectedService: data.selectedService },
+  });
 
   try {
     await sendPaidServiceRequestEmail({

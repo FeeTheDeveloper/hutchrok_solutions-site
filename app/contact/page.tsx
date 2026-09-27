@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mail, MapPin, Phone, Calendar, Shield, CheckCircle } from "lucide-react";
 import VeteranIntakeForm from "@/components/veteran-intake-form";
+import ContactMessageForm from "@/components/contact-message-form";
 
 export const metadata: Metadata = {
   title: "Start Your Free Filing — Veteran LLC Intake",
@@ -76,6 +77,18 @@ export default function ContactPage() {
                 >
                   <a href="/eligibility">Check Eligibility</a>
                 </Button>
+              </div>
+
+              {/* General message → Hutchrok OS mailbox */}
+              <div className="bg-white rounded-xl border border-border/40 p-6">
+                <h3 className="font-semibold text-navy mb-1">
+                  Have a Question Instead?
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Not ready for intake? Send us a message and our operations
+                  desk will reply by email.
+                </p>
+                <ContactMessageForm />
               </div>
 
               {/* Contact Info */}
