@@ -502,3 +502,43 @@ export function validateVeteranIntakeStep(
   }
   return { success: false, fieldErrors };
 }
+
+/**
+ * General contact message ("Send us a message"). Routed to Hutchrok OS, which
+ * acknowledges the sender from the OS mailbox and queues a reply for review.
+ */
+export const contactMessageSchema = z.object({
+  name: z.string().trim().min(1, "Name is required.").max(200),
+  email: z.string().trim().min(1, "Email is required.").email("Enter a valid email."),
+  phone: z.string().trim().max(30).optional().default(""),
+  subject: z.string().trim().min(1, "Subject is required.").max(200),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Please include a few more details.")
+    .max(5000, "Please keep your message under 5,000 characters."),
+  // Honeypot — real users never fill this in.
+  website: z.string().max(0).optional().default(""),
+});
+
+export type ContactMessageInput = z.infer<typeof contactMessageSchema>;
+
+export function validateContactMessage(data: unknown): {
+  success: boolean;
+  data?: ContactMessageInput;
+  fieldErrors?: Record<string, string>;
+} {
+  const result = contactMessageSchema.safeParse(data);
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (key && !fieldErrors[String(key)]) {
+      fieldErrors[String(key)] = issue.message;
+    }
+  }
+  return { success: false, fieldErrors };
+}

@@ -8,7 +8,7 @@
  */
 
 import { CASE_STATUS_META, getCaseStatusMeta, shouldNotifyClient } from "@/lib/case-status";
-import { emailFrom, TEAM_INBOX } from "@/lib/email/config";
+import { clientReplyTo, emailFrom } from "@/lib/email/config";
 import { CASE_EVENTS, type CaseEvent } from "./events";
 import type { NotificationChannel } from "./dispatcher";
 
@@ -72,7 +72,7 @@ async function sendClientEmail(
       body: JSON.stringify({
         from: emailFrom(),
         to: [to],
-        reply_to: TEAM_INBOX,
+        reply_to: clientReplyTo(),
         subject,
         text,
       }),

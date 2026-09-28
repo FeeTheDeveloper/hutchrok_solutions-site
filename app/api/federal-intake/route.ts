@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { validateFederalIntake, scoreFederalReadiness } from "@/lib/federal-intake";
 import { rateLimit } from "@/lib/rate-limit";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
+import { emitSiteSignal } from "@/lib/os/bridge";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -101,6 +102,20 @@ export async function POST(request: NextRequest) {
         readinessScore,
       );
     }
+
+    // Hutchrok OS acknowledges the applicant and queues a govcon review.
+    // The readiness score is internal routing data — it never reaches the client.
+    await emitSiteSignal({
+      type: "federal_intake.submitted",
+      contact: { name: data.name, email: data.email, phone: data.phone, businessName: data.legalEntityName },
+      subject: `Federal contract prep intake: ${data.legalEntityName}`,
+      data: {
+        readinessScore,
+        entityType: data.entityType,
+        stateOfFormation: data.stateOfFormation,
+        samAttemptStatus: data.samAttemptStatus,
+      },
+    });
 
     // No score, no internals — just an acknowledgement.
     return apiSuccess({ received: true }, 201);

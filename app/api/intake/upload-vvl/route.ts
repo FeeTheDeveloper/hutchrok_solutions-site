@@ -4,6 +4,7 @@ import { ALLOWED_UPLOAD_TYPES, MAX_UPLOAD_SIZE } from "@/lib/types";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { rateLimit } from "@/lib/rate-limit";
 import { validateFileContent, sanitizeFilename } from "@/lib/upload-safety";
+import { emitSiteSignal } from "@/lib/os/bridge";
 
 /** Max time after case creation during which public VVL upload is allowed */
 const UPLOAD_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
@@ -178,6 +179,12 @@ export async function POST(request: NextRequest) {
     );
     // File was uploaded but record failed — still partial success
   }
+
+  await emitSiteSignal({
+    type: "document.uploaded",
+    entity: { type: "filing_case", id: filing.id, ref: filing.case_number },
+    data: { document_type: "vvl", uploaded_by: "client", mime: file.type },
+  });
 
   return apiSuccess({ uploaded: true, filename: safeFilename }, 201);
 }
