@@ -1,6 +1,8 @@
-# Hutchrok Solutions Group — Veteran Business Formation Platform
+# Hutchrok Solutions Group — Business Formation Platform
 
-Full-stack veteran business formation platform with compliance-first intake, filing case management, authenticated client dashboard, and Microsoft 365 operational wiring. Built on Next.js 16, Supabase, and deployed on Vercel. Clerk authentication is supported but fully optional — the app runs without Clerk keys via a graceful fallback.
+Full-stack business formation platform with intake, filing case-management, authenticated-client, and Microsoft 365 integration foundations. Built on Next.js 16 and Supabase. Current company, certification, provider, and deployment facts require authoritative verification.
+
+[Portfolio evidence and truth boundary](docs/PORTFOLIO_CASE_STUDY.md)
 
 ---
 
