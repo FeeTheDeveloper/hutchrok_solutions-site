@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { IllustratedHero } from "@/components/hero-illustration";
 import {
   FileText,
   Shield,
@@ -158,17 +159,19 @@ export default function ServicesPage() {
     <>
       {/* Page Header */}
       <section className="bg-gradient-navy py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <Badge variant="secondary" className="mb-3 text-gold bg-gold/10">
-            Our Services
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Comprehensive Business Enablement
-          </h1>
-          <p className="text-base sm:text-lg text-white/70 max-w-2xl mx-auto">
-            From formation through long-term operations, we deliver the systems,
-            structure, and support your business needs to thrive.
-          </p>
+        <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
+          <IllustratedHero name="registeredAgentCompliance" priority>
+            <Badge variant="secondary" className="mb-3 text-gold bg-gold/10">
+              Our Services
+            </Badge>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+              Comprehensive Business Enablement
+            </h1>
+            <p className="text-base sm:text-lg text-white/70 max-w-2xl mx-auto lg:mx-0">
+              From formation through long-term operations, we deliver the systems,
+              structure, and support your business needs to thrive.
+            </p>
+          </IllustratedHero>
         </div>
       </section>
 

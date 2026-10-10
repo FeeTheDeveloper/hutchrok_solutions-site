@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { IllustratedHero } from "@/components/hero-illustration";
 import {
   Globe,
   Palette,
@@ -36,21 +37,23 @@ export default function LaunchServicesPage() {
     <>
       {/* Header */}
       <section className="bg-gradient-navy py-16 sm:py-20">
-        <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10 text-center">
-          <Badge
-            variant="secondary"
-            className="mb-3 text-gold bg-gold/10 text-xs tracking-wider uppercase"
-          >
-            After Your Filing
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
-            Optional Paid Services After Your LLC
-          </h1>
-          <p className="text-white/60 max-w-2xl mx-auto text-sm sm:text-base lg:text-lg leading-relaxed">
-            Your free LLC filing is just the beginning. Build a professional
-            presence with services designed specifically for new veteran-owned
-            businesses.
-          </p>
+        <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
+          <IllustratedHero name="launchServices" priority>
+            <Badge
+              variant="secondary"
+              className="mb-3 text-gold bg-gold/10 text-xs tracking-wider uppercase"
+            >
+              After Your Filing
+            </Badge>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+              Optional Paid Services After Your LLC
+            </h1>
+            <p className="text-white/60 max-w-2xl mx-auto lg:mx-0 text-sm sm:text-base lg:text-lg leading-relaxed">
+              Your free LLC filing is just the beginning. Build a professional
+              presence with services designed specifically for new veteran-owned
+              businesses.
+            </p>
+          </IllustratedHero>
         </div>
       </section>
 

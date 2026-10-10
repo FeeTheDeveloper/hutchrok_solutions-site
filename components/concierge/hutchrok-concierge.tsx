@@ -233,8 +233,14 @@ export function HutchrokConcierge({
     };
   }, [nodeId, displayShowLeadCapture, leadCaptured]);
 
-  // Scroll into view on node change (on mobile especially)
+  // Scroll into view on node change (on mobile especially).
+  // Skip the initial mount so landing on a page doesn't jump past the hero.
+  const hasMounted = useRef(false);
   useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
     panelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [nodeId]);
 
