@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { HutchrokConcierge } from "@/components/concierge/hutchrok-concierge";
+import { IllustratedHero } from "@/components/hero-illustration";
 import {
   SocialProofStrip,
   ProcessTransparencyBanner,
@@ -30,43 +31,45 @@ export default function FreeFilingPage() {
     <>
       {/* Header */}
       <section className="bg-gradient-navy py-16 sm:py-20">
-        <div className="mx-auto max-w-4xl px-6 sm:px-8 lg:px-10 text-center">
-          <Badge
-            variant="secondary"
-            className="mb-4 text-gold bg-gold/10 text-xs tracking-wider uppercase"
-          >
-            $0 Filing for Veterans
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
-            Start Your Texas LLC — Free
-          </h1>
-          <p className="text-white/65 max-w-2xl mx-auto text-sm sm:text-base lg:text-lg leading-relaxed mb-4">
-            If you&apos;re a U.S. military veteran with a Texas Veterans Commission
-            Verification Letter, Hutchrok will file your LLC at no cost.
-          </p>
-          <p className="text-xs sm:text-sm text-gold/70 mb-8 font-medium tracking-wide">
-            No SOS account needed · Operator-reviewed filings · No hidden fees
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/contact">
-              <Button
-                size="lg"
-                className="bg-gold hover:bg-gold-dark text-navy font-bold text-base px-10 h-12 shadow-lg shadow-gold/10"
-              >
-                Start My Filing
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/eligibility">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/30 text-white hover:bg-white/10 font-medium text-base px-8 h-12"
-              >
-                Check My Eligibility
-              </Button>
-            </Link>
-          </div>
+        <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
+          <IllustratedHero name="freeFilingFormation" priority>
+            <Badge
+              variant="secondary"
+              className="mb-4 text-gold bg-gold/10 text-xs tracking-wider uppercase"
+            >
+              $0 Filing for Veterans
+            </Badge>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+              Start Your Texas LLC — Free
+            </h1>
+            <p className="text-white/65 max-w-2xl mx-auto lg:mx-0 text-sm sm:text-base lg:text-lg leading-relaxed mb-4">
+              If you&apos;re a U.S. military veteran with a Texas Veterans Commission
+              Verification Letter, Hutchrok will file your LLC at no cost.
+            </p>
+            <p className="text-xs sm:text-sm text-gold/70 mb-8 font-medium tracking-wide">
+              No SOS account needed · Operator-reviewed filings · No hidden fees
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
+              <Link href="/contact">
+                <Button
+                  size="lg"
+                  className="bg-gold hover:bg-gold-dark text-navy font-bold text-base px-10 h-12 shadow-lg shadow-gold/10"
+                >
+                  Start My Filing
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/eligibility">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white font-medium text-base px-8 h-12"
+                >
+                  Check My Eligibility
+                </Button>
+              </Link>
+            </div>
+          </IllustratedHero>
         </div>
       </section>
 
@@ -286,7 +289,7 @@ export default function FreeFilingPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white/30 text-white hover:bg-white/10 font-medium text-base px-8 h-12"
+                className="bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white font-medium text-base px-8 h-12"
               >
                 I Need Verification Help
               </Button>

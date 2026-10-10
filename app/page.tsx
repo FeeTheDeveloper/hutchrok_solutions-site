@@ -21,6 +21,7 @@ import {
   TrustBadgeStrip,
 } from "@/components/authority-signals";
 import { VeteranOwnedBadge } from "@/components/VeteranOwnedBadge";
+import { IllustratedHero } from "@/components/hero-illustration";
 
 /** Mono field-label — the site's signature device, styled like a form annotation. */
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -40,58 +41,60 @@ export default function HomePage() {
       <section className="relative bg-hero-premium overflow-hidden">
         <div className="bg-grid-pattern absolute inset-0 pointer-events-none" />
 
-        <div className="relative mx-auto max-w-4xl px-6 sm:px-8 lg:px-10 py-24 sm:py-32 lg:py-40 flex flex-col items-center text-center">
-          <p className="font-mono text-[11px] sm:text-xs tracking-[0.28em] uppercase text-gold/80 mb-6">
-            Veteran Business Launch Platform · Texas
-          </p>
+        <div className="relative mx-auto max-w-6xl px-6 sm:px-8 lg:px-10 py-20 sm:py-28 lg:py-32">
+          <IllustratedHero name="heroTexasLaunch" priority>
+            <p className="font-mono text-[11px] sm:text-xs tracking-[0.28em] uppercase text-gold/80 mb-6">
+              Veteran Business Launch Platform · Texas
+            </p>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6 leading-[1.08] max-w-3xl">
-            From DD-214 to{" "}
-            <span className="text-gold">open for business.</span>
-          </h1>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6 leading-[1.08] max-w-3xl mx-auto lg:mx-0">
+              From DD-214 to{" "}
+              <span className="text-gold">open for business.</span>
+            </h1>
 
-          <p className="text-base sm:text-lg text-white/70 mb-10 max-w-2xl leading-relaxed">
-            Hutchrok files your Texas LLC for free — then equips it to earn.
-            TVC verification, Certificate of Formation, SOS filing, and every
-            launch asset your new company needs, handled by veterans who have
-            done it themselves.
-          </p>
+            <p className="text-base sm:text-lg text-white/70 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              Hutchrok files your Texas LLC for free — then equips it to earn.
+              TVC verification, Certificate of Formation, SOS filing, and every
+              launch asset your new company needs, handled by veterans who have
+              done it themselves.
+            </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md sm:max-w-none mb-12">
-            <Link href="/free-filing" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto bg-gold hover:bg-gold-dark text-navy font-bold text-base px-10 h-12 shadow-lg shadow-gold/10 hover:shadow-gold/20 transition-shadow"
-              >
-                Start My Free Filing
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="#launch-path" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full sm:w-auto border-gold/40 text-gold hover:bg-gold/10 font-semibold text-base px-10 h-12"
-              >
-                See the Launch Package
-              </Button>
-            </Link>
-          </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 mb-12">
+              <Link href="/free-filing" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto bg-gold hover:bg-gold-dark text-navy font-bold text-base px-10 h-12 shadow-lg shadow-gold/10 hover:shadow-gold/20 transition-shadow"
+                >
+                  Start My Free Filing
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="#launch-path" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto border-gold/40 text-gold hover:bg-gold/10 font-semibold text-base px-10 h-12"
+                >
+                  See the Launch Package
+                </Button>
+              </Link>
+            </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-mono text-[11px] tracking-[0.16em] uppercase text-white/50">
-            <span className="flex items-center gap-1.5">
-              <BadgeCheck className="h-3.5 w-3.5 text-gold/70" />
-              TVC-Verified Veteran-Owned
-            </span>
-            <span className="flex items-center gap-1.5">
-              <FileText className="h-3.5 w-3.5 text-gold/70" />
-              Human-Reviewed Filings
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5 text-gold/70" />
-              Texas-Only Expertise
-            </span>
-          </div>
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 font-mono text-[11px] tracking-[0.16em] uppercase text-white/50">
+              <span className="flex items-center gap-1.5">
+                <BadgeCheck className="h-3.5 w-3.5 text-gold/70" />
+                TVC-Verified Veteran-Owned
+              </span>
+              <span className="flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-gold/70" />
+                Human-Reviewed Filings
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 text-gold/70" />
+                Texas-Only Expertise
+              </span>
+            </div>
+          </IllustratedHero>
         </div>
       </section>
 

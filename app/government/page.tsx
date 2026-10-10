@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Building2, FileText, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { IllustratedHero } from "@/components/hero-illustration";
 
 const naics = [
   ["541611", "Administrative Management & General Management Consulting"],
@@ -16,8 +17,8 @@ export default function GovernmentPage() {
       <section className="relative overflow-hidden bg-navy py-24 sm:py-32">
         <div className="absolute inset-0 bg-grid-pattern opacity-20" />
         <div className="relative mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
-          <div className="max-w-4xl">
-            <div className="mb-6 flex flex-wrap gap-3">
+          <IllustratedHero name="governmentContracting" priority>
+            <div className="mb-6 flex flex-wrap justify-center gap-3 lg:justify-start">
               <span className="rounded-full border border-gold/50 bg-gold/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-gold">
                 SBA Certified SDVOSB
               </span>
@@ -28,22 +29,22 @@ export default function GovernmentPage() {
             <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
               Veteran-owned execution for government and commercial missions.
             </h1>
-            <p className="mt-6 max-w-3xl text-base leading-8 text-white/70 sm:text-lg">
+            <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-white/70 sm:text-lg lg:mx-0">
               Hutchrok Solutions Group LLC is an SBA-certified Service-Disabled Veteran-Owned Small Business and Veteran-Owned Small Business delivering management consulting, program support, custom software, marketing, and design services.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <Link href="/contact">
                 <Button className="h-12 bg-gold px-7 font-bold text-navy hover:bg-gold-dark">
                   Partner With Hutchrok <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
               <Link href="/services">
-                <Button variant="outline" className="h-12 border-white/30 px-7 text-white hover:bg-white/10">
+                <Button variant="outline" className="h-12 bg-transparent border-white/30 px-7 text-white hover:bg-white/10 hover:text-white">
                   View Capabilities
                 </Button>
               </Link>
             </div>
-          </div>
+          </IllustratedHero>
         </div>
       </section>
 
