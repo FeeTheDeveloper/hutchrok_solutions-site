@@ -71,6 +71,7 @@ export type ClientProfileInput = z.infer<typeof clientProfileSchema>;
 
 export const checkoutCreateSchema = z.object({
   serviceSlug: z.string().trim().min(1, "Service is required.").max(100),
+  requestId: z.uuid("A checkout attempt ID is required."),
 });
 
 export type CheckoutCreateInput = z.infer<typeof checkoutCreateSchema>;

@@ -6,11 +6,18 @@ import { validateCheckoutCreate } from "@/lib/validation";
 import { SERVICE_REQUEST_BY_SLUG } from "@/lib/paid-services";
 import { getStripePriceCatalogEntry } from "@/lib/stripe-price-catalog";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { createHash } from "node:crypto";
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) {
     return apiError(ErrorCode.UNAUTHORIZED, "Sign in to start checkout.", 401);
+  }
+
+  const siteOrigin = new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.hutchrok.com").origin;
+  const origin = request.headers.get("origin");
+  if (origin && origin !== siteOrigin) {
+    return apiError(ErrorCode.UNAUTHORIZED, "Checkout must start from this website.", 403);
   }
 
   const stripeSecret = process.env.STRIPE_SECRET_KEY;
@@ -55,8 +62,8 @@ export async function POST(request: NextRequest) {
   const user = await currentUser();
   const email =
     user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || null;
-  if (!email) {
-    return apiError(ErrorCode.BAD_REQUEST, "Your account is missing an email address.", 400);
+  if (!email || user?.primaryEmailAddress?.verification?.status !== "verified") {
+    return apiError(ErrorCode.BAD_REQUEST, "Verify your primary email before checkout.", 400);
   }
 
   const stripe = new Stripe(stripeSecret);
@@ -70,15 +77,11 @@ export async function POST(request: NextRequest) {
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: priceEntry.mode,
     line_items: [{ price: priceEntry.priceId, quantity: 1 }],
-    // Restrict Checkout to card rails. Eligible wallets such as Apple Pay and
-    // Google Pay remain available through Stripe-hosted card Checkout, while
-    // other dynamic payment methods are not introduced automatically.
-    payment_method_types: ["card"],
     allow_promotion_codes: true,
     client_reference_id: userId,
     customer_email: email || undefined,
-    success_url: `${request.nextUrl.origin}/dashboard?checkout=success`,
-    cancel_url: `${request.nextUrl.origin}/dashboard?checkout=cancel`,
+    success_url: `${siteOrigin}/dashboard?checkout=success`,
+    cancel_url: `${siteOrigin}/dashboard?checkout=cancel`,
     metadata: sharedMetadata,
   };
 
@@ -90,7 +93,21 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    const account = await stripe.accounts.retrieve(null);
+    if (account.id !== "acct_1UP8e4K9EdgEUYPN") {
+      throw new Error("Checkout Stripe account does not match Hutchrok.");
+    }
+    const price = await stripe.prices.retrieve(priceEntry.priceId, { expand: ["product"] });
+    const productActive = typeof price.product === "object" &&
+      !("deleted" in price.product) && price.product.active;
+    if (!price.active || !price.livemode || !productActive || price.currency !== "usd" ||
+      price.unit_amount !== Math.round(service.startingPrice * 100) ||
+      (priceEntry.mode === "payment" ? price.recurring !== null : price.recurring === null)) {
+      throw new Error("Stripe price does not match the published service.");
+    }
+    const idempotencyKey = createHash("sha256")
+      .update(`hutchrok:${userId}:${serviceSlug}:${validation.data!.requestId}`).digest("hex");
+    const session = await stripe.checkout.sessions.create(sessionParams, { idempotencyKey });
 
     if (!session.url) {
       return apiError(ErrorCode.INTERNAL_ERROR, "Failed to create checkout URL.", 500);
