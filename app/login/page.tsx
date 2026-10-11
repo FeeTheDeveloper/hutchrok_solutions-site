@@ -35,7 +35,7 @@ export default function LoginPage() {
 
         <section className="flex items-center justify-center rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-6">
           {CLERK_READY ? (
-            <SignIn forceRedirectUrl="/dashboard" signUpUrl="/sign-up" />
+            <SignIn routing="hash" forceRedirectUrl="/dashboard" signUpUrl="/sign-up" />
           ) : (
             <div className="w-full max-w-md rounded-xl border border-border bg-cream p-6 text-center">
               <p className="text-sm font-semibold uppercase tracking-wide text-gold">

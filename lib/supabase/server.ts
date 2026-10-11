@@ -1,4 +1,5 @@
-import { createContextClient } from "@supabase/server/core";
+import "server-only";
+import { createAdminClient } from "@supabase/server/core";
 import { getConfig } from "@/lib/config";
 
 type LooseDatabase = {
@@ -22,11 +23,15 @@ type LooseDatabase = {
 /**
  * Server-side Supabase client.
  * Used in API routes and server components.
- * Reads connection config from centralized config module.
+ * Clerk/admin authorization and ownership checks live in each caller. This
+ * server-only client uses the service key; it must never fall back to anon.
  */
-export function getSupabaseServer(): ReturnType<typeof createContextClient<LooseDatabase>> {
+export function getSupabaseServer(): ReturnType<typeof createAdminClient<LooseDatabase>> {
   const config = getConfig();
-  return createContextClient<LooseDatabase>({
+  if (!config.supabaseSecretKey) {
+    throw new Error("SUPABASE_SECRET_KEY is required for server database operations.");
+  }
+  return createAdminClient<LooseDatabase>({
     env: {
       url: config.supabaseUrl,
       publishableKeys: {

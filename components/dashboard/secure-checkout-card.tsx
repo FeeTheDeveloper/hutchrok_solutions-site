@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { Loader2, Lock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,8 @@ export default function SecureCheckoutCard({ initialStatus = "" }: SecureCheckou
   const [serviceSlug, setServiceSlug] = useState<CheckoutSlug>(CHECKOUT_OPTIONS[0].slug);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const attempt = useRef<{ serviceSlug: string; requestId: string } | null>(null);
+  const inFlight = useRef(false);
 
   const selected = useMemo(() => {
     return serviceSlug ? SERVICE_REQUEST_BY_SLUG[serviceSlug] : null;
@@ -45,6 +47,11 @@ export default function SecureCheckoutCard({ initialStatus = "" }: SecureCheckou
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
+    if (inFlight.current) return;
+    inFlight.current = true;
+    if (attempt.current?.serviceSlug !== serviceSlug) {
+      attempt.current = { serviceSlug, requestId: crypto.randomUUID() };
+    }
     setSubmitting(true);
     setError("");
 
@@ -52,7 +59,7 @@ export default function SecureCheckoutCard({ initialStatus = "" }: SecureCheckou
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serviceSlug }),
+        body: JSON.stringify(attempt.current),
       });
       const json: unknown = await res.json();
 
@@ -69,6 +76,7 @@ export default function SecureCheckoutCard({ initialStatus = "" }: SecureCheckou
     } catch {
       setError("Unable to start secure checkout right now.");
     } finally {
+      inFlight.current = false;
       setSubmitting(false);
     }
   }
@@ -84,7 +92,7 @@ export default function SecureCheckoutCard({ initialStatus = "" }: SecureCheckou
       <CardContent className="space-y-4">
         {initialStatus === "success" && (
           <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-            Payment completed successfully. Our team will follow up shortly.
+            You returned from checkout. Payment is confirmed separately by Stripe; this page alone is not a receipt.
           </div>
         )}
         {initialStatus === "cancel" && (

@@ -17,7 +17,7 @@ export interface StripePriceCatalogEntry {
   mode: StripeCheckoutMode;
   /**
    * Whether this service can currently be purchased through Stripe Checkout.
-   * Registered Agent stays wired up in Stripe but disabled here until the
+   * Registered Agent stays disabled here until the
    * operational requirements (staffed TX registered-office address, Form
    * 401-A consent process) are complete — it remains waitlist-only.
    */
@@ -26,45 +26,43 @@ export interface StripePriceCatalogEntry {
 
 export const STRIPE_PRICE_CATALOG: Record<ServiceRequestSlug, StripePriceCatalogEntry> = {
   "business-website": {
-    priceId: "price_1U2JhgDFTET1QGPEZWbAggCD",
+    priceId: "price_1UPPc9K9EdgEUYPNEjVHNIeR",
     mode: "payment",
     checkoutEnabled: true,
   },
   "brand-identity-package": {
-    priceId: "price_1U2JifDFTET1QGPEypMb0H5N",
+    priceId: "price_1UPPc9K9EdgEUYPNGEVJtY8o",
     mode: "payment",
     checkoutEnabled: true,
   },
   "logo-design": {
-    priceId: "price_1U2JjYDFTET1QGPEimITUhto",
+    priceId: "price_1UPPcAK9EdgEUYPNuDpN8YIu",
     mode: "payment",
     checkoutEnabled: true,
   },
   "business-email-setup": {
-    priceId: "price_1U2JkpDFTET1QGPErYE56q6c",
+    priceId: "price_1UPPcAK9EdgEUYPNOQf3mB1Q",
     mode: "payment",
     checkoutEnabled: true,
   },
   "domain-hosting": {
-    priceId: "price_1U2Jm0DFTET1QGPEwa5ca4qX",
+    priceId: "price_1UPPcBK9EdgEUYPNFVAXu2SE",
     mode: "payment",
     checkoutEnabled: true,
   },
   "compliance-ops-setup": {
-    priceId: "price_1U2JnCDFTET1QGPEU8maLAuC",
+    priceId: "price_1UPPcBK9EdgEUYPNbprh1lMs",
     mode: "payment",
     checkoutEnabled: true,
   },
-  // A live Launch Package price has not been created in the connected
-  // Hutchrok Stripe account yet. Keep the legacy mapping disabled so the
-  // site cannot create a Checkout Session against a price from another account.
+  // Reconciled against Hutchrok account acct_1UP8e4K9EdgEUYPN.
   "launch-package": {
-    priceId: "price_1TyP2MHPynHEHcqhrMIvMNj0",
+    priceId: "price_1UPPcBK9EdgEUYPN2omVNY24",
     mode: "payment",
-    checkoutEnabled: false,
+    checkoutEnabled: true,
   },
   "registered-agent": {
-    priceId: "price_1TyP2RHPynHEHcqhiGtyptxE",
+    priceId: "",
     mode: "subscription",
     checkoutEnabled: false,
   },
@@ -73,5 +71,7 @@ export const STRIPE_PRICE_CATALOG: Record<ServiceRequestSlug, StripePriceCatalog
 export function getStripePriceCatalogEntry(
   serviceSlug: string,
 ): StripePriceCatalogEntry | null {
-  return STRIPE_PRICE_CATALOG[serviceSlug as ServiceRequestSlug] ?? null;
+  return Object.hasOwn(STRIPE_PRICE_CATALOG, serviceSlug)
+    ? STRIPE_PRICE_CATALOG[serviceSlug as ServiceRequestSlug]
+    : null;
 }

@@ -53,7 +53,7 @@ function buildConfig() {
     supabaseAnonKey,
     /** Supabase publishable key used by @supabase/server (falls back to anon key) */
     supabasePublishableKey: optional("SUPABASE_PUBLISHABLE_KEY", supabaseAnonKey),
-    /** Supabase secret/service key used by @supabase/server admin helpers */
+    /** Required by the server-only database client; never used in the browser. */
     supabaseSecretKey: optional("SUPABASE_SECRET_KEY"),
     /** Optional JWKS URL for validating Supabase JWTs in @supabase/server flows */
     supabaseJwksUrl: optional("SUPABASE_JWKS_URL"),
@@ -143,6 +143,7 @@ export const ENV_VARS = {
   required: [
     "SUPABASE_URL",
     "SUPABASE_ANON_KEY",
+    "SUPABASE_SECRET_KEY",
     "ADMIN_TOKEN",
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",

@@ -40,6 +40,7 @@ loadEnvFile(resolve(process.cwd(), ".env.local"));
 const REQUIRED = [
   "SUPABASE_URL",
   "SUPABASE_ANON_KEY",
+  "SUPABASE_SECRET_KEY",
   "ADMIN_TOKEN",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
@@ -57,7 +58,7 @@ function record(service, ok, detail) {
 }
 
 async function json(url, init) {
-  const res = await fetch(url, init);
+  const res = await fetch(url, { ...init, signal: AbortSignal.timeout(15_000) });
   let body = null;
   try {
     body = await res.json();
@@ -87,7 +88,7 @@ async function checkSupabase() {
   const secret = process.env.SUPABASE_SECRET_KEY
     ? "secret key set"
     : "SUPABASE_SECRET_KEY MISSING";
-  record("supabase", true, `project ${ref} · GoTrue ${health.body?.version ?? "?"} · ${secret}`);
+  record("supabase", Boolean(process.env.SUPABASE_SECRET_KEY), `project ${ref} · GoTrue ${health.body?.version ?? "?"} · ${secret}`);
 }
 
 async function checkStripe() {
@@ -106,7 +107,13 @@ async function checkStripe() {
 
   const mode = key.startsWith("sk_live_") ? "live" : "test";
   const hooks = await json("https://api.stripe.com/v1/webhook_endpoints?limit=100", { headers });
-  const matching = (hooks.body?.data ?? []).filter((e) => e.url?.includes("/api/stripe/webhook"));
+  const matching = (hooks.body?.data ?? []).filter((e) =>
+    e.url === "https://www.hutchrok.com/api/stripe/webhook" && e.status === "enabled",
+  );
+  if (account.body.id !== "acct_1UP8e4K9EdgEUYPN") {
+    record("stripe", false, "Stripe account does not match Hutchrok");
+    return;
+  }
 
   if (!process.env.STRIPE_WEBHOOK_SECRET) {
     record(
@@ -198,6 +205,9 @@ async function checkCloudflare() {
       : `zone HTTP ${zone.status}`;
   }
   record("cloudflare", true, `account ${account.slice(0, 8)}… · ${zoneNote}`);
+
+  // Case documents use Supabase Storage. An unused R2 product is not a site outage.
+  if (!process.env.R2_BUCKET) return;
 
   // R2 is reported separately: the credentials can be present while the
   // product itself is still switched off on the account.

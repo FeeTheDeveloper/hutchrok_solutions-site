@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import Stripe from "stripe";
 import { apiError, apiSuccess, ErrorCode } from "@/lib/api-response";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { emitSiteSignal } from "@/lib/os/bridge";
+import { emitSiteSignal, isOsBridgeEnabled } from "@/lib/os/bridge";
 
 export async function POST(request: NextRequest) {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -36,8 +36,15 @@ export async function POST(request: NextRequest) {
 
   console.log("[api/stripe/webhook] Event received:", event.id, event.type);
 
-  if (event.type === "checkout.session.completed") {
+  const isCheckoutPaidEvent = event.type === "checkout.session.completed" ||
+    event.type === "checkout.session.async_payment_succeeded";
+
+  if (isCheckoutPaidEvent) {
     const session = event.data.object as Stripe.Checkout.Session;
+    // A completed Checkout can still be awaiting a delayed payment method.
+    if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
+      return apiSuccess({ received: true }, 200);
+    }
     const clerkUserId = session.metadata?.clerk_user_id ?? "";
     const customerId =
       typeof session.customer === "string" ? session.customer : null;
@@ -53,22 +60,24 @@ export async function POST(request: NextRequest) {
             clerk_user_id: clerkUserId,
             email: customerEmail,
             stripe_customer_id: customerId,
-            stripe_last_checkout_at: new Date().toISOString(),
+            stripe_last_checkout_at: new Date(event.created * 1000).toISOString(),
           },
           { onConflict: "clerk_user_id" },
         );
 
       if (error) {
         console.error("[api/stripe/webhook] Profile sync failed:", error.message);
+        return apiError(ErrorCode.INTERNAL_ERROR, "Payment recording is temporarily unavailable.", 503);
       }
     }
   }
 
-  if (event.type === "checkout.session.completed") {
+  if (isCheckoutPaidEvent && isOsBridgeEnabled()) {
     const session = event.data.object as Stripe.Checkout.Session;
-    await emitSiteSignal({
-      type: session.mode === "subscription" ? "membership.activated" : "payment.completed",
-      signalId: `stripe:${event.id}`,
+    const delivered = await emitSiteSignal({
+      // A single checkout does not establish ongoing subscription entitlement.
+      type: "payment.completed",
+      signalId: `stripe:checkout:${session.id}:paid`,
       contact: {
         ...(session.customer_details?.email ? { email: session.customer_details.email } : {}),
         ...(session.customer_details?.name ? { name: session.customer_details.name } : {}),
@@ -76,13 +85,15 @@ export async function POST(request: NextRequest) {
       entity: { type: "stripe_checkout_session", id: session.id },
       data: { mode: session.mode, service: session.metadata?.service_slug ?? null },
     });
-  } else if (event.type === "invoice.payment_failed" || event.type === "checkout.session.async_payment_failed") {
-    await emitSiteSignal({
+    if (!delivered) return apiError(ErrorCode.INTERNAL_ERROR, "Payment delivery will be retried.", 503);
+  } else if (isOsBridgeEnabled() && (event.type === "invoice.payment_failed" || event.type === "checkout.session.async_payment_failed")) {
+    const delivered = await emitSiteSignal({
       type: "payment.failed",
       signalId: `stripe:${event.id}`,
       entity: { type: "stripe_event", id: event.id },
       data: { stripe_event_type: event.type },
     });
+    if (!delivered) return apiError(ErrorCode.INTERNAL_ERROR, "Payment delivery will be retried.", 503);
   }
 
   return apiSuccess({ received: true }, 200);
