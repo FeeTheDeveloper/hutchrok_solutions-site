@@ -6,15 +6,15 @@ This is a targeted secondary-engineer review of the production connection paths 
 
 ## CRITICAL
 
-**C1 — Direct anonymous database access bypasses Clerk and application ownership checks (OPEN).** Count-only authenticated-as-anon HEAD requests on the production Supabase REST API returned nonzero visible counts for client_profiles, filing_cases, case_documents, intake_submissions, and audit_log. No client row contents were retrieved. lib/db/schema.sql contains always-true policies, and docs/SECURITY_FINDINGS.md already describes this issue. The previous getSupabaseServer used createContextClient without a user token; installing a secret in Vercel did not make that client privileged. The patch uses the SDK's createAdminClient behind server-only and fails closed without a secret. This prepares the application for revoking direct public access; it does not repair existing database policies.
+**C1 — Direct anonymous database access bypassed Clerk and application ownership checks (REPAIRED 2026-10-11).** Count-only authenticated-as-anon HEAD requests on the production Supabase REST API returned nonzero visible counts for client_profiles, filing_cases, case_documents, intake_submissions, and audit_log. No client row contents were retrieved. lib/db/schema.sql contains always-true policies, and docs/SECURITY_FINDINGS.md already describes this issue. The previous getSupabaseServer used createContextClient without a user token; installing a secret in Vercel did not make that client privileged. The patch uses the SDK's createAdminClient behind server-only and fails closed without a secret. That code change prepared the application for the separate database policy repair subsequently applied below.
 
-Supabase MCP returns no projects; both available dashboard profiles require sign-in. Database policy changes remain unapplied. Block new autonomous handling of sensitive records until a project administrator applies and verifies the repair.
+The user restored browser access to the exact production project. The connector still lacks project permission, so the authenticated dashboard SQL Editor was used. Removed five always-true core policies, revoked direct anon/authenticated/PUBLIC grants on the five core and three membership tables, and removed three public case-document Storage policies. RLS remains enabled; the bucket remains private; existing service-role privileges are preserved. New postgres-created public tables no longer receive automatic anon/authenticated grants. No client rows or files were modified. Ten anonymous REST checks now return 401, catalog checks deny both roles on all ten tables, both roles see zero Storage objects, and the deployed service-key health check remains 200. See docs/operations for the preimage, exact repair and repeatable verification. Application-level tenant tests are still required before autonomous handling.
 
 ## HIGH
 
 **H1 — Production authentication unavailable (configuration repaired).** Clerk's primary domain was misspelled www.hutcrok.com while Cloudflare and Vercel serve www.hutchrok.com. Corrected the existing domain while preserving the existing clerk.www / accounts.www layout; updated only the six Clerk email CNAME targets to the new domain's generated targets. Frontend API, account portal, primary email DNS and SSL issuance were verified in Clerk. Production Vercel lacked both Clerk keys and redirect variables; these were added only to production and the existing commit was redeployed. Browser login now renders Clerk and unauthenticated account/checkout API calls return 401.
 
-**H2 — Stripe account/catalog mismatch (patch and provider reconciliation prepared).** The verified Hutchrok live account had zero products and zero prices. Existing site price IDs did not belong to this account. Created idempotently keyed prices matching the published offers and updated the seven purchasable service mappings. Checkout verifies the account ID, live mode, product/price activity, USD amount and billing mode before creating a session. Browser-supplied amount/price IDs are ignored. Registered-agent service remains waitlist-only.
+**H2 — Stripe account/catalog mismatch (patch deployed and catalog reconciled).** The verified Hutchrok live account had zero products and zero prices. Existing site price IDs did not belong to this account. Created idempotently keyed prices matching the published offers and updated the seven purchasable service mappings. Checkout verifies the account ID, live mode, product/price activity, USD amount and billing mode before creating a session. Browser-supplied amount/price IDs are ignored. Registered-agent service remains waitlist-only.
 
 **H3 — Payment acknowledgement before reliable processing (partially repaired).** The webhook previously emitted payment.completed without checking payment_status, ignored async success, and acknowledged failed profile/OS writes with HTTP 200. The patch gates on paid/no_payment_required, handles async success, returns 503 on database or configured OS delivery failure, and uses a stable Checkout Session paid-effect ID. The Stripe endpoint now subscribes to async success. A durable event receipt/outbox and replay reconciliation are still required before claiming exactly-once effects or enabling an autonomous OS.
 
@@ -42,7 +42,7 @@ Supabase MCP returns no projects; both available dashboard profiles require sign
 Passed locally: 12 route/SDK regression tests; TypeScript with --noEmit --incremental false; ESLint on changed files; diff whitespace validation. Tests exercise real route code with provider boundaries substituted, plus the actual Supabase SDK's outgoing key selection. Five payment tests were observed failing before the fixes.
 
 Required before claiming complete production readiness:
-1. Database policies/grants and private storage audit; anon and authenticated users cannot select/update/delete any private record directly.
+1. The direct database/storage permission audit now passes. Re-run the supplied checks after every migration and add application-level storage upload/download tests using isolated fixtures.
 2. Two real Clerk users cannot read, claim, modify or download each other's records; verify primary email ownership and forged/expired/wrong-tenant sessions.
 3. Authenticated browser checkout to the verified live catalog, with no real purchase unless separately authorized; test successful payment, failure, replay, concurrent duplicate events and crash between persistence and delivery in a sandbox.
 4. Membership checkout, renewal, cancellation, past due and recovery; capacity/allowance concurrency and duplicate-subscription tests.
@@ -51,13 +51,13 @@ Required before claiming complete production readiness:
 
 ## RECOMMENDED CHANGES
 
-1. Sign in to the named Supabase project or reconnect its MCP, inspect actual policy/grant definitions, and export the current definitions for rollback.
-2. After the deployed /api/health confirms the service-key client works, revoke direct anon/authenticated table access for these five private tables and remove their permissive policies. Preserve service_role access. Review storage.objects/bucket policies separately.
+1. Preserve the checked-in permission preimage and applied SQL; verify project identity and current grants before any subsequent schema change.
+2. Keep anon/authenticated direct access denied and case-documents private. Re-run the supplied SQL/HTTP checks after migrations. Reconnect Supabase MCP with access to this project for future provider-backed automation.
 3. Keep public intake behind validated/rate-limited server routes; keep each Clerk user ownership predicate at server read/write boundaries. Do not use user-editable metadata to grant membership or admin capabilities.
 4. Add tenant/environment/provider-account-bound payment receipts and an outbox; reconcile provider state before subscription entitlements or OS effects.
 5. Keep this patch isolated for Claude's review. Preserve the existing architecture and production guard.
 
-Suggested SQL for administrator review (NOT APPLIED; compare live grants/policies first):
+Initial narrower SQL proposal (superseded by the executed docs/operations/hutchrok-private-access-repair.sql, which also closes storage and membership grants):
 
 ```sql
 begin;
@@ -78,3 +78,12 @@ commit;
 Rollback/recovery: original deployment dpl_FApo3Vj7ar71r4JdrBJNJtbUrftw; auth repair deployment dpl_6wWk1sv4iZKttnQ3MN1RBjG9tmPQ. Prefer rolling back code while keeping corrected Clerk DNS/configuration. Reverting to the misspelled Clerk domain restores the outage and invalidates sessions again. DNS preimages and Stripe webhook preimage were saved under ignored .vercel/production-repair/. Do not restore permissive database policies to repair an application error; repair or roll back the server code while retaining confidentiality.
 
 Sources: [Clerk domain changes](https://clerk.com/docs/guides/development/deployment/changing-domains), [Stripe fulfillment](https://docs.stripe.com/checkout/fulfillment), [Supabase API security](https://supabase.com/docs/guides/api/securing-your-api), installed @supabase/server 1.4.0 docs/core-primitives.md, current repository and live provider observations.
+
+
+## Follow-up verification at 2026-10-11 19:00 UTC
+
+The applied permission repair and exact preimage are preserved in the isolated PR branch. Re-run scripts/verify-private-access.mjs and docs/operations/verify-private-access.sql after future permission changes. The live application code remains commit 562d8efddf248c4884e969b43ef0cd611d9a69e3; this follow-up changes SQL/review artifacts only. The browser project dashboard also displays an outstanding-invoices warning. Billing was not changed.
+
+The local drive is full, so follow-up artifacts were committed through GitHub rather than written to the local checkout. No credentials or client contents were added. Supabase's generic destructive-query warning was accepted only for the reviewed permission removals; the SQL contains no row/file deletion. The transaction completed successfully.
+
+Recovery constraint after RLS repair: do not roll back to the old anon-context database client. Keep a deployment with the server-only service-key client (562d8ef or a validated successor). Fix forward or roll back compatible code while retaining denied public access; the archived permission preimage is diagnostic evidence, not an automatic insecure rollback.

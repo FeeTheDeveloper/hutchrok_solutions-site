@@ -1,33 +1,36 @@
 # Production security findings
 
-## P0 — Core application RLS remains overly permissive
+## Resolved 2026-10-11: core database and case-document storage exposure
 
-Supabase security advisors still report always-true `ALL` policies on:
+The Hutchrok production project `igiuifkvunrnmgamyzqw` now denies direct
+`anon` and `authenticated` access to all 10 public application tables.
+The repair revoked unnecessary grants on the five core and three membership
+tables, removed five always-true policies, and removed the three public
+SELECT/INSERT/DELETE policies on `storage.objects` for `case-documents`.
+The bucket remains private. No client rows or stored objects were modified.
 
-- `intake_submissions`
-- `filing_cases`
-- `case_documents`
-- `audit_log`
-- `client_profiles`
+The deployed application uses a server-only service-key client. Existing
+`service_role` CRUD access was preserved; caller authorization and ownership
+checks remain required on every server operation.
 
-These policies effectively allow broad anonymous access despite RLS being
-enabled. Do not store real client, veteran, filing, identity, payment-linkage,
-or private-document data until the application is confirmed to use
-`SUPABASE_SECRET_KEY` for all server writes and the permissive policies are
-replaced with least-privilege policies.
+Verification on 2026-10-11:
+- Anonymous HTTP HEAD probes to all 10 tables returned 401.
+- Catalog checks found no table or column privilege for anon/authenticated,
+  with RLS enabled on all 10 tables and server CRUD privileges preserved.
+- Storage queries under both anon and authenticated returned zero visible objects.
+- Production `/api/health` returned 200; a nonexistent tracking lookup returned 404.
 
-This bundle does not silently remove the existing policies because doing so
-before confirming every production route uses the server secret could break
-intake, tracking, profile, and document workflows. The required sequence is:
+Review [the exact repair](operations/hutchrok-private-access-repair.sql),
+[the permission preimage](operations/supabase-permissions-before-20261011.json),
+and [the SQL checks](operations/verify-private-access.sql).
+Run `node --env-file=.env.local scripts/verify-private-access.mjs` for read-only
+HTTP checks. Do not replay legacy permissive schema scripts after this repair.
 
-1. Confirm `SUPABASE_SECRET_KEY` is configured in Vercel Production, Preview,
-   and Development.
-2. Verify every privileged Supabase operation runs only on the server.
-3. Add a reviewed core-RLS hardening migration.
-4. Test intake, case claiming, tracking, profile access, admin actions, and
-   document upload/download in Preview.
-5. Apply the migration to Production.
-6. Re-run Supabase security advisors and direct anonymous-access tests.
+New tables created by postgres in public no longer receive automatic
+anon/authenticated table grants. Managed supabase_admin defaults are unchanged,
+so every future migration still needs explicit grant/RLS review.
+This closes the observed direct database/storage bypass; it does not establish
+complete application-level tenant isolation or payment/OS readiness.
 
 ## Agent tables
 
@@ -49,3 +52,4 @@ Agent administration routes in this overlay require an
 `Authorization: Bearer` header and intentionally reject query-string-only
 authentication. The broader admin area should migrate to Clerk role-based
 access or another session-based control.
+
