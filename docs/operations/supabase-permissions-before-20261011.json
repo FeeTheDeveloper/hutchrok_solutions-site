@@ -1,0 +1,248 @@
+{
+  "project": "igiuifkvunrnmgamyzqw",
+  "observedDate": "2026-10-11",
+  "source": "Authenticated Supabase SQL Editor; permission metadata only",
+  "tables": [
+    {
+      "schema": "public",
+      "table": "intake_submissions",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "schema": "public",
+      "table": "filing_cases",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "schema": "public",
+      "table": "case_documents",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "schema": "public",
+      "table": "audit_log",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "schema": "public",
+      "table": "client_profiles",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "schema": "public",
+      "table": "agent_definitions",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "schema": "public",
+      "table": "agent_tasks",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "schema": "public",
+      "table": "premium_members",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "schema": "public",
+      "table": "member_businesses",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "schema": "public",
+      "table": "member_business_submissions",
+      "rls": true,
+      "forced": false,
+      "kind": "r",
+      "options": null,
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Allow anon delete on case-documents",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "DELETE",
+      "qual": "(bucket_id = 'case-documents'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Allow anon select on case-documents",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(bucket_id = 'case-documents'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Allow anon insert on case-documents",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(bucket_id = 'case-documents'::text)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "intake_submissions",
+      "policyname": "Allow all for anon",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "true",
+      "with_check": "true"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "filing_cases",
+      "policyname": "Allow all for anon",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "true",
+      "with_check": "true"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "case_documents",
+      "policyname": "Allow all for anon",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "true",
+      "with_check": "true"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "audit_log",
+      "policyname": "Allow all for anon",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "true",
+      "with_check": "true"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "client_profiles",
+      "policyname": "Allow all for anon",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "true",
+      "with_check": "true"
+    }
+  ],
+  "buckets": [
+    {
+      "id": "case-documents",
+      "public": false
+    }
+  ],
+  "functions": [
+    {
+      "name": "update_updated_at_column",
+      "args": "",
+      "kind": "f",
+      "definer": false,
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    }
+  ],
+  "defaults": [
+    {
+      "role": "postgres",
+      "schema": "public",
+      "type": "r",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "role": "postgres",
+      "schema": "public",
+      "type": "f",
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "role": "postgres",
+      "schema": "public",
+      "type": "S",
+      "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+    },
+    {
+      "role": "supabase_admin",
+      "schema": "public",
+      "type": "r",
+      "acl": "{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}"
+    },
+    {
+      "role": "supabase_admin",
+      "schema": "public",
+      "type": "f",
+      "acl": "{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+    },
+    {
+      "role": "supabase_admin",
+      "schema": "public",
+      "type": "S",
+      "acl": "{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}"
+    }
+  ]
+}
