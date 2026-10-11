@@ -229,3 +229,409 @@ button:active, [role="button"]:active {
   color: #475569;
   font-style: italic;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   3D ILLUSTRATION MOTION SYSTEM
+
+   Three nested transform layers, each with exactly one job:
+     .hk-motion-reveal → scroll entrance (fade + rise)
+     .hk-motion-stage  → pointer parallax tilt
+     .hk-motion-drift  → continuous idle float
+
+   Inside the frame the art pans against its own edges, so each
+   illustration reads as moving — not just the card around it. Every
+   illustration gets a distinct signature via [data-motion]; a signature
+   only sets CSS vars, so the keyframes stay shared.
+
+   All continuous motion is off under prefers-reduced-motion.
+   ════════════════════════════════════════════════════════════════════ */
+
+.hk-motion {
+  position: relative;
+  perspective: 1400px;
+
+  /* pointer-driven (set in JS, reset on leave) */
+  --hk-tilt-x: 0deg;
+  --hk-tilt-y: 0deg;
+  --hk-px: 50%;
+  --hk-py: 45%;
+
+  /* idle float — frame */
+  --hk-float-dur: 11s;
+  --hk-fx: 0px;
+  --hk-fy: -12px;
+  --hk-fr: 0deg;
+
+  /* in-frame pan — art */
+  --hk-pan-dur: 18s;
+  --hk-ps: 1.045;
+  --hk-ax: 0px;
+  --hk-ay: 0px;
+
+  --hk-sheen-dur: 9s;
+}
+
+/* ── Gold bloom behind the frame ── */
+.hk-motion-glow {
+  position: absolute;
+  inset: -14% -9% -18%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(200, 169, 81, 0.22) 0%,
+    rgba(200, 169, 81, 0.07) 45%,
+    transparent 72%
+  );
+  filter: blur(28px);
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+.hk-motion[data-visible="true"] .hk-motion-glow {
+  opacity: 1;
+  animation: hk-bloom var(--hk-float-dur) ease-in-out infinite alternate;
+}
+
+/* ── Layer 1: scroll entrance ── */
+.hk-motion-reveal {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale(0.97);
+  transition:
+    opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hk-motion[data-visible="true"] .hk-motion-reveal {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Layer 2: pointer parallax tilt ── */
+.hk-motion-stage {
+  transform: rotateX(var(--hk-tilt-x)) rotateY(var(--hk-tilt-y));
+  transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* ── Layer 3: idle float ── */
+.hk-motion[data-visible="true"] .hk-motion-drift {
+  animation: hk-float var(--hk-float-dur) ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* ── The frame ── */
+.hk-motion-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(var(--radius) + 12px); /* matches rounded-3xl */
+  background-color: #faf8f5;
+  box-shadow:
+    0 0 0 1px rgba(200, 169, 81, 0.25),
+    0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 500ms ease;
+}
+.hk-motion:hover .hk-motion-frame {
+  box-shadow:
+    0 0 0 1px rgba(200, 169, 81, 0.45),
+    0 32px 64px -14px rgba(0, 0, 0, 0.5);
+}
+
+/* ── The art, panning inside the frame ── */
+.hk-motion-art {
+  display: block;
+  transform: scale(var(--hk-ps));
+  transform-origin: center;
+}
+.hk-motion[data-visible="true"] .hk-motion-art {
+  animation: hk-pan var(--hk-pan-dur) ease-in-out infinite alternate;
+}
+
+/* ── Pointer-tracked specular highlight (sells the 3D) ── */
+.hk-motion-spec {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    42% 42% at var(--hk-px) var(--hk-py),
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(229, 208, 143, 0.16) 38%,
+    transparent 70%
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+.hk-motion:hover .hk-motion-spec {
+  opacity: 1;
+}
+
+/* ── Periodic gold sheen sweep ── */
+.hk-motion-sheen {
+  position: absolute;
+  inset: -40% -60%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    104deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.5) 47%,
+    rgba(229, 208, 143, 0.7) 50%,
+    rgba(255, 255, 255, 0.5) 53%,
+    transparent 62%
+  );
+  mix-blend-mode: overlay;
+}
+.hk-motion[data-visible="true"] .hk-motion-sheen {
+  animation: hk-sheen var(--hk-sheen-dur) cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* ── Depth vignette ── */
+.hk-motion-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 100% at 50% 0%,
+    transparent 42%,
+    rgba(10, 22, 40, 0.14) 100%
+  );
+}
+
+/* ── Gold motes drifting up through the frame ── */
+.hk-motion-motes {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hk-motion-mote {
+  position: absolute;
+  bottom: -8px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(229, 208, 143, 0.95) 0%,
+    rgba(200, 169, 81, 0) 70%
+  );
+  opacity: 0;
+}
+.hk-motion[data-visible="true"] .hk-motion-mote {
+  animation: hk-mote var(--hk-mote-dur, 11s) linear var(--hk-mote-delay, 0s)
+    infinite;
+}
+
+/* ════ Keyframes ════ */
+@keyframes hk-float {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(var(--hk-fx), var(--hk-fy), 0) rotate(var(--hk-fr));
+  }
+}
+
+/* Circular path, used only by the orbit signature. */
+@keyframes hk-orbit {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate3d(var(--hk-fx), var(--hk-fy), 0) rotate(var(--hk-fr));
+  }
+  50% {
+    transform: translate3d(0, calc(var(--hk-fy) * 2), 0) rotate(0deg);
+  }
+  75% {
+    transform: translate3d(calc(var(--hk-fx) * -1), var(--hk-fy), 0)
+      rotate(calc(var(--hk-fr) * -1));
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes hk-pan {
+  from {
+    transform: scale(var(--hk-ps)) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(calc(var(--hk-ps) + 0.035))
+      translate3d(var(--hk-ax), var(--hk-ay), 0);
+  }
+}
+
+@keyframes hk-bloom {
+  from {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes hk-sheen {
+  0% {
+    opacity: 0;
+    transform: translate3d(-65%, 0, 0);
+  }
+  8% {
+    opacity: 0.9;
+  }
+  34% {
+    opacity: 0;
+    transform: translate3d(65%, 0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(65%, 0, 0);
+  }
+}
+
+@keyframes hk-mote {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.7);
+  }
+  12% {
+    opacity: 0.9;
+  }
+  70% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--hk-mote-dx, 14px), var(--hk-mote-dy, -260px), 0)
+      scale(1.25);
+  }
+}
+
+/* ════ Per-illustration motion signatures ════ */
+
+/* heroTexasLaunch — the flagship: biggest lift, slow confident sway. */
+.hk-motion[data-motion="lift"] {
+  --hk-float-dur: 12s;
+  --hk-fx: 6px;
+  --hk-fy: -18px;
+  --hk-fr: 0.5deg;
+  --hk-pan-dur: 20s;
+  --hk-ax: -10px;
+  --hk-ay: 8px;
+  --hk-sheen-dur: 10s;
+}
+
+/* freeFilingFormation — settles like a document being stamped. */
+.hk-motion[data-motion="seal"] {
+  --hk-float-dur: 9s;
+  --hk-fx: -4px;
+  --hk-fy: -9px;
+  --hk-fr: -0.65deg;
+  --hk-pan-dur: 15s;
+  --hk-ax: 7px;
+  --hk-ay: 6px;
+  --hk-sheen-dur: 7.5s;
+}
+
+/* governmentContracting — slow institutional rise. */
+.hk-motion[data-motion="rise"] {
+  --hk-float-dur: 14s;
+  --hk-fx: 0px;
+  --hk-fy: -14px;
+  --hk-fr: 0.25deg;
+  --hk-pan-dur: 22s;
+  --hk-ax: 0px;
+  --hk-ay: -9px;
+  --hk-sheen-dur: 12s;
+}
+
+/* veteranBenefitsResources — orbits, like the resource network it draws. */
+.hk-motion[data-motion="orbit"] {
+  --hk-float-dur: 18s;
+  --hk-fx: 10px;
+  --hk-fy: -8px;
+  --hk-fr: 0.6deg;
+  --hk-pan-dur: 19s;
+  --hk-ax: -8px;
+  --hk-ay: -7px;
+  --hk-sheen-dur: 11s;
+}
+.hk-motion[data-motion="orbit"][data-visible="true"] .hk-motion-drift {
+  animation-name: hk-orbit;
+  animation-direction: normal;
+}
+
+/* registeredAgentCompliance — metronome steady, like a filing calendar. */
+.hk-motion[data-motion="sway"] {
+  --hk-float-dur: 7.5s;
+  --hk-fx: 11px;
+  --hk-fy: -5px;
+  --hk-fr: 0.8deg;
+  --hk-pan-dur: 14s;
+  --hk-ax: 9px;
+  --hk-ay: 4px;
+  --hk-sheen-dur: 8.5s;
+}
+
+/* launchServices — fastest, diagonal climb. */
+.hk-motion[data-motion="launch"] {
+  --hk-float-dur: 8s;
+  --hk-fx: 12px;
+  --hk-fy: -20px;
+  --hk-fr: -0.7deg;
+  --hk-pan-dur: 13s;
+  --hk-ax: -12px;
+  --hk-ay: 10px;
+  --hk-sheen-dur: 6.5s;
+}
+
+/* ════ Reduced motion: keep a plain fade, drop everything else ════ */
+@media (prefers-reduced-motion: reduce) {
+  .hk-motion-reveal {
+    transform: none;
+    transition: opacity 400ms ease;
+  }
+  .hk-motion-stage {
+    transform: none;
+    transition: none;
+  }
+  .hk-motion-art {
+    transform: none;
+  }
+  .hk-motion[data-visible="true"] .hk-motion-glow,
+  .hk-motion[data-visible="true"] .hk-motion-drift,
+  .hk-motion[data-visible="true"] .hk-motion-art,
+  .hk-motion[data-visible="true"] .hk-motion-sheen,
+  .hk-motion[data-visible="true"] .hk-motion-mote {
+    animation: none;
+  }
+  .hk-motion-sheen,
+  .hk-motion-motes {
+    display: none;
+  }
+}
+
+/* Above the fold: the entrance plays from CSS on load, so a priority
+   illustration never waits on hydration to become visible (keeps the hero
+   image out of the LCP critical path). Below the fold still reveals on
+   scroll via [data-visible]. */
+.hk-motion[data-entrance="load"] .hk-motion-reveal {
+  opacity: 1;
+  transform: none;
+  animation: hk-enter 950ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes hk-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0) scale(0.975);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hk-motion[data-entrance="load"] .hk-motion-reveal {
+    animation: none;
+  }
+}

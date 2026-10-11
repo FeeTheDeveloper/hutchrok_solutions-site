@@ -1,7 +1,11 @@
-import Image from "next/image";
-import { ILLUSTRATIONS, type IllustrationKey } from "@/lib/illustrations";
+import { type IllustrationKey } from "@/lib/illustrations";
+import { MotionIllustration } from "@/components/motion-illustration";
 
-/** Framed 3D illustration sized for the right column of a navy page hero. */
+/**
+ * Framed 3D illustration sized for the right column of a navy page hero.
+ * The frame, lighting, and all motion live in MotionIllustration so every
+ * hero on the site animates the same way without page-level changes.
+ */
 export function HeroIllustration({
   name,
   priority = false,
@@ -11,21 +15,8 @@ export function HeroIllustration({
   priority?: boolean;
   className?: string;
 }) {
-  const img = ILLUSTRATIONS[name];
   return (
-    <div
-      className={`overflow-hidden rounded-3xl bg-cream ring-1 ring-gold/25 shadow-2xl shadow-black/40 ${className}`}
-    >
-      <Image
-        src={img.src}
-        width={img.width}
-        height={img.height}
-        alt={img.alt}
-        priority={priority}
-        sizes="(min-width: 1024px) 560px, (min-width: 640px) 448px, 100vw"
-        className="h-auto w-full"
-      />
-    </div>
+    <MotionIllustration name={name} priority={priority} className={className} />
   );
 }
 
