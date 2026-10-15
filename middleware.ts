@@ -12,6 +12,24 @@ const UNAUTHORIZED_HTML = `<!DOCTYPE html>
 <p>A valid admin token is required to access this page.</p>
 </div></body></html>`;
 
+/**
+ * Apex → www redirect. On Vercel this was a project-level domain redirect
+ * (hutchrok.com → www.hutchrok.com, 308). Cloudflare Workers has no equivalent
+ * project setting, so both hostnames hit this Worker and the redirect happens here.
+ */
+function apexRedirect(request: NextRequest): NextResponse | null {
+  const host = (request.headers.get("host") ?? request.nextUrl.host)
+    .split(":")[0]
+    .toLowerCase();
+  if (host !== "hutchrok.com") return null;
+
+  const url = new URL(request.url);
+  url.host = "www.hutchrok.com";
+  url.protocol = "https:";
+  url.port = "";
+  return NextResponse.redirect(url, 308);
+}
+
 function adminTokenGuard(request: NextRequest): NextResponse | null {
   const token =
     request.headers.get("authorization")?.replace("Bearer ", "") ||
@@ -35,6 +53,9 @@ function adminTokenGuard(request: NextRequest): NextResponse | null {
  * - Existing admin token protection for `/admin` routes.
  */
 const clerkHandler = clerkMiddleware(async (auth, request) => {
+  const apex = apexRedirect(request);
+  if (apex) return apex;
+
   if (isDashboardRoute(request)) {
     await auth.protect();
   }
@@ -48,6 +69,9 @@ const clerkHandler = clerkMiddleware(async (auth, request) => {
 });
 
 function fallbackHandler(request: NextRequest) {
+  const apex = apexRedirect(request);
+  if (apex) return apex;
+
   if (isDashboardRoute(request)) {
     return NextResponse.redirect(new URL("/", request.url));
   }

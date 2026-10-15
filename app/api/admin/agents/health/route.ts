@@ -35,7 +35,9 @@ export async function GET(request: NextRequest) {
       enabledAgents: agents.filter((agent) => agent.enabled).map((agent) => agent.agentType),
       databaseConnectivity: true,
       openaiKeyConfigured: openaiConfigured,
-      applicationVersion: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) || "development",
+      applicationVersion:
+        (process.env.DEPLOY_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA)?.slice(0, 12) ||
+        "development",
       timestamp: new Date().toISOString(),
     });
   } catch {
