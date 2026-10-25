@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,9 @@ import {
 } from "@/components/authority-signals";
 import { VeteranOwnedBadge } from "@/components/VeteranOwnedBadge";
 import { IllustratedHero } from "@/components/hero-illustration";
+import HutchrokOperatingSystem from "@/components/marketing/HutchrokOperatingSystem";
+import { GuideCast } from "@/components/marketing/guide-cast";
+import { CLIENT_SERVICES_GUIDE } from "@/lib/guides";
 
 /** Mono field-label — the site's signature device, styled like a form annotation. */
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -97,6 +101,11 @@ export default function HomePage() {
           </IllustratedHero>
         </div>
       </section>
+
+      {/* ════════════════════════════════════════
+          OPERATING SYSTEM — 3D Motion Feature
+          ════════════════════════════════════════ */}
+      <HutchrokOperatingSystem />
 
       {/* ════════════════════════════════════════
           SOCIAL PROOF — Stats Strip
@@ -342,6 +351,11 @@ export default function HomePage() {
       </section>
 
       {/* ════════════════════════════════════════
+          GUIDES — The Human Layer
+          ════════════════════════════════════════ */}
+      <GuideCast />
+
+      {/* ════════════════════════════════════════
           WHO QUALIFIES
           ════════════════════════════════════════ */}
       <section className="section-padding bg-white">
@@ -418,9 +432,21 @@ export default function HomePage() {
       <section className="section-padding bg-cream">
         <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10">
           <div className="text-center mb-8">
-            <div className="mb-4">
-              <FieldLabel>Guide</FieldLabel>
-            </div>
+            <figure className="mb-5 flex flex-col items-center">
+              <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-gold/50 bg-[#ECEAE6]">
+                <Image
+                  src={CLIENT_SERVICES_GUIDE.image}
+                  alt=""
+                  fill
+                  sizes="80px"
+                  className="object-cover object-top"
+                />
+              </div>
+              <figcaption className="mt-2 text-sm text-navy">
+                <span className="font-semibold">{CLIENT_SERVICES_GUIDE.name}</span>
+                <span className="text-slate-600"> · {CLIENT_SERVICES_GUIDE.role}</span>
+              </figcaption>
+            </figure>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy mb-3 leading-tight">
               Not Sure Where to Start?
             </h2>

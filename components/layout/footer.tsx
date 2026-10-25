@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Mail, MapPin, Facebook, Instagram } from "lucide-react";
+import { Mail, MapPin, MessageSquare, Facebook, Instagram } from "lucide-react";
+import { TEXT_LINE } from "@/lib/contact";
 
 const socialLinks = [
   {
@@ -16,6 +17,10 @@ const socialLinks = [
 
 const quickLinks = [
   { href: "/free-filing", label: "Free Filing" },
+  { href: "/membership", label: "Membership" },
+  { href: "/launch-services", label: "Launch Services" },
+  { href: "/government", label: "Government" },
+  { href: "/track", label: "Track Filing" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/verification-help", label: "Verification Help" },
   { href: "/services", label: "Services" },
@@ -108,6 +113,12 @@ export default function Footer() {
               Contact
             </h4>
             <ul className="space-y-3">
+              <li className="flex items-center gap-2 text-sm text-white/70">
+                <MessageSquare className="h-4 w-4 text-gold" />
+                <a href={TEXT_LINE.href} className="hover:text-gold transition-colors">
+                  Text {TEXT_LINE.display}
+                </a>
+              </li>
               <li className="flex items-center gap-2 text-sm text-white/70">
                 <Mail className="h-4 w-4 text-gold" />
                 <span>contact@hutchrok.com</span>
