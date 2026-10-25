@@ -7,7 +7,16 @@ import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { useAppAuth, CLERK_ENABLED } from "@/app/providers";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, MessageSquare, X } from "lucide-react";
+import { TEXT_LINE } from "@/lib/contact";
+
+/** The desktop bar carries only the core paths; everything else lives in the mobile menu and footer. */
+const primaryLinks = [
+  { href: "/free-filing", label: "Free Filing" },
+  { href: "/launch-services", label: "Services" },
+  { href: "/government", label: "Government" },
+  { href: "/track", label: "Track Filing" },
+];
 
 const navLinks = [
   { href: "/membership", label: "Membership" },
@@ -52,8 +61,8 @@ export default function Navbar() {
           />
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-0.5">
-          {navLinks.map((link) => {
+        <nav aria-label="Primary" className="hidden lg:flex items-center gap-1">
+          {primaryLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
@@ -94,13 +103,18 @@ export default function Navbar() {
                   Log In
                 </Button>
               </Link>
-              <Link href="/sign-up" className="hidden sm:block">
-                <Button variant="outline" className="border-navy/20 text-navy hover:bg-cream">
-                  Sign Up
-                </Button>
-              </Link>
             </>
           )}
+
+          <a
+            href={TEXT_LINE.href}
+            className="flex items-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold text-navy hover:text-gold-dark transition-colors"
+          >
+            <MessageSquare className="h-4 w-4 text-gold-dark" aria-hidden="true" />
+            <span className="sr-only">Text us at {TEXT_LINE.display}</span>
+            <span aria-hidden="true" className="hidden sm:inline">{TEXT_LINE.display}</span>
+            <span aria-hidden="true" className="sm:hidden">Text</span>
+          </a>
 
           <Link href="/membership" className="hidden sm:block">
             <Button className="bg-gold hover:bg-gold-dark text-navy font-semibold shadow-sm hover:shadow-md transition-shadow">
