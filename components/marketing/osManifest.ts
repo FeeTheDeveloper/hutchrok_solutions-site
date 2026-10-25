@@ -26,7 +26,7 @@ export const OS_STAGES: OsStage[] = [
     flowClip: "Shield turns with gold star",
     video: "/media/os/verification.mp4",
     poster: "/media/os/verification.jpg",
-    href: "/services/veteran-verification",
+    href: "/verification-help",
   },
   {
     id: "formation",
@@ -36,7 +36,7 @@ export const OS_STAGES: OsStage[] = [
     flowClip: "Gold seal stamping documents",
     video: "/media/os/formation.mp4",
     poster: "/media/os/formation.jpg",
-    href: "/services/formation",
+    href: "/formation-filings",
   },
   {
     id: "contracting",
@@ -46,7 +46,7 @@ export const OS_STAGES: OsStage[] = [
     flowClip: "Green bars grow upward",
     video: "/media/os/contracting.mp4",
     poster: "/media/os/contracting.jpg",
-    href: "/services/government-contracting",
+    href: "/services/federal-contract-prep",
   },
   {
     id: "credit",
@@ -56,7 +56,7 @@ export const OS_STAGES: OsStage[] = [
     flowClip: "Green line graph rising",
     video: "/media/os/credit.mp4",
     poster: "/media/os/credit.jpg",
-    href: "/services/business-credit",
+    href: "/credit-enablement",
   },
   {
     id: "compliance",
@@ -66,7 +66,7 @@ export const OS_STAGES: OsStage[] = [
     flowClip: "Gold check marks and padlock",
     video: "/media/os/compliance.mp4",
     poster: "/media/os/compliance.jpg",
-    href: "/services/compliance",
+    href: "/services",
   },
   {
     id: "platform",
@@ -76,7 +76,7 @@ export const OS_STAGES: OsStage[] = [
     flowClip: "Laptop and rocket launch",
     video: "/media/os/platform.mp4",
     poster: "/media/os/platform.jpg",
-    href: "/services/software-automation",
+    href: "/launch-services",
   },
   {
     id: "footprint",
@@ -86,7 +86,7 @@ export const OS_STAGES: OsStage[] = [
     flowClip: "Texas storefront render",
     video: "/media/os/footprint.mp4",
     poster: "/media/os/footprint.jpg",
-    href: "/services/texas-filings",
+    href: "/formation-filings",
   },
   {
     id: "network",
@@ -96,6 +96,6 @@ export const OS_STAGES: OsStage[] = [
     flowClip: "Gold star on navy shield",
     video: "/media/os/network.mp4",
     poster: "/media/os/network.jpg",
-    href: "/network",
+    href: "/mission",
   },
 ];
