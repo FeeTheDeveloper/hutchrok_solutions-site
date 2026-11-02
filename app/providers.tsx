@@ -11,11 +11,14 @@ import { getRoleFromMetadata, type AppRole } from "@/lib/auth/roles";
    ───────────────────────────────────────────────────────── */
 
 interface AppAuthState {
+  /** True once the auth provider has resolved the session (always true without Clerk). */
+  isLoaded: boolean;
   isSignedIn: boolean;
   role: AppRole | null;
 }
 
 const AppAuthContext = createContext<AppAuthState>({
+  isLoaded: true,
   isSignedIn: false,
   role: null,
 });
@@ -31,12 +34,12 @@ export const CLERK_ENABLED =
 /* ── Provider tree ─────────────────────────────────────── */
 
 function ClerkBridge({ children }: { children: React.ReactNode }) {
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const role = getRoleFromMetadata(user?.publicMetadata);
 
   return (
-    <AppAuthContext.Provider value={{ isSignedIn: !!isSignedIn, role }}>
+    <AppAuthContext.Provider value={{ isLoaded: !!isLoaded, isSignedIn: !!isSignedIn, role }}>
       {children}
     </AppAuthContext.Provider>
   );
@@ -45,7 +48,7 @@ function ClerkBridge({ children }: { children: React.ReactNode }) {
 export function Providers({ children }: { children: React.ReactNode }) {
   if (!CLERK_ENABLED) {
     return (
-      <AppAuthContext.Provider value={{ isSignedIn: false, role: null }}>
+      <AppAuthContext.Provider value={{ isLoaded: true, isSignedIn: false, role: null }}>
         {children}
       </AppAuthContext.Provider>
     );
