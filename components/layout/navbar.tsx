@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { useAppAuth, CLERK_ENABLED } from "@/app/providers";
+import { useAppAuth } from "@/app/providers";
 import { Button } from "@/components/ui/button";
 import { Menu, MessageSquare, X } from "lucide-react";
 import { TEXT_LINE } from "@/lib/contact";
@@ -33,7 +33,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const { isSignedIn } = useAppAuth();
+  const { isSignedIn, clerkEnabled } = useAppAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -92,7 +92,7 @@ export default function Navbar() {
                   Dashboard
                 </Button>
               </Link>
-              {CLERK_ENABLED && <UserButton afterSignOutUrl="/" />}
+              {clerkEnabled && <UserButton afterSignOutUrl="/" />}
             </>
           )}
 

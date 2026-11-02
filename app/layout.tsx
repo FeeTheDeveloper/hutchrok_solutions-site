@@ -50,6 +50,14 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Read at request time on dynamic routes (/login, /sign-up, /dashboard) from the
+ * Worker's runtime env, so auth works even if the key was absent at build time.
+ */
+function clerkPublishableKey(): string | undefined {
+  return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || undefined;
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -60,7 +68,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <Providers>
+        <Providers publishableKey={clerkPublishableKey()}>
           <SbaPromoBanner />
           <Navbar />
           <main className="min-h-screen">{children}</main>

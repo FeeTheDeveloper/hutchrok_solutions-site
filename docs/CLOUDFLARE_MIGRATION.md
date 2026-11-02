@@ -51,6 +51,14 @@ Two kinds of variables, and the difference matters:
   machine that runs `cf:build`/`cf:deploy`, or the deployed bundle ships without them.
 - Everything else is read at request time from the Worker's secrets.
 
+Exception — `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (2026-11-02): the root layout resolves it on the
+server and passes it to `<ClerkProvider publishableKey>`, so the dynamic auth routes (`/login`,
+`/sign-up`, `/dashboard`) pick it up from the Worker secret even if the build machine lacked it.
+Before this, a build without the key made the server render `<SignIn>`/`<SignUp>` while the
+browser bundle skipped `<ClerkProvider>`, crashing the widget (`useSession can only be used
+within the <ClerkProvider />`) and leaving the auth panel empty. Statically prerendered pages
+still bake whatever was present at build, so keep the key in `.env.local` before `cf:deploy`.
+
 Carried over from Vercel but previously missing from `.env.local` (added during the migration,
 they are build-time Clerk routing values):
 `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`,

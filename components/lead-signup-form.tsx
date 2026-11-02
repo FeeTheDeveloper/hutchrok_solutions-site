@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { CLERK_ENABLED } from "@/app/providers";
+import { useAppAuth } from "@/app/providers";
 import { MARKETING_SERVICES, SIGNUP_DISCOUNT_LABEL } from "@/lib/promotions";
 
 interface LeadState {
@@ -39,6 +39,7 @@ function isLeadSignupResponse(value: unknown): value is LeadSignupResponse {
 }
 
 export default function LeadSignupForm() {
+  const { clerkEnabled } = useAppAuth();
   const [form, setForm] = useState<LeadState>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -135,7 +136,7 @@ export default function LeadSignupForm() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
-          {CLERK_ENABLED && (
+          {clerkEnabled && (
             <Link href="/sign-up">
               <Button
                 variant="outline"
