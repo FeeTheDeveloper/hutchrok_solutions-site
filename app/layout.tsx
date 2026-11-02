@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import { ConciergeFloating } from "@/components/concierge/hutchrok-concierge";
 import { SbaPromoBanner } from "@/components/SbaPromoBanner";
+import { SignupEntryModal } from "@/components/signup-entry-modal";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -65,6 +66,7 @@ export default function RootLayout({
           <main className="min-h-screen">{children}</main>
           <Footer />
           <ConciergeFloating />
+          <SignupEntryModal />
         </Providers>
       </body>
     </html>
