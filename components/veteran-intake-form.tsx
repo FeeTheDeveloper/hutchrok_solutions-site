@@ -28,7 +28,7 @@ import type {
 import { validateVeteranIntakeStep } from "@/lib/validation";
 import { loadAnswers } from "@/lib/eligibility";
 import { cn } from "@/lib/utils";
-import { CLERK_ENABLED } from "@/app/providers";
+import { useAppAuth } from "@/app/providers";
 import {
   CheckCircle,
   Loader2,
@@ -1113,6 +1113,7 @@ function SuccessState({
   uploading: boolean;
   uploadDone: boolean;
 }) {
+  const { clerkEnabled } = useAppAuth();
   const trackHref = caseNumber
     ? `/track?case=${encodeURIComponent(caseNumber)}${
         email ? `&email=${encodeURIComponent(email)}` : ""
@@ -1171,7 +1172,7 @@ function SuccessState({
         </p>
       </div>
 
-      {CLERK_ENABLED && (
+      {clerkEnabled && (
         <div className="bg-navy rounded-xl p-6 text-left max-w-md mx-auto mb-8">
           <h4 className="text-sm font-bold text-white mb-1.5">
             Create your account
@@ -1193,9 +1194,9 @@ function SuccessState({
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link href={trackHref}>
           <Button
-            variant={CLERK_ENABLED ? "outline" : "default"}
+            variant={clerkEnabled ? "outline" : "default"}
             className={
-              CLERK_ENABLED
+              clerkEnabled
                 ? "border-navy/30 text-navy hover:bg-navy hover:text-white font-medium gap-2"
                 : "bg-gold hover:bg-gold-dark text-navy font-bold gap-2"
             }

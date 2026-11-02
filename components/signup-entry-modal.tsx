@@ -7,7 +7,7 @@ import { Dialog } from "radix-ui";
 import { SignUp } from "@clerk/nextjs";
 import { ArrowLeft, ArrowRight, BadgeCheck, LayoutDashboard, Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CLERK_ENABLED, useAppAuth } from "@/app/providers";
+import { useAppAuth } from "@/app/providers";
 import { SIGNUP_DISCOUNT_CODE, SIGNUP_DISCOUNT_LABEL } from "@/lib/promotions";
 
 /**
@@ -50,7 +50,7 @@ const BENEFITS = [
 
 export function SignupEntryModal() {
   const pathname = usePathname();
-  const { isLoaded, isSignedIn } = useAppAuth();
+  const { clerkEnabled, isLoaded, isSignedIn } = useAppAuth();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"cta" | "signup">("cta");
 
@@ -150,7 +150,7 @@ export function SignupEntryModal() {
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
 
-              {CLERK_ENABLED ? (
+              {clerkEnabled ? (
                 <div className="flex justify-center">
                   <SignUp
                     routing="hash"
