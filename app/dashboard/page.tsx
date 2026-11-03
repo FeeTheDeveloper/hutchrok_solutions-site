@@ -10,6 +10,7 @@ import { getDashboardWorkspaceSnapshot } from "@/lib/dashboard/workspace";
 import { getClientCases } from "@/lib/services/client-cases";
 import FilingTracker from "@/components/filing-tracker";
 import ClientCaseCard from "@/components/client-case-card";
+import FreeFilingCard from "@/components/dashboard/free-filing-card";
 import AccountProfileCard from "@/components/dashboard/account-profile-card";
 import SecureCheckoutCard from "@/components/dashboard/secure-checkout-card";
 import PremiumMemberWorkspace from "@/components/dashboard/premium-member-workspace";
@@ -121,6 +122,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </CardContent>
         </Card>
 
+        <FreeFilingCard />
         <AccountProfileCard />
         <SecureCheckoutCard initialStatus={checkoutState} />
 

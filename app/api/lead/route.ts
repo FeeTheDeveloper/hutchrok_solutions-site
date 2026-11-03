@@ -6,6 +6,7 @@ import { validateLeadSignup } from "@/lib/validation";
 import { SIGNUP_DISCOUNT_CODE, SIGNUP_DISCOUNT_LABEL } from "@/lib/promotions";
 import { emailFrom, TEAM_INBOX } from "@/lib/email/config";
 import { emitSiteSignal } from "@/lib/os/bridge";
+import { upsertNewsletterContact } from "@/lib/newsletter";
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -123,6 +124,17 @@ export async function POST(request: NextRequest) {
 
   // Best-effort; do not block or fail the request on email/OS errors.
   await Promise.allSettled([
+    // Every lead becomes a contact; only opted-in leads are newsletter-subscribed.
+    upsertNewsletterContact({
+      email: data.email,
+      name: data.name,
+      phone: data.phone,
+      businessName: data.businessName,
+      source: "lead-signup",
+      tags: ["lead"],
+      interests: data.interests,
+      consent: data.marketingOptIn,
+    }),
     notifyTeam({
       name: data.name,
       email: data.email,

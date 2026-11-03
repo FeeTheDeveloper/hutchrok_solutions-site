@@ -15,7 +15,10 @@ import {
   CheckCircle,
   Rocket,
 } from "lucide-react";
+import SpecialsStrip from "@/components/specials-strip";
 import { formatStartingPrice, PAID_SERVICES } from "@/lib/paid-services";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Launch Services — Build Your Business After Filing",
@@ -56,6 +59,8 @@ export default function LaunchServicesPage() {
           </IllustratedHero>
         </div>
       </section>
+
+      <SpecialsStrip />
 
       {/* Services grid */}
       <section className="section-padding bg-white">
