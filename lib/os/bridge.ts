@@ -19,6 +19,9 @@ import { createHmac, randomUUID } from "crypto";
 export type SiteSignalType =
   | "contact.submitted"
   | "lead.created"
+  | "newsletter.subscribed"
+  | "free_filing.requested"
+  | "free_filing.redeemed"
   | "intake.submitted"
   | "service_request.submitted"
   | "federal_intake.submitted"
