@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowRight, FileText, Mail, ShieldCheck, UserCheck } from "lucide-react";
+import { FileText, Mail, ShieldCheck, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NewsletterSignup from "@/components/newsletter-signup";
 import { TVC_CONTACT, TVC_GENERAL } from "@/lib/tvc-contact";
@@ -30,7 +29,6 @@ const steps = [
 ];
 
 export default function TvcConnectPage() {
-  const named = TVC_CONTACT.listingConfirmed;
   const subject = encodeURIComponent("Veteran benefits / claims assistance — referred by Hutchrok");
 
   return (
@@ -62,31 +60,26 @@ export default function TvcConnectPage() {
         </ol>
 
         <div className="rounded-xl border border-gold/40 p-6">
-          {named ? (
-            <>
-              <p className="text-xs font-bold uppercase tracking-wide text-gold">Your TVC contact</p>
-              <p className="mt-2 text-xl font-bold text-navy">{TVC_CONTACT.name}</p>
-              <p className="text-sm text-muted-foreground">{TVC_CONTACT.role}, {TVC_CONTACT.agency}</p>
-              <a href={`mailto:${TVC_CONTACT.email}?subject=${subject}`} className="mt-4 inline-block">
-                <Button className="bg-gold text-navy hover:bg-gold-dark">
-                  <Mail className="mr-2 h-4 w-4" /> Email {TVC_CONTACT.name.split(" ")[0]}
-                </Button>
-              </a>
-              <p className="mt-2 break-all text-xs text-muted-foreground">{TVC_CONTACT.email}</p>
-            </>
-          ) : (
-            <>
-              <p className="text-xs font-bold uppercase tracking-wide text-gold">Get connected</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Tell us you need benefits help and we&apos;ll connect you with a TVC service officer.
-              </p>
-              <Link href="/contact?topic=tvc-connect" className="mt-4 inline-block">
-                <Button className="bg-gold text-navy hover:bg-gold-dark">
-                  Request an introduction <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </>
-          )}
+          <p className="text-xs font-bold uppercase tracking-wide text-gold">Benefits &amp; claims inquiries</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Email a Texas Veterans Commission service officer directly for VA disability claims, appeals, and
+            benefits questions. TVC assistance is free.
+          </p>
+          <a href={`mailto:${TVC_CONTACT.email}?subject=${subject}`} className="mt-4 inline-block">
+            <Button className="bg-gold text-navy hover:bg-gold-dark">
+              <Mail className="mr-2 h-4 w-4" /> Email TVC benefits &amp; claims
+            </Button>
+          </a>
+          <p className="mt-2 break-all text-sm font-medium text-navy">{TVC_CONTACT.email}</p>
+          <div className="mt-4 text-sm text-muted-foreground">
+            <p className="font-semibold text-navy">When you email, include:</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              <li>Your full name, phone number, and Texas county</li>
+              <li>What you need: a new claim, appeal, increase, or general benefits question</li>
+              <li>That you were referred by Hutchrok Solutions Group</li>
+            </ul>
+            <p className="mt-2 text-xs">Do not email your Social Security number, DD-214, or medical records. The service officer will tell you how to share documents securely.</p>
+          </div>
           <div className="mt-6 border-t pt-4 text-sm text-muted-foreground space-y-1">
             <p>
               <a href={TVC_GENERAL.website} target="_blank" rel="noopener noreferrer" className="underline">tvc.texas.gov</a>

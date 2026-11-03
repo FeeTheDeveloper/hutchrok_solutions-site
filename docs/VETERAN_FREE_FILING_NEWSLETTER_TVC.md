@@ -11,12 +11,11 @@
 - **Add-on specials** — `lib/specials.ts`, date-windowed (America/Chicago). Veterans Day special `SALUTE20`, Nov 4–15, 2026, 20% off website/brand/logo/email.
   Shown on `/launch-services` and `/resources` (hourly revalidate). Checkout enforcement of the code is NOT yet wired to Stripe.
 - **Veteran feeds** — `/resources`, VA News (`news.va.gov/feed/`) + VFW press releases, hourly, failures degrade gracefully. TVC blocks automated access, so it is a link-out.
-- **TVC Connect** — `/tvc-connect`. Named contact (Victoria Spitler) renders only when `NEXT_PUBLIC_TVC_CONTACT_CONFIRMED=true`; otherwise routes to `/contact?topic=tvc-connect`.
+- **TVC Connect** — `/tvc-connect`. Benefits & claims inquiries go to the TVC email (no individual named), with what-to-include and do-not-email-SSN/DD-214 guidance.
 
 ## Deploy steps
 1. Apply `lib/db/migration-013-free-filing-newsletter.sql` in Supabase.
-2. Set `NEXT_PUBLIC_TVC_CONTACT_CONFIRMED=true` only after Victoria Spitler / TVC approve the public listing.
-3. Build + deploy via the existing Cloudflare pipeline (`npm run cf:deploy`).
+2. Build + deploy via the existing Cloudflare pipeline (`npm run cf:deploy`).
 
 ## Open items
 - Stripe coupon for `SALUTE20` (restricted to the listed services, veterans with VERIFIED/REDEEMED entitlement).

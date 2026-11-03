@@ -1,16 +1,10 @@
 /**
- * Texas Veterans Commission direct contact for the TVC Connect page.
- *
- * Publishing a named state employee's contact must be confirmed with that
- * person (and TVC) first. Until `listingConfirmed` is true the page shows the
- * TVC general channels and routes the named-contact request through Hutchrok.
+ * Texas Veterans Commission benefits & claims inbox for the TVC Connect page.
+ * Shown by email only — no individual is named on the public site.
  */
 export const TVC_CONTACT = {
-  name: "Victoria Spitler",
-  role: "Veteran Service Officer & Claims Specialist",
   agency: "Texas Veterans Commission",
   email: "victoria.spitler@tvc.texas.gov",
-  listingConfirmed: process.env.NEXT_PUBLIC_TVC_CONTACT_CONFIRMED === "true",
 } as const;
 
 export const TVC_GENERAL = {
